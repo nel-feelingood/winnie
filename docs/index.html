@@ -45,7 +45,7 @@
 
   <div class="hero">
     <div>
-      <p class="sub">Слушает по шорткату, ставит напоминания, выполняет быстрые команды, ведёт заметки. Окно чата закрывается, медведь остаётся в углу экрана.</p>
+      <p class="sub">Слушает по шорткату, ставит напоминания, выполняет быстрые команды, ведёт заметки. Окно чата закрывается, медведь остаётся на экране.</p>
       <div class="prompt">
         <div class="prompt-head"><span>Быстрая установка</span><button type="button" class="btn small" data-copy="install-prompt"><span class="roll"><span>Скопировать</span><span>Скопировано</span></span></button></div>
         <pre id="install-prompt" tabindex="0">Установи и настрой на этом Mac приложение Winnie – десктоп-питомца с чатом Claude (открытый код, MIT).
@@ -94,7 +94,7 @@
       <p class="prompt-note">Вставляется в Claude Code или другого агента с терминалом. Агент собирает приложение и помогает с настройкой. <a href="install.html">Установка вручную</a></p>
       <p class="reqs">macOS 14+ · ключ Anthropic API · открытый код, MIT</p>
     </div>
-    <div class="scene" role="img" aria-label="Медведь в углу экрана, над ним окно чата с вкладками Chat, Events и Notes">
+    <div class="scene" role="img" aria-label="Медведь на экране, над ним окно чата с вкладками Chat, Events и Notes">
       <div class="panel" id="panel"><div class="slot on"><img class="only-light" src="images/app/chat-light.png" alt=""><img class="only-dark" src="images/app/chat-dark.png" alt=""></div><div class="slot"><img class="only-light" src="images/app/events-light.png" alt=""><img class="only-dark" src="images/app/events-dark.png" alt=""></div><div class="slot"><img class="only-light" src="images/app/note-light.png" alt=""><img class="only-dark" src="images/app/note-dark.png" alt=""></div></div>
       <img class="pet" id="pet" src="images/sprites/idle.png" alt="">
     </div>
@@ -148,14 +148,31 @@
   </section>
 
   <section>
-    <div class="head"><span class="n">04</span><h2>Кадры</h2></div>
+    <div class="head"><span class="n">04</span><h2>Размер и место</h2></div>
+    <div class="frame call">
+      <div>
+        <ul class="facts">
+          <li><b>Размер</b><span>От 50 до 250%. Ползунок в настройках или просьба в чате: «стань побольше».</span></li>
+          <li><b>Место</b><span>Медведь перетаскивается мышью в любую точку экрана. Место запоминается.</span></li>
+          <li><b>Окно чата</b><span>Открывается рядом с медведем и переезжает вместе с ним.</span></li>
+        </ul>
+      </div>
+      <div class="play">
+        <div class="play-area" id="play-area"><img id="play-pet" src="images/sprites/idle.png" alt="Медведь, которого можно перетащить" draggable="false"></div>
+        <label class="play-size"><span>Размер</span><input id="play-range" type="range" min="50" max="250" step="5" value="100" aria-label="Размер медведя"><output id="play-out">100%</output></label>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><span class="n">05</span><h2>Кадры</h2></div>
     <div class="frame"><div class="screen"><div class="pic"><img id="frame" src="images/sprites/idle.png" alt=""></div>
       <div class="info"><span class="k" id="frame-n">01 / 09</span><h3 id="frame-t"></h3><p id="frame-d"></p><button class="pill" id="frame-play" type="button">Пауза</button></div></div>
       <div class="strip" id="strip" role="tablist" aria-label="Кадры"></div></div>
   </section>
 
   <section>
-    <div class="head"><span class="n">05</span><h2>Где хранятся данные</h2></div>
+    <div class="head"><span class="n">06</span><h2>Где хранятся данные</h2></div>
     <ol class="rules">
       <li><span>Чаты, заметки и память – файлы на Mac<small>Папка ~/Library/Application Support/Winnie.</small></span></li>
       <li><span>Ключи и токены – в Связке ключей macOS<small>В файлы настроек и в репозиторий они не попадают.</small></span></li>
@@ -165,7 +182,7 @@
   </section>
 
   <section class="faq">
-    <div class="head"><span class="n">06</span><h2>Вопросы</h2></div>
+    <div class="head"><span class="n">07</span><h2>Вопросы</h2></div>
     <details><summary>Сколько стоит</summary><p>Приложение бесплатное. Запросы к Claude оплачиваются по тарифам Anthropic, расходы видны в настройках.</p></details>
     <details><summary>Почему нет готовой сборки</summary><p>У проекта нет подписи Apple. Сборка из исходников занимает несколько минут, Xcode не нужен.</p></details>
     <details><summary>Можно ли заменить персонажа</summary><p>Да. Кадры – 13 PNG-файлов в папке приложения.</p></details>
@@ -173,7 +190,7 @@
   </section>
 
   <section>
-    <div class="head"><span class="n">07</span><h2>Написать автору</h2></div>
+    <div class="head"><span class="n">08</span><h2>Написать автору</h2></div>
     <div class="contact">
       <div><p>Кнопка открывает почтовую программу с готовым письмом. Сайт ничего не отправляет сам.</p>
         <p><a href="mailto:nelfeelingood@gmail.com?subject=Winnie">nelfeelingood@gmail.com</a><br><a href="https://t.me/otetslsd" rel="me">Telegram</a> · <a href="https://www.instagram.com/interrobong/" rel="me">Instagram</a> · <a href="about.html">Об авторе</a></p></div>

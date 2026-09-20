@@ -194,11 +194,46 @@ if (box && 'ResizeObserver' in window) new ResizeObserver(() => {
   $('resize-size').textContent = `${Math.round(box.offsetWidth * 2)} × ${Math.round(box.offsetHeight * 2)}`;
 }).observe(box);
 
-// ---------- 04: frames. They change by themselves like a cartoon; picking one from the strip pauses.
+// ---------- Size and place: drag the bear inside the area, scale him with the slider.
+const playPet = $('play-pet'), playArea = $('play-area');
+if (playPet && playArea) {
+  const range = $('play-range'), out = $('play-out');
+  let grab = null;
+  const clamp = (value, max) => Math.min(Math.max(value, 0), max);
+  const place = (x, y) => {
+    playPet.style.translate = 'none';
+    playPet.style.left = `${clamp(x, playArea.clientWidth - playPet.offsetWidth)}px`;
+    playPet.style.top = `${clamp(y, playArea.clientHeight - playPet.offsetHeight)}px`;
+  };
+  new Image().src = sprite('drag');
+  playPet.addEventListener('pointerdown', event => {
+    const pet = playPet.getBoundingClientRect();
+    grab = { x: event.clientX - pet.left, y: event.clientY - pet.top };
+    playPet.setPointerCapture(event.pointerId);
+    playPet.classList.add('held'); playPet.src = sprite('drag');
+  });
+  playPet.addEventListener('pointermove', event => {
+    if (!grab) return;
+    const area = playArea.getBoundingClientRect();
+    place(event.clientX - area.left - grab.x, event.clientY - area.top - grab.y);
+  });
+  const release = () => { if (!grab) return; grab = null; playPet.classList.remove('held'); playPet.src = sprite('idle'); };
+  playPet.addEventListener('pointerup', release);
+  playPet.addEventListener('pointercancel', release);
+  range.addEventListener('input', () => {
+    const centre = { x: playPet.offsetLeft + playPet.offsetWidth / 2, y: playPet.offsetTop + playPet.offsetHeight / 2 };
+    playPet.style.width = `${110 * range.value / 100}px`;
+    out.textContent = `${range.value}%`;
+    // Grow around the bear's own centre and keep him inside the area.
+    if (playPet.style.translate === 'none') place(centre.x - playPet.offsetWidth / 2, centre.y - playPet.offsetHeight / 2);
+  });
+}
+
+// ---------- 05: frames. They change by themselves like a cartoon; picking one from the strip pauses.
 const strip = $('strip');
 if (strip) {
   const frames = [
-    ['idle', 'Покой', 'Стоит в углу экрана поверх всех окон.'], ['hover', 'Заметил', 'Курсор над ним. Появляется кнопка нового диалога.'],
+    ['idle', 'Покой', 'Стоит на экране поверх всех окон.'], ['hover', 'Заметил', 'Курсор над ним. Появляется кнопка нового диалога.'],
     ['thinking', 'Думает', 'Запрос ушёл, ответа ещё нет.'], ['talking', 'Говорит', 'Ответ приходит в чат.'],
     ['listening', 'Слушает', 'Идёт диктовка.'], ['drag', 'Тащат', 'Его перетаскивают. Место запоминается.'],
     ['error', 'Ошибка', 'Нет сети или не подошёл ключ.'], ['sleep', 'Спит', 'Минута без действий.'],
