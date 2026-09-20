@@ -40,7 +40,7 @@ final class PetView: NSView {
     private var sleepTimer: Timer?
 
     private static let dragThreshold: CGFloat = 4
-    private static let sleepDelay: TimeInterval = 5 * 60
+    private static let sleepDelay: TimeInterval = 60
 
     init(sprites: SpriteProvider) {
         self.sprites = sprites
@@ -96,17 +96,38 @@ final class PetView: NSView {
         updateBreathing()
     }
 
-    /// A slow Core Animation scale: composited on the GPU, no per-frame app code,
-    /// so it costs next to nothing. Stopped while asleep or dragged.
+    private enum Breathing: Equatable {
+        case none, awake, asleep
+
+        /// Peak vertical stretch and the length of one inhale, in seconds.
+        var shape: (scale: CGFloat, inhale: CFTimeInterval)? {
+            switch self {
+            case .none: nil
+            case .awake: (1.025, 2.2)
+            // Sleep is slower and deeper, so it reads as snoozing rather than standing.
+            case .asleep: (1.04, 3.4)
+            }
+        }
+    }
+
+    private var breathing = Breathing.none
+
+    /// A slow Core Animation scale: composited by the window server with no
+    /// per-frame app code, so it costs next to nothing even running all day.
     private func updateBreathing() {
-        let shouldBreathe = mood.state != .sleep && mood.state != .drag
-        let isBreathing = spriteLayer.animation(forKey: "breathe") != nil
-        guard shouldBreathe != isBreathing else { return }
-        guard shouldBreathe else { return spriteLayer.removeAnimation(forKey: "breathe") }
+        let wanted: Breathing = switch mood.state {
+        case .drag: .none
+        case .sleep: .asleep
+        default: .awake
+        }
+        guard wanted != breathing else { return }
+        breathing = wanted
+        spriteLayer.removeAnimation(forKey: "breathe")
+        guard let shape = wanted.shape else { return }
         let breathe = CABasicAnimation(keyPath: "transform.scale.y")
         breathe.fromValue = 1.0
-        breathe.toValue = 1.025
-        breathe.duration = 2.2
+        breathe.toValue = shape.scale
+        breathe.duration = shape.inhale
         breathe.autoreverses = true
         breathe.repeatCount = .infinity
         breathe.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
