@@ -1,23 +1,20 @@
 import AppKit
-import os
 
 /// A "Copy" pill that appears above text selected in the chat.
 ///
-/// SwiftUI does not expose where a selection is, so this works at the AppKit level:
-/// after a mouse-up it asks the panel's first responder. The pill is a plain NSView
-/// on top of the hosting view, so clicking it never reaches SwiftUI and the
-/// selection survives the click.
+/// SwiftUI does not expose where a selection is, but on macOS selectable `Text` is
+/// backed by a hidden text field whose field editor is a regular NSTextView, so its
+/// selection notifications and geometry are available. The pill is a plain NSView on
+/// top of the hosting view: clicking it never reaches SwiftUI and the selection survives.
 @MainActor
 final class SelectionCopyButton: NSObject {
     private weak var panel: NSPanel?
     private let pill = PillButton()
     private var monitor: Any?
-    /// Set when the selection lives in a real NSTextView; otherwise copying goes
-    /// through the responder chain, exactly like pressing ⌘C.
     private weak var textView: NSTextView?
+    private var pendingShow: Task<Void, Never>?
     private var hideTask: Task<Void, Never>?
 
-    private static let log = Logger(subsystem: "local.winnie.pet", category: "selection")
     private static let gap: CGFloat = 6
 
     init(panel: NSPanel) {
@@ -27,54 +24,49 @@ final class SelectionCopyButton: NSObject {
         pill.onClick = { [weak self] in self?.copy() }
         panel.contentView?.addSubview(pill)
 
-        let events: NSEvent.EventTypeMask = [.leftMouseDown, .leftMouseUp, .scrollWheel, .keyDown]
-        monitor = NSEvent.addLocalMonitorForEvents(matching: events) { [weak self] event in
-            MainActor.assumeIsolated { self?.handle(event) }
+        // Not a mouse-up monitor: while a selection is dragged the text view runs its own
+        // nested tracking loop, and events consumed there never reach local monitors.
+        NotificationCenter.default.addObserver(self, selector: #selector(selectionChanged(_:)),
+                                               name: NSTextView.didChangeSelectionNotification, object: nil)
+
+        monitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel, .keyDown]) { [weak self] event in
+            MainActor.assumeIsolated {
+                // The pill is positioned once; anything that moves or edits the text makes it stale.
+                if event.window === self?.panel { self?.hide() }
+            }
             return event
         }
     }
 
     func hide() {
+        pendingShow?.cancel()
         hideTask?.cancel()
         pill.isHidden = true
-        textView = nil
     }
 
-    private func handle(_ event: NSEvent) {
-        guard let panel, event.window === panel else { return }
-        switch event.type {
-        case .leftMouseUp:
-            let location = event.locationInWindow
-            guard !pill.frame.contains(location) else { return }
-            // The selection is final only after the text view has processed this mouse-up.
-            DispatchQueue.main.async { [weak self] in self?.evaluate(mouseUpAt: location) }
-        case .leftMouseDown:
-            if !pill.frame.contains(event.locationInWindow) { hide() }
-        default:
-            hide()
+    @objc private func selectionChanged(_ note: Notification) {
+        guard let view = note.object as? NSTextView, let panel, view.window === panel else { return }
+        // The message field has its own ⌘C habits; the pill is for reading answers.
+        guard !view.isEditable, view.selectedRange().length > 0 else { return hide() }
+        textView = view
+        pill.isHidden = true
+        pendingShow?.cancel()
+        pendingShow = Task { [weak self] in
+            // This fires continuously during the drag; wait for the button to come up
+            // so the pill does not chase the pointer.
+            while NSEvent.pressedMouseButtons != 0 {
+                try? await Task.sleep(for: .milliseconds(40))
+                if Task.isCancelled { return }
+            }
+            self?.showAboveSelection()
         }
     }
 
-    private func evaluate(mouseUpAt location: NSPoint) {
-        guard let panel, panel.isVisible else { return }
-
-        if let view = panel.firstResponder as? NSTextView {
-            // The message field has its own ⌘C habits; the pill is for reading answers.
-            guard !view.isEditable, view.selectedRange().length > 0 else { return hide() }
-            textView = view
-            let onScreen = view.firstRect(forCharacterRange: view.selectedRange(), actualRange: nil)
-            let inWindow = panel.convertFromScreen(onScreen)
-            Self.log.notice("selection in NSTextView")
-            return show(above: NSPoint(x: inWindow.midX, y: inWindow.maxY))
-        }
-
-        // No NSTextView: fall back to "can something copy right now?" and anchor to the pointer.
-        let item = NSMenuItem(title: "", action: #selector(NSText.copy(_:)), keyEquivalent: "")
-        guard let target = NSApp.target(forAction: #selector(NSText.copy(_:)), to: nil, from: item),
-              (target as? NSUserInterfaceValidations)?.validateUserInterfaceItem(item) ?? false
-        else { return hide() }
-        Self.log.notice("selection via responder chain: \(String(describing: type(of: target)), privacy: .public)")
-        show(above: NSPoint(x: location.x, y: location.y + 10))
+    private func showAboveSelection() {
+        guard let panel, panel.isVisible, let textView, textView.selectedRange().length > 0 else { return }
+        let onScreen = textView.firstRect(forCharacterRange: textView.selectedRange(), actualRange: nil)
+        let inWindow = panel.convertFromScreen(onScreen)
+        show(above: NSPoint(x: inWindow.midX, y: inWindow.maxY))
     }
 
     private func show(above anchor: NSPoint) {
@@ -82,22 +74,19 @@ final class SelectionCopyButton: NSObject {
         pill.setTitle("Copy")
         var origin = NSPoint(x: anchor.x - pill.frame.width / 2, y: anchor.y + Self.gap)
         origin.x = min(max(origin.x, 8), content.bounds.width - pill.frame.width - 8)
-        // No room above (selection at the very top): go below the pointer instead of off-panel.
+        // No room above (selection right under the header): go below the first line instead.
         if origin.y + pill.frame.height > content.bounds.height - 44 {
-            origin.y = anchor.y - pill.frame.height - 28
+            origin.y = anchor.y - pill.frame.height - 24
         }
         pill.setFrameOrigin(origin)
         pill.isHidden = false
     }
 
     private func copy() {
-        if let textView {
-            let selected = (textView.string as NSString).substring(with: textView.selectedRange())
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(selected, forType: .string)
-        } else {
-            NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
-        }
+        guard let textView, textView.selectedRange().length > 0 else { return hide() }
+        let selected = (textView.string as NSString).substring(with: textView.selectedRange())
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(selected, forType: .string)
         pill.setTitle("Copied ✓")
         hideTask?.cancel()
         hideTask = Task { [weak self] in
