@@ -121,7 +121,8 @@ struct ChatView: View {
                 Label("Удалить все чаты…", systemImage: "trash")
             }
         } label: {
-            HStack(spacing: 8) {
+            // Icon, name and caret travel together as one centred group; a long name truncates in place.
+            HStack(spacing: 6) {
                 Image(systemName: "bubble.left")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
@@ -129,9 +130,8 @@ struct ChatView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .lineLimit(1)
                     .truncationMode(.tail)
-                Spacer(minLength: 0)
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: 8, weight: .bold))
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 12)
