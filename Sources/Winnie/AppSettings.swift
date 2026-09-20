@@ -12,6 +12,9 @@ struct Shortcut: Codable, Equatable {
     static let `default` = Shortcut(keyCode: UInt32(kVK_Space),
                                     modifiers: UInt32(controlKey | optionKey),
                                     display: "⌃⌥Space")
+    static let defaultVoice = Shortcut(keyCode: UInt32(kVK_ANSI_V),
+                                       modifiers: UInt32(controlKey | optionKey),
+                                       display: "⌃⌥V")
 }
 
 @MainActor
@@ -40,7 +43,19 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    /// Opens the chat with the microphone already on.
+    @Published var voiceShortcut: Shortcut {
+        didSet { defaults.set(try? JSONEncoder().encode(voiceShortcut), forKey: "voiceShortcut") }
+    }
+    /// Read answers aloud when the question was asked by voice.
+    @Published var speaksReplies: Bool {
+        didSet { defaults.set(speaksReplies, forKey: "speaksReplies") }
+    }
+
     init() {
+        voiceShortcut = defaults.data(forKey: "voiceShortcut")
+            .flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .defaultVoice
+        speaksReplies = defaults.object(forKey: "speaksReplies") as? Bool ?? true
         let storedScale = defaults.double(forKey: "petScale")
         petScale = Self.petScaleRange.contains(storedScale) ? storedScale : 1
         masterPrompt = defaults.string(forKey: "masterPrompt") ?? MasterPrompt.standard

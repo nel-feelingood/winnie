@@ -16,7 +16,7 @@ public struct ClaudeClient: Sendable {
 
     /// The user's master prompt followed by the constraints that come from the app
     /// itself (popover width, search, today's date) and are not the user's to maintain.
-    static func systemPrompt(master: String, now: Date = Date()) -> String {
+    static func systemPrompt(master: String, spoken: Bool = false, now: Date = Date()) -> String {
         let date = now.formatted(.iso8601.year().month().day())
         let persona = master.trimmingCharacters(in: .whitespacesAndNewlines)
         return """
@@ -26,9 +26,19 @@ public struct ClaudeClient: Sendable {
         Технические условия окна чата. Оно узкое, около 360 точек в ширину: пиши в Markdown, но \
         без заголовков и без широких таблиц; короткий список или пара строк кода — нормально. У \
         тебя есть веб-поиск: пользуйся им, когда вопрос зависит от актуальных или редких \
-        сведений, и не трать его на то, что и так хорошо знаешь. Сегодня \(date).
+        сведений, и не трать его на то, что и так хорошо знаешь. Сегодня \(date).\(spoken ? spokenNote : "")
         """
     }
+
+    /// Added when the question came by voice: the reply goes to a speech synthesizer.
+    private static let spokenNote = """
+
+
+        Последний вопрос задан голосом, и твой ответ будет прочитан вслух синтезатором речи. \
+        Отвечай одним-тремя короткими разговорными предложениями, без Markdown, списков, \
+        ссылок, кода и скобок; числа и сокращения пиши так, как их произносят. Вопрос распознан \
+        автоматически, поэтому в нём могут быть ослышки: догадывайся по смыслу.
+        """
 
     /// Loads the JPEG bytes of an attached screenshot by file name.
     public typealias ImageLoader = @Sendable (String) -> Data?
@@ -51,13 +61,13 @@ public struct ClaudeClient: Sendable {
             }
     }
 
-    static func requestBody(model: ModelOption, master: String = MasterPrompt.standard,
+    static func requestBody(model: ModelOption, master: String = MasterPrompt.standard, spoken: Bool = false,
                             messages: [[String: Any]], now: Date = Date()) -> [String: Any] {
         var body: [String: Any] = [
             "model": model.rawValue,
             "max_tokens": 32000,
             "stream": true,
-            "system": systemPrompt(master: master, now: now),
+            "system": systemPrompt(master: master, spoken: spoken, now: now),
             "messages": messages,
             "tools": [["type": model.webSearchToolType, "name": "web_search", "max_uses": 5]],
         ]
@@ -88,7 +98,7 @@ public struct ClaudeClient: Sendable {
     // MARK: - Chat
 
     public func streamReply(apiKey: String, model: ModelOption, masterPrompt: String, history: [ChatMessage],
-                            imageLoader: @escaping ImageLoader = { _ in nil })
+                            spoken: Bool = false, imageLoader: @escaping ImageLoader = { _ in nil })
         -> AsyncThrowingStream<StreamEvent, Error>
     {
         AsyncThrowingStream { continuation in
@@ -97,7 +107,7 @@ public struct ClaudeClient: Sendable {
                     guard !apiKey.isEmpty else { throw ClaudeError.missingAPIKey }
                     var messages = Self.apiMessages(from: history, imageLoader: imageLoader)
                     for _ in 0...Self.maxResumes {
-                        let turn = try await runTurn(apiKey: apiKey, model: model, master: masterPrompt, messages: messages) {
+                        let turn = try await runTurn(apiKey: apiKey, model: model, master: masterPrompt, spoken: spoken, messages: messages) {
                             continuation.yield($0)
                         }
                         switch turn.stopReason {
@@ -124,10 +134,11 @@ public struct ClaudeClient: Sendable {
         }
     }
 
-    private func runTurn(apiKey: String, model: ModelOption, master: String, messages: [[String: Any]],
+    private func runTurn(apiKey: String, model: ModelOption, master: String, spoken: Bool,
+                         messages: [[String: Any]],
                          emit: (StreamEvent) -> Void) async throws -> TurnAccumulator
     {
-        let body = Self.requestBody(model: model, master: master, messages: messages)
+        let body = Self.requestBody(model: model, master: master, spoken: spoken, messages: messages)
         let betas = model.usesDefaultFallback ? ["server-side-fallback-2026-07-01"] : []
         let request = try Self.urlRequest(apiKey: apiKey, body: body, betas: betas)
 

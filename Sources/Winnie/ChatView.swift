@@ -125,12 +125,22 @@ struct ChatView: View {
 
     private var inputRow: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            TextField("Сообщение", text: $controller.draft, axis: .vertical)
+            TextField(controller.isListening ? "Слушаю…" : "Сообщение", text: $controller.draft, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.system(size: 13))
                 .lineLimit(1...6)
                 .focused($inputFocused)
                 .onSubmit { controller.send() }
+
+            Button { controller.toggleListening() } label: {
+                Image(systemName: controller.isListening ? "waveform.circle.fill" : "mic.circle")
+                    .font(.system(size: 20))
+                    .symbolEffect(.pulse, isActive: controller.isListening)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(controller.isListening ? Color.red : Color.secondary)
+            .disabled(controller.isStreaming)
+            .help(controller.isListening ? "Закончить и отправить" : "Спросить голосом")
 
             Button {
                 controller.isStreaming ? controller.stop() : controller.send()

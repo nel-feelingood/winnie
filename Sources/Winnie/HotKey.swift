@@ -7,17 +7,26 @@ import Carbon.HIToolbox
 final class HotKey {
     private var hotKeyRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
+    private let id: UInt32
     private let action: () -> Void
 
-    init(action: @escaping () -> Void) {
+    /// `id` tells this shortcut apart: every handler sees every hot key press.
+    init(id: UInt32, action: @escaping () -> Void) {
+        self.id = id
         self.action = action
         let spec = [EventTypeSpec(eventClass: OSType(kEventClassKeyboard),
                                   eventKind: UInt32(kEventHotKeyPressed))]
         let context = Unmanaged.passUnretained(self).toOpaque()
-        InstallEventHandler(GetApplicationEventTarget(), { _, _, context in
-            guard let context else { return noErr }
+        InstallEventHandler(GetApplicationEventTarget(), { _, event, context in
+            guard let context, let event else { return noErr }
+            var pressed = EventHotKeyID()
+            GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                              nil, MemoryLayout<EventHotKeyID>.size, nil, &pressed)
             let hotKey = Unmanaged<HotKey>.fromOpaque(context).takeUnretainedValue()
-            MainActor.assumeIsolated { hotKey.action() }
+            MainActor.assumeIsolated {
+                guard pressed.id == hotKey.id else { return }
+                hotKey.action()
+            }
             return noErr
         }, 1, spec, context, &handlerRef)
     }
@@ -25,8 +34,8 @@ final class HotKey {
     func register(_ shortcut: Shortcut) {
         if let hotKeyRef { UnregisterEventHotKey(hotKeyRef) }
         hotKeyRef = nil
-        let id = EventHotKeyID(signature: OSType(0x574E_4E45), id: 1) // 'WNNE'
-        RegisterEventHotKey(shortcut.keyCode, shortcut.modifiers, id,
+        let hotKeyID = EventHotKeyID(signature: OSType(0x574E_4E45), id: id) // 'WNNE'
+        RegisterEventHotKey(shortcut.keyCode, shortcut.modifiers, hotKeyID,
                             GetApplicationEventTarget(), 0, &hotKeyRef)
     }
 }

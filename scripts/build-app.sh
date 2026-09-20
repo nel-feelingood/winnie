@@ -31,6 +31,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
+    <key>NSMicrophoneUsageDescription</key><string>Винни слушает вопрос, когда ты нажимаешь кнопку микрофона.</string>
+    <key>NSSpeechRecognitionUsageDescription</key><string>Винни превращает сказанное в текст вопроса. Распознавание идёт на этом Mac.</string>
 </dict>
 </plist>
 PLIST

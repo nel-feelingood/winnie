@@ -201,6 +201,8 @@ import Testing
         #expect(mood.state == .hover)
         mood.activity = .thinking
         #expect(mood.state == .thinking)
+        mood.activity = .listening
+        #expect(mood.state == .listening)
         mood.activity = .error
         #expect(mood.state == .error)
         mood.isDragging = true
@@ -229,5 +231,33 @@ import Testing
         let message = ChatMessage(role: .assistant, text: "См. https://a.com и https://b.com",
                                   sources: [Source(title: "B", url: "https://b.com")])
         #expect(LinkExtractor.allLinks(for: message).map(\.url) == ["https://b.com", "https://a.com"])
+    }
+}
+
+@Suite struct SpeechTextTests {
+    @Test func stripsMarkdownForTheSynthesizer() {
+        let markdown = "## Итог\n- **Мёд** — это [еда](https://ru.wikipedia.org/wiki/Мёд), см. https://a.com\n```swift\nlet x = 1\n```"
+        #expect(SpeechText.clean(markdown) == "Итог\nМёд — это еда, см.")
+    }
+
+    @Test func popsOnlyFinishedSentences() {
+        var buffer = "Привет, Серёжа! Дела идут. А вот это ещё не догов"
+        #expect(SpeechText.popSentences(from: &buffer) == ["Привет, Серёжа!", "Дела идут."])
+        #expect(buffer == "А вот это ещё не догов")
+        buffer += "орено.\n"
+        #expect(SpeechText.popSentences(from: &buffer) == ["А вот это ещё не договорено."])
+        #expect(buffer.isEmpty)
+    }
+
+    @Test func doesNotSplitNumbersOrReadOpenCodeBlocks() {
+        var number = "Это стоит 3.5 рубля"
+        #expect(SpeechText.popSentences(from: &number).isEmpty)
+        var code = "Вот код. ```swift\nlet x = 1\n"
+        #expect(SpeechText.popSentences(from: &code).isEmpty)
+    }
+
+    @Test func spokenQuestionsAddTheReadAloudRule() {
+        #expect(ClaudeClient.systemPrompt(master: "x", spoken: true).contains("прочитан вслух"))
+        #expect(!ClaudeClient.systemPrompt(master: "x").contains("прочитан вслух"))
     }
 }

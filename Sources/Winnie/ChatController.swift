@@ -13,6 +13,7 @@ final class ChatController: ObservableObject {
     @Published private(set) var focusToken = 0
     /// Screenshots waiting to go out with the next message.
     @Published private(set) var pendingImages: [String] = []
+    @Published private(set) var isListening = false
 
     let store: ChatStore
     let settings: AppSettings
@@ -22,6 +23,8 @@ final class ChatController: ObservableObject {
 
     private let client = ClaudeClient()
     private var streamTask: Task<Void, Never>?
+    private let listener = SpeechListener()
+    private let speaker = Speaker()
 
     /// MarkdownUI re-parses the whole message on every change, so deltas are
     /// flushed to the UI at most this often instead of per token.
@@ -30,6 +33,44 @@ final class ChatController: ObservableObject {
     init(store: ChatStore, settings: AppSettings) {
         self.store = store
         self.settings = settings
+
+        listener.onTranscript = { [weak self] in self?.draft = $0 }
+        listener.onFinished = { [weak self] in self?.finishListening(heard: $0) }
+        listener.onFailure = { [weak self] failure in
+            self?.isListening = false
+            self?.onActivity(.none)
+            self?.show(toast: failure.errorDescription ?? "Микрофон недоступен")
+        }
+        speaker.onFinished = { [weak self] in
+            // The spoken answer outlasts the text stream; the pet talks until the voice stops.
+            if self?.isStreaming == false { self?.onActivity(.none) }
+        }
+    }
+
+    // MARK: - Voice
+
+    /// Mic button and voice shortcut: start listening, or finish early and send.
+    func toggleListening() {
+        if isListening { return listener.finish() }
+        guard !isStreaming else { return }
+        speaker.stop()
+        draft = ""
+        isListening = true
+        onActivity(.listening)
+        listener.start()
+    }
+
+    private func finishListening(heard text: String) {
+        isListening = false
+        guard !text.isEmpty else { return onActivity(.none) }
+        draft = text
+        send(spoken: true)
+    }
+
+    /// Closing the chat is the "be quiet" gesture.
+    func silence() {
+        listener.cancel()
+        speaker.stop()
     }
 
     func focusInput() { focusToken += 1 }
@@ -87,10 +128,12 @@ final class ChatController: ObservableObject {
     func stop() {
         streamTask?.cancel()
         streamTask = nil
+        speaker.stop()
     }
 
-    func send() {
+    func send(spoken: Bool = false) {
         guard canSend else { return }
+        speaker.stop()
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         let images = pendingImages
         let session = store.current ?? store.startNew()
@@ -115,11 +158,15 @@ final class ChatController: ObservableObject {
         isStreaming = true
         onActivity(.thinking)
         streamTask = Task { [weak self] in
-            await self?.stream(into: reply.id, sessionID: session.id, history: history, apiKey: apiKey)
+            await self?.stream(into: reply.id, sessionID: session.id, history: history, apiKey: apiKey,
+                               spoken: spoken)
         }
     }
 
-    private func stream(into replyID: UUID, sessionID: UUID, history: [ChatMessage], apiKey: String) async {
+    private func stream(into replyID: UUID, sessionID: UUID, history: [ChatMessage], apiKey: String,
+                        spoken: Bool) async {
+        let speaks = spoken && settings.speaksReplies
+        var unspoken = ""
         var pending = ""
         var lastFlush = ContinuousClock.now
         var failure: Error?
@@ -135,12 +182,18 @@ final class ChatController: ObservableObject {
         do {
             for try await event in client.streamReply(apiKey: apiKey, model: settings.model,
                                                              masterPrompt: settings.masterPrompt, history: history,
+                                                             spoken: speaks,
                                                              imageLoader: { ImageStore.data(for: $0) }) {
                 switch event {
                 case .textDelta(let piece):
                     if searchStatus != nil { searchStatus = nil }
                     onActivity(.talking)
                     pending += piece
+                    if speaks {
+                        // Speak sentence by sentence, so the voice starts before the answer ends.
+                        unspoken += piece
+                        SpeechText.popSentences(from: &unspoken).forEach(speaker.speak)
+                    }
                     if ContinuousClock.now - lastFlush >= Self.flushInterval { flush() }
                 case .searching(let query):
                     searchStatus = query.map { "Ищу: \($0)" } ?? "Ищу в интернете…"
@@ -155,6 +208,8 @@ final class ChatController: ObservableObject {
             failure = error
         }
         flush()
+        let tail = SpeechText.clean(unspoken)
+        if speaks, failure == nil, !tail.isEmpty { speaker.speak(tail) }
 
         searchStatus = nil
         isStreaming = false
@@ -172,7 +227,7 @@ final class ChatController: ObservableObject {
         } else {
             if isEmpty { store.removeMessage(replyID, from: sessionID) }
             store.save()
-            onActivity(.none)
+            if !speaker.isSpeaking { onActivity(.none) }
         }
     }
 

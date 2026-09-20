@@ -9,7 +9,9 @@ final class SpriteProvider {
 
     func image(for state: PetState) -> NSImage {
         if let cached = cache[state] { return cached }
-        let image = load(state) ?? load(.idle) ?? Self.placeholder(for: state)
+        // Until a dedicated `listening.png` is drawn, the attentive hover pose stands in for it.
+        let standIn = state == .listening ? load(.hover) : nil
+        let image = load(state) ?? standIn ?? load(.idle) ?? Self.placeholder(for: state)
         cache[state] = image
         return image
     }
@@ -45,7 +47,7 @@ final class SpriteProvider {
             let face: String
             switch state {
             case .idle: face = "• •"
-            case .hover: face = "◉ ◉"
+            case .hover, .listening: face = "◉ ◉"
             case .thinking: face = "• ˙"
             case .talking: face = "• •"
             case .drag: face = "° °"

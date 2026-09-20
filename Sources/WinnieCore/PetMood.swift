@@ -2,11 +2,11 @@ import Foundation
 
 /// Sprite names double as the file names the artist delivers (`idle.png`, ...).
 public enum PetState: String, CaseIterable, Sendable {
-    case idle, hover, thinking, talking, drag, error, sleep
+    case idle, hover, thinking, talking, drag, error, sleep, listening
 }
 
 public enum ChatActivity: Equatable, Sendable {
-    case none, thinking, talking, error
+    case none, listening, thinking, talking, error
 }
 
 /// Resolves competing inputs into the one sprite to show. Pure so the
@@ -23,6 +23,7 @@ public struct PetMood: Equatable, Sendable {
         if isDragging { return .drag }
         switch activity {
         case .error: return .error
+        case .listening: return .listening
         case .thinking: return .thinking
         case .talking: return .talking
         case .none: break

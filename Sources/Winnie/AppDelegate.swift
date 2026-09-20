@@ -14,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var chatPanel: ChatPanel!
     private var statusMenu: StatusMenu!
     private var hotKey: HotKey!
+    private var voiceHotKey: HotKey!
     private var settingsWindow: SettingsWindowController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -45,6 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow = SettingsWindowController(
             settings: settings,
             onShortcutChange: { [unowned self] in hotKey.register($0) },
+            onVoiceShortcutChange: { [unowned self] in voiceHotKey.register($0) },
             onScaleChange: { [unowned self] in
                 petView.apply(scale: $0)
                 settings.petOrigin = petWindow.frame.origin
@@ -62,8 +64,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             isPetVisible: { [unowned self] in petWindow.isVisible }
         ))
 
-        hotKey = HotKey { [unowned self] in toggleFromShortcut() }
+        hotKey = HotKey(id: 1) { [unowned self] in toggleFromShortcut() }
         hotKey.register(settings.shortcut)
+        voiceHotKey = HotKey(id: 2) { [unowned self] in
+            // Pressed again while listening, it ends the question early and sends it.
+            if !chatPanel.isVisible { openChat(new: false) }
+            controller.toggleListening()
+        }
+        voiceHotKey.register(settings.voiceShortcut)
 
         if !Keychain.hasAPIKey { settingsWindow.show() }
     }
@@ -114,6 +122,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func closeChat() {
         guard chatPanel.isVisible else { return }
+        controller.silence()
         chatPanel.orderOut(nil)
         petView.refresh()
     }

@@ -5,6 +5,7 @@ import WinnieCore
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
     var onShortcutChange: (Shortcut) -> Void
+    var onVoiceShortcutChange: (Shortcut) -> Void
     var onScaleChange: (Double) -> Void
 
     /// Left empty on purpose: showing the stored key would mean reading the secret
@@ -12,8 +13,6 @@ struct SettingsView: View {
     @State private var apiKey = ""
     private let hasStoredKey = Keychain.hasAPIKey
     @State private var saved = false
-    @State private var isRecording = false
-    @State private var monitor: Any?
 
     var body: some View {
         Form {
@@ -60,29 +59,45 @@ struct SettingsView: View {
             } footer: {
                 Text("Характер Винни и то, как он отвечает. Применяется со следующего сообщения.")
             }
+            Section("Голос") {
+                Toggle("Отвечать вслух на голосовые вопросы", isOn: $settings.speaksReplies)
+                ShortcutRecorder(title: "Спросить голосом", shortcut: $settings.voiceShortcut)
+            }
             Section("Шорткат") {
-                HStack {
-                    Text("Показать / спрятать Винни")
-                    Spacer()
-                    Button(isRecording ? "Нажми сочетание…" : settings.shortcut.display) {
-                        isRecording ? stopRecording() : startRecording()
-                    }
-                }
+                ShortcutRecorder(title: "Показать / спрятать Винни", shortcut: $settings.shortcut)
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 640)
+        .frame(width: 520, height: 740)
+        .onChange(of: settings.shortcut) { _, shortcut in onShortcutChange(shortcut) }
+        .onChange(of: settings.voiceShortcut) { _, shortcut in onVoiceShortcutChange(shortcut) }
         .onChange(of: settings.petScale) { _, scale in onScaleChange(scale) }
+    }
+}
+
+/// A button that captures the next modifier+key press as a shortcut.
+private struct ShortcutRecorder: View {
+    let title: String
+    @Binding var shortcut: Shortcut
+
+    @State private var isRecording = false
+    @State private var monitor: Any?
+
+    var body: some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Button(isRecording ? "Нажми сочетание…" : shortcut.display) {
+                isRecording ? stopRecording() : startRecording()
+            }
+        }
         .onDisappear { stopRecording() }
     }
 
     private func startRecording() {
         isRecording = true
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            if let shortcut = Shortcut(event: event) {
-                settings.shortcut = shortcut
-                onShortcutChange(shortcut)
-            }
+            if let recorded = Shortcut(event: event) { shortcut = recorded }
             stopRecording()
             return nil
         }
@@ -100,25 +115,29 @@ final class SettingsWindowController {
     private var window: NSWindow?
     private let settings: AppSettings
     private let onShortcutChange: (Shortcut) -> Void
+    private let onVoiceShortcutChange: (Shortcut) -> Void
     private let onScaleChange: (Double) -> Void
 
     init(settings: AppSettings, onShortcutChange: @escaping (Shortcut) -> Void,
+         onVoiceShortcutChange: @escaping (Shortcut) -> Void,
          onScaleChange: @escaping (Double) -> Void) {
         self.settings = settings
         self.onShortcutChange = onShortcutChange
+        self.onVoiceShortcutChange = onVoiceShortcutChange
         self.onScaleChange = onScaleChange
     }
 
     func show() {
         if window == nil {
             let view = SettingsView(settings: settings, onShortcutChange: onShortcutChange,
+                                    onVoiceShortcutChange: onVoiceShortcutChange,
                                     onScaleChange: onScaleChange)
             let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable],
                                   backing: .buffered, defer: false)
             window.title = "Настройки Винни"
             window.contentView = NSHostingView(rootView: view)
             window.isReleasedWhenClosed = false
-            window.setContentSize(NSSize(width: 520, height: 640))
+            window.setContentSize(NSSize(width: 520, height: 740))
             window.center()
             self.window = window
         }
