@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Настройки Winnie</title>
+<meta name="description" content="Все настройки Winnie: размер и характер медведя, поведение, быстрые действия, API, MCP, модель и расходы, голос, шорткаты.">
+<meta property="og:title" content="Настройки Winnie">
+<meta property="og:description" content="Все настройки Winnie: размер и характер медведя, поведение, быстрые действия, API, MCP, модель и расходы, голос, шорткаты.">
+<meta property="og:image" content="https://nel-feelingood.github.io/winnie/images/sprites/hover.png">
+<meta property="og:url" content="https://nel-feelingood.github.io/winnie/settings.html">
+<link rel="icon" href="images/favicon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <a class="brand" href="index.html"><img src="images/favicon.png" alt="">Winnie</a>
+    <div class="nav-links">
+      <a href="features.html">Возможности</a>
+      <a href="usecases.html">Сценарии</a>
+      <a href="settings.html" class="on">Настройки</a>
+      <a href="install.html">Установка</a>
+      <a href="about.html">Автор</a>
+      <a href="https://github.com/nel-feelingood/winnie">GitHub</a>
+    </div>
+  </nav>
+</div>
+<main class="wrap subpage">
+  <span class="eyebrow">Настройки</span>
+  <h1>Что можно настроить</h1>
+  <p class="lead">Настройки открываются шестерёнкой в чате или из значка в строке меню. Почти всё из этого можно поменять и просьбой в чате: «стань побольше», «выключи сны», «добавь кнопку».</p>
+
+  <div class="toc"><ol>
+    <li><a href="#s-winnie">Винни</a></li><li><a href="#s-behaviour">Поведение</a></li><li><a href="#s-quick">Быстрые действия</a></li>
+    <li><a href="#s-api">API</a></li><li><a href="#s-mcp">MCP</a></li><li><a href="#s-model">Модель и расходы</a></li>
+    <li><a href="#s-voice">Голос</a></li><li><a href="#s-keys">Шорткаты</a></li>
+  </ol></div>
+
+  <h2 id="s-winnie">🐻 Винни</h2>
+  <table>
+    <tr><th>Настройка</th><th>Что делает</th></tr>
+    <tr><td>Размер</td><td>Ползунок масштаба медведя, со сбросом.</td></tr>
+    <tr><td>Мастер-промпт</td><td>Характер и манера речи Винни. Правила окна чата, поиск и дата добавляются сами. Кнопка «Вернуть стандартный».</td></tr>
+    <tr><td>Память</td><td>Список того, что ты просил запомнить. Пополняется фразой «запомни, что…», записи можно удалять.</td></tr>
+  </table>
+
+  <h2 id="s-behaviour">🎭 Поведение</h2>
+  <table>
+    <tr><th>Настройка</th><th>Что делает</th></tr>
+    <tr><td>Перекур в 16:20</td><td>Каждый день в 16:20 Винни устраивает перекур. По просьбе в чате анимация играет в любое время, даже если тумблер выключен.</td></tr>
+    <tr><td>Сны</td><td>Пока Винни спит, над ним раз в 10 секунд всплывает эмодзи: чаще то, что ему снится, иногда любой случайный.</td></tr>
+  </table>
+
+  <h2 id="s-quick">⚡ Быстрые действия</h2>
+  <table>
+    <tr><th>Настройка</th><th>Что делает</th></tr>
+    <tr><td>Подпись на кнопке</td><td>Короткий текст, который виден в пустом чате.</td></tr>
+    <tr><td>Инструкция для Винни</td><td>Что на самом деле отправляется. Пусто — отправляется сама подпись.</td></tr>
+    <tr><td>Сразу</td><td>Отправлять по нажатию или только подставить в поле ввода.</td></tr>
+    <tr><td>Порядок</td><td>Кнопки переставляются; «Вернуть стандартные» восстанавливает набор по умолчанию.</td></tr>
+  </table>
+
+  <h2 id="s-api">🔑 API</h2>
+  <table>
+    <tr><th>Настройка</th><th>Что делает</th></tr>
+    <tr><td>Claude</td><td>Ключ Anthropic API. Хранится в Связке ключей.</td></tr>
+    <tr><td>Почта · Gmail</td><td>Client ID и Client Secret своего OAuth-клиента, вход через браузер, «Войти заново» и «Отключить».</td></tr>
+    <tr><td>Telegram</td><td>Токен бота от @BotFather, код привязки, «Отвязать», переключатель «Присылать напоминания в Telegram».</td></tr>
+    <tr><td>Свои API</td><td>Адрес (только https), описание для медведя, заголовок авторизации и токен. Отдельный переключатель разрешает запросы, которые что-то меняют (POST, PUT, PATCH, DELETE).</td></tr>
+  </table>
+  <p><a href="install.html#gmail">Как подключить Gmail, Telegram и остальное →</a></p>
+
+  <h2 id="s-mcp">🔌 MCP</h2>
+  <table>
+    <tr><th>Настройка</th><th>Что делает</th></tr>
+    <tr><td>Приложения по MCP</td><td>Адрес сервера (только https) и токен. Пустой токен — вход через браузер по OAuth.</td></tr>
+  </table>
+
+  <h2 id="s-model">💸 Модель и расходы</h2>
+  <table>
+    <tr><th>Настройка</th><th>Что делает</th></tr>
+    <tr><td>Отвечает</td><td>Модель: Opus — самый умный, Sonnet — золотая середина, Haiku — быстрый и дешёвый.</td></tr>
+    <tr><td>Расходы</td><td>Запросы, входящие и исходящие токены, поиски и стоимость за сегодня, 7 и 30 дней. Ссылка на пополнение баланса.</td></tr>
+  </table>
+
+  <h2 id="s-voice">🎙️ Голос</h2>
+  <table>
+    <tr><th>Настройка</th><th>Что делает</th></tr>
+    <tr><td>Голос</td><td>«Авто» выбирает лучший установленный русский голос; «Скачать голоса…» открывает системные настройки.</td></tr>
+    <tr><td>Манера</td><td>«Как в мультике» — стилизация высотой и темпом, или «Обычный». Кнопка «Прослушать».</td></tr>
+    <tr><td>Когда говорить</td><td>«Отвечать вслух на голосовые вопросы» и «Проговаривать напоминания вслух».</td></tr>
+  </table>
+
+  <h2 id="s-keys">⌨️ Шорткаты</h2>
+  <table>
+    <tr><th>Настройка</th><th>Что делает</th></tr>
+    <tr><td>Показать / спрятать Винни</td><td>По умолчанию <code>⌃⌥Space</code>. Работает из любого приложения.</td></tr>
+    <tr><td>Диктовка: включить / выключить</td><td>По умолчанию <code>⇧⌘E</code>. Включает микрофон в текущем чате; закрытый чат сначала открывается.</td></tr>
+    <tr><td>В окне чата</td><td><code>⌘N</code> — новый диалог, <code>Esc</code> или <code>⌘W</code> — свернуть, <code>⌘V</code> — вставить скриншот из буфера, <code>↩</code> — отправить, <code>⌥↩</code> — новая строка.</td></tr>
+  </table>
+  <p>Чтобы сменить глобальный шорткат, нажми на сочетание и набери новое — с ⌘, ⌥ или ⌃. Занятые сочетания не принимаются.</p>
+  <div class="next">
+    <a class="btn btn-primary" href="index.html#top">Установить по промпту</a>
+    <a class="btn btn-ghost" href="https://github.com/nel-feelingood/winnie"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <span>© 2026 Sergey Donskov · исходный код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
+      <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="about.html">Об авторе</a> · <a href="mailto:nelfeelingood@gmail.com?subject=Winnie">nelfeelingood@gmail.com</a></span>
+    </div>
+    <p>Лицензия MIT распространяется только на код. Винни-Пух — персонаж фильмов Фёдора Хитрука («Союзмультфильм»);
+      изображения нарисованы для личного использования и лицензией не покрываются. Проект не связан с Anthropic, Google и Telegram.</p>
+  </div>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 
 # Winnie
 
-**[Сайт](https://nel-feelingood.github.io/winnie/)** · **[Инструкция по установке](https://nel-feelingood.github.io/winnie/install.html)**
+**[Сайт](https://nel-feelingood.github.io/winnie/)** · **[Возможности](https://nel-feelingood.github.io/winnie/features.html)** · **[Сценарии](https://nel-feelingood.github.io/winnie/usecases.html)** · **[Настройки](https://nel-feelingood.github.io/winnie/settings.html)** · **[Установка](https://nel-feelingood.github.io/winnie/install.html)**
 
 Персональный десктоп-питомец для macOS: Винни-Пух живёт поверх всех окон, а по клику открывает
 карманный чат на Claude API. Нужен для быстрых одноразовых дел — перевести, найти, напомнить,
@@ -54,7 +54,7 @@
 ## Установка
 
 Проще всего — отдать ИИ-агенту с терминалом (например, Claude Code)
-[готовый промпт с сайта](https://nel-feelingood.github.io/winnie/#install). Или руками:
+[готовый промпт с сайта](https://nel-feelingood.github.io/winnie/). Или руками:
 
 ```bash
 git clone https://github.com/nel-feelingood/winnie.git
