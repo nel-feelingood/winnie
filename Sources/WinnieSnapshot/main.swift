@@ -67,7 +67,7 @@ MainActor.assumeIsolated {
         let actions = SettingsActions(onShortcutChange: { _ in }, onNewVoiceShortcutChange: { _ in }, onVoicePreview: {})
         let navigation = SettingsNavigation()
         navigation.pane = pane
-        let view = SettingsView(settings: AppSettings(), gmail: GmailAuth(), memory: memory, usage: usage, mcp: MCPAuth(), actions: actions,
+        let view = SettingsView(settings: AppSettings(), gmail: GmailAuth(), memory: memory, usage: usage, mcp: MCPAuth(), telegram: TelegramBridge(), actions: actions,
                                 navigation: navigation)
         let window = InertWindow(contentRect: NSRect(x: -3000, y: -3000, width: 720, height: 560), styleMask: [.borderless],
                                  backing: .buffered, defer: false)

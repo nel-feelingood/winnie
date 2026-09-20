@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var memory = MemoryStore(directory: AppSettings.supportDirectory)
     private lazy var usage = UsageStore(directory: AppSettings.supportDirectory)
     private let mcp = MCPAuth()
+    private let telegram = TelegramBridge()
     private lazy var controller = ChatController(store: store, reminders: reminders, memory: memory, usage: usage,
                                                  mcp: mcp, gmail: gmail, settings: settings)
     private var scheduler: ReminderScheduler!
@@ -68,7 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ImageStore.removeOrphans(keeping: store.referencedImageFiles)
 
         settingsWindow = SettingsWindowController(
-            settings: settings, gmail: gmail, memory: memory, usage: usage, mcp: mcp,
+            settings: settings, gmail: gmail, memory: memory, usage: usage, mcp: mcp, telegram: telegram,
             actions: SettingsActions(
                 onShortcutChange: { [unowned self] in hotKey.register($0) },
                 onNewVoiceShortcutChange: { [unowned self] in newVoiceHotKey.register($0) },
@@ -88,6 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         scheduler = ReminderScheduler(store: reminders)
         scheduler.onFire = { [unowned self] reminder in
+            telegram.forward(reminder: reminder.title)
             controller.present(reminder)
             showChatWithoutStealingFocus()
         }
@@ -95,6 +97,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         scheduler.onPermissionDenied = { [unowned self] in
             controller.notify("Разреши Winnie уведомления в Системных настройках, иначе напоминания не всплывут")
         }
+
+        telegram.answer = { [unowned self] in await controller.answerTelegram($0) }
+        telegram.resetConversation = { [unowned self] in controller.resetTelegramChat() }
+        telegram.start()
 
         // After the chat panel exists, so a reminder missed while Winnie was closed can be shown.
         scheduler.catchUp()

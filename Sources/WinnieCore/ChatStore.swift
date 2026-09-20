@@ -57,6 +57,16 @@ public final class ChatStore: ObservableObject {
         return session
     }
 
+    /// A chat that exists beside the one on screen, e.g. the Telegram conversation: created on
+    /// demand and never made current, so it does not pull the open chat away from the user.
+    @discardableResult
+    public func detachedSession(id: UUID, title: String, now: Date = Date()) -> ChatSession {
+        if let existing = sessions.first(where: { $0.id == id }) { return existing }
+        let session = ChatSession(id: id, title: title, now: now)
+        sessions.append(session)
+        return session
+    }
+
     public func select(_ id: UUID) {
         guard sessions.contains(where: { $0.id == id }) else { return }
         currentID = id

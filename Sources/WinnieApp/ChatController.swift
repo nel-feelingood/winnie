@@ -274,39 +274,9 @@ final class ChatController: ObservableObject {
             lastFlush = .now
         }
 
-        // Resolved per answer: an expired OAuth token is refreshed here, before the request needs it.
-        let apps = await mcp.servers(for: settings.connectors)
-        let apis = settings.resolvedAPIs
         do {
             if let keyProblem { throw keyProblem }
-            for try await event in client.streamReply(apiKey: apiKey, model: settings.model,
-                                                             masterPrompt: settings.masterPrompt, history: history,
-                                                             spoken: speaks,
-                                                             imageLoader: { ImageStore.data(for: $0) },
-                                                             toolHandler: { [reminders, memory, settings, smokeBreak = onSmokeBreak, mail = MailTools(client: gmail.client),
-                                                                             custom = CustomAPITools(apis: apis)] name, input in
-                                                                 if name == CustomAPIToolSchema.name { return await custom.execute(input: input) }
-                                                                 if MailToolSchema.names.contains(name) {
-                                                                     return await mail.execute(name: name, input: input)
-                                                                 }
-                                                                 if EnvironmentToolSchema.names.contains(name) {
-                                                                     return await MainActor.run {
-                                                                         EnvironmentTools(settings: settings, reminders: reminders, onSmokeBreak: smokeBreak).execute(name: name, input: input)
-                                                                     }
-                                                                 }
-                                                                 if MemoryToolSchema.names.contains(name) {
-                                                                     return await MainActor.run {
-                                                                         MemoryTools(store: memory).execute(name: name, input: input)
-                                                                     }
-                                                                 }
-                                                                 return await MainActor.run {
-                                                                     ReminderTools(store: reminders).execute(name: name, input: input)
-                                                                 }
-                                                             },
-                                                             offersMail: gmail.isConnected,
-                                                             memory: memory.notes,
-                                                             apps: apps,
-                                                             apis: apis.map(\.api)) {
+            for try await event in await replyEvents(apiKey: apiKey, history: history, spoken: speaks) {
                 switch event {
                 case .textDelta(let piece):
                     if searchStatus != nil { searchStatus = nil }
@@ -357,6 +327,80 @@ final class ChatController: ObservableObject {
             store.save()
             if !speaker.isSpeaking { onActivity(.none) }
         }
+    }
+
+    /// One answer from the model with every tool Winnie has. The chat and the Telegram bridge
+    /// both go through here, so they cannot drift apart in what Winnie is able to do.
+    private func replyEvents(apiKey: String, history: [ChatMessage], spoken: Bool, channelNote: String = "")
+        async -> AsyncThrowingStream<StreamEvent, Error>
+    {
+        // Resolved per answer: an expired OAuth token is refreshed here, before the request needs it.
+        let apps = await mcp.servers(for: settings.connectors)
+        let apis = settings.resolvedAPIs
+        return client.streamReply(
+            apiKey: apiKey, model: settings.model, masterPrompt: settings.masterPrompt, history: history, spoken: spoken,
+            imageLoader: { ImageStore.data(for: $0) },
+            toolHandler: { [reminders, memory, settings, smokeBreak = onSmokeBreak, mail = MailTools(client: gmail.client),
+                            custom = CustomAPITools(apis: apis)] name, input in
+                if name == CustomAPIToolSchema.name { return await custom.execute(input: input) }
+                if MailToolSchema.names.contains(name) { return await mail.execute(name: name, input: input) }
+                if EnvironmentToolSchema.names.contains(name) {
+                    return await MainActor.run {
+                        EnvironmentTools(settings: settings, reminders: reminders, onSmokeBreak: smokeBreak).execute(name: name, input: input)
+                    }
+                }
+                if MemoryToolSchema.names.contains(name) {
+                    return await MainActor.run { MemoryTools(store: memory).execute(name: name, input: input) }
+                }
+                return await MainActor.run { ReminderTools(store: reminders).execute(name: name, input: input) }
+            },
+            offersMail: gmail.isConnected, memory: memory.notes, apps: apps, apis: apis.map(\.api), channelNote: channelNote)
+    }
+
+    // MARK: - Telegram
+
+    /// Stable id of the chat that mirrors the Telegram conversation.
+    private static let telegramSessionID = UUID(uuidString: "7E1E6A00-0000-4000-8000-00000000B0B0")!
+    /// Older turns are dropped from what is sent: a phone conversation can run for weeks.
+    private static let telegramHistoryLimit = 24
+
+    /// Answers a message that arrived through the bot. It lives in its own chat, beside
+    /// whatever is open on screen, and never touches the UI state of the visible chat.
+    func answerTelegram(_ text: String) async -> String {
+        let sessionID = Self.telegramSessionID
+        store.detachedSession(id: sessionID, title: "Telegram")
+        store.append(ChatMessage(role: .user, text: text), to: sessionID)
+        let history = Array((store.sessions.first { $0.id == sessionID }?.messages ?? []).suffix(Self.telegramHistoryLimit))
+
+        let apiKey = Keychain.loadAPIKey()
+        var answer = ""
+        var sources: [Source] = []
+        do {
+            if apiKey.isEmpty { throw Keychain.hasAPIKey ? ClaudeError.keychainUnavailable(code: Int(Keychain.lastFailure ?? 0)) : ClaudeError.missingAPIKey }
+            for try await event in await replyEvents(apiKey: apiKey, history: history, spoken: false, channelNote: TelegramAPI.channelNote) {
+                switch event {
+                case .textDelta(let piece): answer += piece
+                case .usage(let sample): usage.record(sample)
+                case .sources(let found): sources = found
+                case .searching, .toolUse: break
+                }
+            }
+        } catch {
+            let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            store.append(ChatMessage(role: .assistant, text: message, isError: true), to: sessionID)
+            return message
+        }
+        answer = answer.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !answer.isEmpty else { return "…" }
+        store.append(ChatMessage(role: .assistant, text: answer, sources: sources), to: sessionID)
+        // Telegram shows no source list of its own, so the links travel with the text.
+        let links = sources.prefix(3).map(\.url).joined(separator: "\n")
+        return links.isEmpty ? answer : answer + "\n\n" + links
+    }
+
+    /// Wipes the Telegram conversation's context («/new» in the bot).
+    func resetTelegramChat() {
+        store.delete(Self.telegramSessionID)
     }
 
     private static func status(forTool name: String) -> String {

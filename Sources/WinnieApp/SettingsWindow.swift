@@ -53,6 +53,7 @@ struct SettingsView: View {
     @ObservedObject var memory: MemoryStore
     @ObservedObject var usage: UsageStore
     @ObservedObject var mcp: MCPAuth
+    @ObservedObject var telegram: TelegramBridge
     let actions: SettingsActions
     @ObservedObject var navigation: SettingsNavigation
 
@@ -229,6 +230,7 @@ struct SettingsView: View {
     @ViewBuilder private var apiPane: some View {
         claudeSection
         mailSection
+        TelegramSection(telegram: telegram)
         customAPISection
     }
 
@@ -464,6 +466,53 @@ extension SettingsView {
     }
 }
 
+private struct TelegramSection: View {
+    @ObservedObject var telegram: TelegramBridge
+    @State private var token = ""
+
+    var body: some View {
+        Section {
+            switch telegram.status {
+            case .off:
+                SecureField("Токен бота", text: $token, prompt: Text("123456:ABC… от @BotFather"))
+                Button("Подключить бота") {
+                    telegram.saveToken(token.trimmingCharacters(in: .whitespacesAndNewlines))
+                    token = ""
+                }
+                .disabled(token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            case .connecting:
+                Label("Подключаюсь к Telegram…", systemImage: "ellipsis.circle").foregroundStyle(.secondary)
+                Button("Отключить") { telegram.disconnect() }
+            case .waitingForCode:
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Отправь этот код своему боту в Telegram")
+                        Text("Кто первым пришлёт код, тому бот и будет отвечать.").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text(telegram.pairingCode).font(.system(size: 22, weight: .semibold, design: .monospaced)).textSelection(.enabled)
+                }
+                Button("Отключить") { telegram.disconnect() }
+            case .connected(let name):
+                HStack {
+                    Label(name.isEmpty ? "Бот привязан" : "Бот отвечает: \(name)", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                    Spacer()
+                    Button("Отвязать") { telegram.unpair() }
+                    Button("Отключить") { telegram.disconnect() }
+                }
+                Toggle("Присылать напоминания в Telegram", isOn: Binding(get: { telegram.forwardsReminders }, set: { telegram.forwardsReminders = $0 }))
+            case .failed(let reason):
+                Label(reason, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                Button("Отключить") { telegram.disconnect() }
+            }
+        } header: {
+            Text("Telegram")
+        } footer: {
+            Footnote("Свой бот от @BotFather: пиши ему с телефона — отвечает Винни с этого мака, со всеми своими инструментами. Работает, пока Winnie запущен. Бот отвечает только одному чату — тому, что прислал код; остальным молчит. Токен хранится в Связке ключей.")
+        }
+    }
+}
+
 private struct NewAPIForm: View {
     let onAdd: (CustomAPI, _ key: String) -> Void
 
@@ -629,9 +678,10 @@ final class SettingsWindowController {
     private let makeView: (SettingsNavigation) -> SettingsView
 
     init(settings: AppSettings, gmail: GmailAuth, memory: MemoryStore, usage: UsageStore, mcp: MCPAuth,
-         actions: SettingsActions) {
+         telegram: TelegramBridge, actions: SettingsActions) {
         makeView = { navigation in
-            SettingsView(settings: settings, gmail: gmail, memory: memory, usage: usage, mcp: mcp, actions: actions,
+            SettingsView(settings: settings, gmail: gmail, memory: memory, usage: usage, mcp: mcp, telegram: telegram,
+                         actions: actions,
                          navigation: navigation)
         }
     }

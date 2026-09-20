@@ -9,6 +9,7 @@ enum Keychain {
         case googleClientID = "google-client-id"
         case googleClientSecret = "google-client-secret"
         case googleRefreshToken = "google-refresh-token"
+        case telegramBotToken = "telegram-bot-token"
     }
 
     private static let service = "local.winnie.pet"

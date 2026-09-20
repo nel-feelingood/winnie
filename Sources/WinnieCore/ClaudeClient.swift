@@ -74,8 +74,8 @@ public struct ClaudeClient: Sendable {
     }
 
     /// The part that changes between requests. Kept out of the cached block.
-    static func volatilePrompt(spoken: Bool, now: Date) -> String {
-        "Now: \(clock(now))." + (spoken ? "\n\n" + spokenNote : "")
+    static func volatilePrompt(spoken: Bool, channelNote: String = "", now: Date) -> String {
+        "Now: \(clock(now))." + (spoken ? "\n\n" + spokenNote : "") + (channelNote.isEmpty ? "" : "\n\n" + channelNote)
     }
 
     /// What the user asked to remember, plus the rules for changing that list.
@@ -158,7 +158,8 @@ public struct ClaudeClient: Sendable {
     }
 
     static func requestBody(model: ModelOption, master: String = MasterPrompt.standard, spoken: Bool = false,
-                            mail: Bool = false, memory: [MemoryNote] = [], apps: [MCPServer] = [], apis: [CustomAPI] = [], clientTools: [[String: Any]] = [],
+                            mail: Bool = false, memory: [MemoryNote] = [], apps: [MCPServer] = [], apis: [CustomAPI] = [],
+                            channelNote: String = "", clientTools: [[String: Any]] = [],
                             messages: [[String: Any]], now: Date = Date()) -> [String: Any] {
         var body: [String: Any] = [
             "model": model.rawValue,
@@ -168,7 +169,7 @@ public struct ClaudeClient: Sendable {
                 // Tools render before system, so this breakpoint caches tool definitions too.
                 ["type": "text", "text": systemPrompt(master: master, mail: mail, memory: memory, apps: apps.map(\.name), apis: apis),
                  "cache_control": ["type": "ephemeral"]],
-                ["type": "text", "text": volatilePrompt(spoken: spoken, now: now)],
+                ["type": "text", "text": volatilePrompt(spoken: spoken, channelNote: channelNote, now: now)],
             ],
             // Auto-places a second breakpoint at the end of the conversation: within one answer
             // the tool loop re-sends everything, and follow-up questions re-send the history.
@@ -207,7 +208,7 @@ public struct ClaudeClient: Sendable {
     public func streamReply(apiKey: String, model: ModelOption, masterPrompt: String, history: [ChatMessage],
                             spoken: Bool = false, imageLoader: @escaping ImageLoader = { _ in nil },
                             toolHandler: ToolHandler? = nil, offersMail: Bool = false, memory: [MemoryNote] = [],
-                            apps: [MCPServer] = [], apis: [CustomAPI] = [])
+                            apps: [MCPServer] = [], apis: [CustomAPI] = [], channelNote: String = "")
         -> AsyncThrowingStream<StreamEvent, Error>
     {
         AsyncThrowingStream { continuation in
@@ -226,7 +227,7 @@ public struct ClaudeClient: Sendable {
                     for _ in 0..<(Self.maxResumes + Self.maxToolSteps) {
                         let turn = try await runTurn(apiKey: apiKey, model: model, master: masterPrompt, spoken: spoken,
                                                      usesTools: usesTools, offersMail: offersMail, memory: memory,
-                                                     apps: apps, apis: apis, now: startedAt, messages: messages) {
+                                                     apps: apps, apis: apis, channelNote: channelNote, now: startedAt, messages: messages) {
                             continuation.yield($0)
                         }
                         if let usage = turn.usage { continuation.yield(.usage(usage)) }
@@ -278,7 +279,8 @@ public struct ClaudeClient: Sendable {
     }
 
     private func runTurn(apiKey: String, model: ModelOption, master: String, spoken: Bool, usesTools: Bool,
-                         offersMail: Bool, memory: [MemoryNote], apps: [MCPServer], apis: [CustomAPI], now: Date, messages: [[String: Any]],
+                         offersMail: Bool, memory: [MemoryNote], apps: [MCPServer], apis: [CustomAPI], channelNote: String,
+                         now: Date, messages: [[String: Any]],
                          emit: (StreamEvent) -> Void) async throws -> TurnAccumulator
     {
         // Mail tools are offered only while Gmail is connected, so the model never promises mail it cannot read.
@@ -287,7 +289,8 @@ public struct ClaudeClient: Sendable {
             + (offersMail ? MailToolSchema.definitions : [])
             + (apis.isEmpty ? [] : [CustomAPIToolSchema.definition(for: apis)])
         let body = Self.requestBody(model: model, master: master, spoken: spoken, mail: usesTools && offersMail,
-                                    memory: memory, apps: apps, apis: usesTools ? apis : [], clientTools: clientTools, messages: messages, now: now)
+                                    memory: memory, apps: apps, apis: usesTools ? apis : [], channelNote: channelNote,
+                                    clientTools: clientTools, messages: messages, now: now)
         let betas = Self.betas(model: model, hasApps: !apps.isEmpty)
         let request = try Self.urlRequest(apiKey: apiKey, body: body, betas: betas)
 
