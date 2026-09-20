@@ -85,7 +85,7 @@ h1 em { font-style: normal; color: var(--acc); }
 
 .prompt { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
 .prompt-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 18px; border-bottom: 1px solid var(--line);
-               font: 12px var(--mono); text-transform: uppercase; letter-spacing: .04em; color: var(--soft); }
+               font: 600 17px var(--sans); letter-spacing: -.01em; color: var(--ink); }
 .prompt pre { margin: 0; padding: 16px 18px; max-height: 148px; overflow-y: auto; white-space: pre-wrap; overflow-wrap: anywhere; scrollbar-width: thin;
               font: 12.5px/1.65 var(--mono); color: var(--soft); }
 .prompt.tall pre { max-height: 420px; }
