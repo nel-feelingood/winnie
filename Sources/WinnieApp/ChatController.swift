@@ -364,7 +364,7 @@ final class ChatController: ObservableObject {
         switch name {
         case "call_api": return "Обращаюсь к API…"
         case "get_settings": return "Смотрю настройки…"
-        case "update_settings", "add_quick_action", "remove_quick_action": return "Меняю настройки…"
+        case "update_settings", "add_quick_action", "remove_quick_action", "move_quick_action": return "Меняю настройки…"
         case "delete_all_reminders": return "Удаляю события…"
         case "play_smoke_break": return "16:20…"
         case "list_emails": return "Смотрю почту…"

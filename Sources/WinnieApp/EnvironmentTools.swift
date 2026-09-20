@@ -50,6 +50,18 @@ struct EnvironmentTools {
             settings.quickActions.removeAll { Self.same($0.text, text) }
             return ToolOutcome("Removed the button «\(text)».")
 
+        case .moveQuickAction(let text, let position):
+            guard let index = settings.quickActions.firstIndex(where: { Self.same($0.text, text) }) else {
+                let existing = settings.quickActions.map { "«\($0.text)»" }.joined(separator: ", ")
+                return ToolOutcome("No button «\(text)». Existing: \(existing.isEmpty ? "none" : existing).", isError: true)
+            }
+            var actions = settings.quickActions
+            let action = actions.remove(at: index)
+            actions.insert(action, at: min(position - 1, actions.count))
+            settings.quickActions = actions
+            let order = actions.enumerated().map { "\($0.offset + 1). «\($0.element.text)»" }.joined(separator: ", ")
+            return ToolOutcome("Moved. The order is now: \(order).")
+
         case .playSmokeBreak:
             onSmokeBreak()
             return ToolOutcome("The smoke-break animation is playing.")
@@ -62,8 +74,8 @@ struct EnvironmentTools {
     }
 
     private var summary: String {
-        let buttons = settings.quickActions.map { action in
-            "\n  - «\(action.text)»\(action.sendsImmediately ? "" : " (fills the field)") → sends: \(action.message)"
+        let buttons = settings.quickActions.enumerated().map { index, action in
+            "\n  \(index + 1). «\(action.text)»\(action.sendsImmediately ? "" : " (fills the field)") → sends: \(action.message)"
         }.joined()
         return """
         pet_size_percent: \(Int((settings.petScale * 100).rounded()))

@@ -35,6 +35,16 @@ import Testing
         #expect(parse("remove_quick_action", ["text": "Переведи"]) == .command(.removeQuickAction(text: "Переведи")))
     }
 
+    @Test func buttonsCanBeMovedToAPosition() {
+        #expect(parse("move_quick_action", ["text": " Помодоро ", "position": 1]) == .command(.moveQuickAction(text: "Помодоро", position: 1)))
+        #expect(parse("move_quick_action", ["text": "Переведи", "position": 99.0]) == .command(.moveQuickAction(text: "Переведи", position: 99)))
+        #expect(parse("move_quick_action", ["text": "Переведи", "position": 0])
+            == .problem("position is required: 1 for first, 2 for second, and so on; a large number means last."))
+        #expect(parse("move_quick_action", ["position": 2]) == .problem("text is required."))
+        // Reordering is a lasting change, so it is guarded like the others.
+        #expect(EnvironmentToolSchema.guardedNames.contains("move_quick_action"))
+    }
+
     @Test func readingIsNeverGuardedButChangesAre() {
         #expect(parse("get_settings") == .command(.readSettings))
         #expect(parse("delete_all_reminders") == .command(.deleteAllReminders))

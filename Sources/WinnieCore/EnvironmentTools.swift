@@ -22,6 +22,8 @@ public enum EnvironmentCommand: Equatable, Sendable {
     case update(SettingsPatch)
     case addQuickAction(label: String, instruction: String, sendsImmediately: Bool)
     case removeQuickAction(text: String)
+    /// `position` is 1-based; values past the end mean "last".
+    case moveQuickAction(text: String, position: Int)
     case deleteAllReminders
     case playSmokeBreak
 
@@ -56,6 +58,12 @@ public enum EnvironmentCommand: Equatable, Sendable {
             guard let text = (arguments["text"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty
             else { return .problem("text is required.") }
             return .command(.removeQuickAction(text: text))
+        case "move_quick_action":
+            guard let text = (arguments["text"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty
+            else { return .problem("text is required.") }
+            guard let position = (arguments["position"] as? Int) ?? (arguments["position"] as? Double).map(Int.init), position >= 1
+            else { return .problem("position is required: 1 for first, 2 for second, and so on; a large number means last.") }
+            return .command(.moveQuickAction(text: text, position: position))
         case "update_settings":
             return parsePatch(arguments)
         default:
@@ -95,7 +103,7 @@ public enum EnvironmentCommand: Equatable, Sendable {
 
 public enum EnvironmentToolSchema {
     public static let names: Set<String> = ["get_settings", "update_settings", "add_quick_action", "remove_quick_action",
-                                            "delete_all_reminders", "play_smoke_break"]
+                                            "delete_all_reminders", "play_smoke_break", "move_quick_action"]
 
     public static let definitions: [[String: Any]] = [
         [
@@ -137,6 +145,18 @@ public enum EnvironmentToolSchema {
             "name": "remove_quick_action",
             "description": "Remove a quick action button by its label (case-insensitive). Get the exact labels from get_settings if unsure. To change a button, remove it and add it again.",
             "input_schema": ["type": "object", "properties": ["text": ["type": "string", "description": "The button's label."]], "required": ["text"]],
+        ],
+        [
+            "name": "move_quick_action",
+            "description": "Move a quick action button to another place in the row, e.g. «поставь Помодоро первым», «перенеси Переведи в конец». Get the labels and their current order from get_settings if unsure.",
+            "input_schema": [
+                "type": "object",
+                "properties": [
+                    "text": ["type": "string", "description": "The button's label (case-insensitive)."],
+                    "position": ["type": "integer", "description": "Where it should end up, counting from 1: 1 is first. Use 99 for last."],
+                ],
+                "required": ["text", "position"],
+            ],
         ],
         [
             "name": "play_smoke_break",
