@@ -145,11 +145,17 @@ struct SettingsView: View {
             Section("Голос") {
                 Toggle("Отвечать вслух на голосовые вопросы", isOn: $settings.speaksReplies)
                 Toggle("Проговаривать напоминания вслух", isOn: $settings.speaksReminders)
-                ShortcutRecorder(title: "Спросить голосом", shortcut: $settings.voiceShortcut)
-                ShortcutRecorder(title: "Новый диалог голосом", shortcut: $settings.newVoiceShortcut)
+                ShortcutRecorder(title: "Спросить голосом", shortcut: $settings.voiceShortcut) {
+                    settings.isFree($0, for: \.voiceShortcut)
+                }
+                ShortcutRecorder(title: "Новый диалог голосом", shortcut: $settings.newVoiceShortcut) {
+                    settings.isFree($0, for: \.newVoiceShortcut)
+                }
             }
             Section("Шорткат") {
-                ShortcutRecorder(title: "Показать / спрятать Винни", shortcut: $settings.shortcut)
+                ShortcutRecorder(title: "Показать / спрятать Винни", shortcut: $settings.shortcut) {
+                    settings.isFree($0, for: \.shortcut)
+                }
             }
         }
         .formStyle(.grouped)
@@ -165,14 +171,18 @@ struct SettingsView: View {
 private struct ShortcutRecorder: View {
     let title: String
     @Binding var shortcut: Shortcut
+    /// False for a combination another Winnie shortcut already uses.
+    let isFree: (Shortcut) -> Bool
 
     @State private var isRecording = false
+    @State private var isTaken = false
     @State private var monitor: Any?
 
     var body: some View {
         HStack {
             Text(title)
             Spacer()
+            if isTaken { Text("уже занято другим шорткатом").font(.caption).foregroundStyle(.red) }
             Button(isRecording ? "Нажми сочетание…" : shortcut.display) {
                 isRecording ? stopRecording() : startRecording()
             }
@@ -182,8 +192,12 @@ private struct ShortcutRecorder: View {
 
     private func startRecording() {
         isRecording = true
+        isTaken = false
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            if let recorded = Shortcut(event: event) { shortcut = recorded }
+            if let recorded = Shortcut(event: event) {
+                isTaken = !isFree(recorded)
+                if !isTaken { shortcut = recorded }
+            }
             stopRecording()
             return nil
         }

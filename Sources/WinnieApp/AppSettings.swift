@@ -3,6 +3,11 @@ import Carbon.HIToolbox
 import WinnieCore
 
 struct Shortcut: Codable, Equatable {
+    /// Same keys, whatever the display string says.
+    func collides(with other: Shortcut) -> Bool {
+        keyCode == other.keyCode && modifiers == other.modifiers
+    }
+
     var keyCode: UInt32
     /// Carbon modifier mask (cmdKey, optionKey, ...).
     var modifiers: UInt32
@@ -79,12 +84,19 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(speaksReminders, forKey: "speaksReminders") }
     }
 
+    /// Whether `candidate` is free to be assigned to the shortcut stored at `slot`.
+    func isFree(_ candidate: Shortcut, for slot: KeyPath<AppSettings, Shortcut>) -> Bool {
+        let slots: [KeyPath<AppSettings, Shortcut>] = [\.shortcut, \.voiceShortcut, \.newVoiceShortcut]
+        return !slots.contains { $0 != slot && self[keyPath: $0].collides(with: candidate) }
+    }
+
     init() {
         speaksReminders = defaults.bool(forKey: "speaksReminders")
         voiceIdentifier = defaults.string(forKey: "voiceIdentifier") ?? ""
         let pitch = defaults.double(forKey: "voicePitch"), rate = defaults.double(forKey: "voiceRate")
         // Neutral by default: an altered pitch only suits a good voice, and that is for the ear to judge.
         voicePitch = Self.voicePitchRange.contains(pitch) ? pitch : 1.0
+
         voiceRate = Self.voiceRateRange.contains(rate) ? rate : 0.52
         voiceShortcut = defaults.data(forKey: "voiceShortcut")
             .flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .defaultVoice
@@ -97,6 +109,17 @@ final class AppSettings: ObservableObject {
         model = defaults.string(forKey: "model").flatMap(ModelOption.init) ?? .opus
         shortcut = defaults.data(forKey: "shortcut")
             .flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .default
+        resolveShortcutCollisions()
+    }
+
+    private func resolveShortcutCollisions() {
+        // Two shortcuts on one key combination: macOS registers only the first, so the other
+        // would silently do nothing. The one the user asked for by name keeps the keys.
+        if voiceShortcut.collides(with: newVoiceShortcut) || voiceShortcut.collides(with: shortcut) {
+            voiceShortcut = [.defaultVoice, Shortcut(keyCode: UInt32(kVK_ANSI_M), modifiers: UInt32(controlKey | optionKey), display: "⌃⌥M")]
+                .first { !$0.collides(with: newVoiceShortcut) && !$0.collides(with: shortcut) } ?? .defaultVoice
+        }
+        if newVoiceShortcut.collides(with: shortcut) { newVoiceShortcut = .defaultNewVoice }
     }
 
     var petOrigin: NSPoint? {
