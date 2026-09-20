@@ -1,78 +1,71 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Сценарии использования Winnie</title>
-<meta name="description" content="Как пользоваться Winnie: перевод, поиск, напоминания, сводка почты, разбор скриншотов, заметки, диктовка, Telegram, MCP.">
-<meta property="og:title" content="Сценарии использования Winnie">
-<meta property="og:description" content="Как пользоваться Winnie: перевод, поиск, напоминания, сводка почты, разбор скриншотов, заметки, диктовка, Telegram, MCP.">
+<title>Сценарии – Winnie</title>
+<meta name="description" content="Сценарии использования Winnie: диктовка, напоминания, быстрые команды, заметки, перевод, поиск, скриншоты, Telegram, MCP.">
+<meta property="og:title" content="Сценарии – Winnie">
+<meta property="og:description" content="Сценарии использования Winnie: диктовка, напоминания, быстрые команды, заметки, перевод, поиск, скриншоты, Telegram, MCP.">
 <meta property="og:image" content="https://nel-feelingood.github.io/winnie/images/sprites/hover.png">
 <meta property="og:url" content="https://nel-feelingood.github.io/winnie/usecases.html">
 <link rel="icon" href="images/favicon.png">
+<script>/* Theme before first paint: saved choice, otherwise the system's. */
+(function(){var t=null;try{t=localStorage.getItem('theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div class="wrap">
-  <nav>
+<div class="w">
+  <header class="top">
     <a class="brand" href="index.html"><img src="images/favicon.png" alt="">Winnie</a>
-    <div class="nav-links">
-      <a href="features.html">Возможности</a>
-      <a href="usecases.html" class="on">Сценарии</a>
-      <a href="settings.html">Настройки</a>
-      <a href="install.html">Установка</a>
-      <a href="about.html">Автор</a>
-      <a href="https://github.com/nel-feelingood/winnie">GitHub</a>
-    </div>
+    <nav class="seg compact" aria-label="Вкладки приложения"><a href="chat.html">Chat</a><a href="events.html">Events</a><a href="notes.html">Notes</a></nav>
+    <nav class="top-links"><a href="features.html">Возможности</a><a href="usecases.html" class="on">Сценарии</a><a href="settings.html">Настройки</a><a href="install.html">Установка</a><a href="about.html">Автор</a></nav>
+    <button class="pill icon" id="theme" type="button" aria-label="Тема: как в системе"></button>
+    <a class="pill gh" href="https://github.com/nel-feelingood/winnie"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+    <button class="pill icon" id="burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="drawer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg></button>
+  </header>
+</div>
+
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer-back" data-close></div>
+  <nav class="drawer-panel" aria-label="Меню">
+    <button class="pill icon" type="button" data-close aria-label="Закрыть меню"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <p class="drawer-label">Вкладки приложения</p>
+    <a href="chat.html">Chat</a><a href="events.html">Events</a><a href="notes.html">Notes</a>
+    <p class="drawer-label">Сайт</p>
+    <a href="features.html">Возможности</a><a href="usecases.html">Сценарии</a><a href="settings.html">Настройки</a><a href="install.html">Установка</a><a href="about.html">Автор</a>
+    <a href="https://github.com/nel-feelingood/winnie">GitHub</a>
   </nav>
 </div>
-<main class="wrap subpage">
-  <span class="eyebrow">Сценарии</span>
-  <h1>Для чего он на самом деле нужен</h1>
-  <p class="lead">Мелкие дела, ради которых жалко открывать браузер. Спросил, получил ответ, закрыл — чат одноразовый.</p>
-  <div class="cases">
-    <div class="case"><h3>🌍 Быстрый перевод</h3><div class="say">Переведи на английский, вежливо: «давайте перенесём созвон на четверг»</div>
-      <p>Выделил текст в ответе — всплывает кнопка Copy. Вставил в письмо и забыл про чат.</p></div>
-    <div class="case"><h3>🔎 Найти и не утонуть во вкладках</h3><div class="say">Во сколько завтра закрывается мэрия и что взять с собой?</div>
-      <p>Ищет в вебе сам и отвечает коротко, со ссылками на источники.</p></div>
-    <div class="case"><h3>⏰ Напоминание на бегу</h3><div class="say">Напомни через 40 минут достать пирог, и каждый будний день в 10 — стендап</div>
-      <p>В нужный момент придёт уведомление, а медведь откроет чат. Можно ответить «отложи на час».</p></div>
-    <div class="case"><h3>📬 Утренняя сводка почты</h3><div class="say">Что важного в почте со вчера?</div>
-      <p>Дайджест с заголовками и списками: что требует ответа, что просто к сведению. Удобно повесить на кнопку.</p></div>
-    <div class="case"><h3>📸 «Что это за ошибка?»</h3><div class="say">[скриншот области экрана] что не так и как починить?</div>
-      <p>Камера прячет чат, даёт выделить область и возвращает снимок во вложении.</p></div>
-    <div class="case"><h3>📝 Заметки голосом и текстом</h3><div class="say">Запиши в заметку «Идеи»: добавить прогулку по экрану</div>
-      <p>Медведь создаёт и дополняет заметки сам. Сослаться на заметку можно через <code>@</code>.</p></div>
-    <div class="case"><h3>🎙️ Руки заняты</h3><div class="say">⇧⌘E → «сколько граммов в стакане муки?»</div>
-      <p>Один шорткат включает диктовку из любого приложения. Ответ Винни может прочитать вслух.</p></div>
-    <div class="case"><h3>✈️ С телефона</h3><div class="say">Telegram: напомни вечером оплатить интернет</div>
-      <p>Бот — тот же Винни с той же памятью и событиями. Напоминания дублируются в Telegram.</p></div>
-    <div class="case"><h3>⏱️ Таймер одной кнопкой</h3><div class="say">Кнопка «20 минут» → «Поставь таймер на 20 минут, потом перерыв на 10»</div>
-      <p>Быстрое действие хранит подпись и полную инструкцию — не нужно каждый раз объяснять.</p></div>
-    <div class="case"><h3>🗂️ Рабочие задачи через MCP</h3><div class="say">Какие задачи на мне сегодня?</div>
-      <p>Подключи трекер по MCP — и медведь отвечает по живым данным, не открывая трекер.</p></div>
-    <div class="case"><h3>🎛️ Настройка словами</h3><div class="say">Стань поменьше, выключи сны и добавь кнопку «Сводка почты»</div>
-      <p>Настройки меняются из чата — окно настроек можно вообще не открывать.</p></div>
-    <div class="case"><h3>🧠 Личные правила</h3><div class="say">Запомни: письма клиентам я пишу на «вы» и без смайликов</div>
-      <p>Память действует во всех будущих чатах, список виден в настройках.</p></div>
-  </div>
-  <div class="next">
-    <a class="btn btn-primary" href="index.html#top">Установить по промпту</a>
-    <a class="btn btn-ghost" href="https://github.com/nel-feelingood/winnie"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
-  </div>
-</main>
 
-<footer>
-  <div class="wrap">
-    <div class="row">
-      <span>© 2026 Sergey Donskov · исходный код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
-      <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="about.html">Об авторе</a> · <a href="mailto:nelfeelingood@gmail.com?subject=Winnie">nelfeelingood@gmail.com</a></span>
-    </div>
-    <p>Лицензия MIT распространяется только на код. Винни-Пух — персонаж фильмов Фёдора Хитрука («Союзмультфильм»);
-      изображения нарисованы для личного использования и лицензией не покрываются. Проект не связан с Anthropic, Google и Telegram.</p>
-  </div>
-</footer>
+<div class="w">
+  <h1 class="ph"><span class="l"><i>Сценарии.</i></span><span class="l"><i>Мелкие дела, ради которых жалко открывать браузер.</i></span></h1>
+  <p class="sub lone">Каждый сценарий занимает одну реплику. Диалог одноразовый.</p>
+  <section><div class="casegrid">
+      <article class="case"><span class="ico" aria-hidden="true">🎙️</span><h3>Руки заняты</h3><div class="mini"><span class="say">⇧⌘E, затем голосом: сколько граммов в стакане муки?</span><span class="ans">Около 130 граммов.</span></div><p>Шорткат работает из любого приложения. Ответ можно получить вслух.</p></article>
+      <article class="case"><span class="ico" aria-hidden="true">⏰</span><h3>Напоминание на бегу</h3><div class="mini"><span class="say">напомни через 40 минут достать пирог</span><span class="ans">Напомню в 14:40.</span></div><p>Уведомление придёт, даже если медведь спрятан.</p></article>
+      <article class="case"><span class="ico" aria-hidden="true">⚡</span><h3>Утренняя сводка одной кнопкой</h3><div class="mini"><span class="say">кнопка «Проверь почту»</span><span class="ans">Два письма ждут ответа, остальное рассылки.</span></div><p>Инструкция хранится в кнопке, каждый раз объяснять не нужно.</p></article>
+      <article class="case"><span class="ico" aria-hidden="true">📝</span><h3>Мысль, пока не забылась</h3><div class="mini"><span class="say">запиши в Идеи: прогулка по экрану</span><span class="ans">Добавил в заметку «Идеи».</span></div><p>Заметка остаётся Markdown-файлом на диске.</p></article>
+      <article class="case"><span class="ico" aria-hidden="true">🌍</span><h3>Быстрый перевод</h3><div class="mini"><span class="say">переведи вежливо: давайте перенесём созвон на четверг</span><span class="ans">Could we please move the call to Thursday?</span></div><p>Ответ выделяется и копируется кнопкой Copy.</p></article>
+      <article class="case"><span class="ico" aria-hidden="true">🔎</span><h3>Найти без вкладок</h3><div class="mini"><span class="say">до скольки сегодня работает мэрия?</span><span class="ans">До 18:00, приём документов до 17:30.</span></div><p>Под ответом ссылка на источник.</p></article>
+      <article class="case"><span class="ico" aria-hidden="true">📸</span><h3>Что это за ошибка</h3><div class="mini"><span class="say">скриншот области экрана: что не так?</span><span class="ans">Не хватает прав на запись в папку.</span></div><p>Камера в поле ввода прикладывает снимок к вопросу.</p></article>
+      <article class="case"><span class="ico" aria-hidden="true">✈️</span><h3>С телефона</h3><div class="mini"><span class="say">в Telegram: напомни вечером оплатить интернет</span><span class="ans">Напомню в 19:00.</span></div><p>Бот отвечает, пока приложение запущено на Mac.</p></article>
+      <article class="case"><span class="ico" aria-hidden="true">🗂️</span><h3>Рабочие задачи через MCP</h3><div class="mini"><span class="say">какие задачи на мне сегодня?</span><span class="ans">Три задачи, одна просрочена.</span></div><p>Трекер подключается как MCP-сервер.</p></article>
+      <article class="case"><span class="ico" aria-hidden="true">🎛️</span><h3>Настройка словами</h3><div class="mini"><span class="say">стань поменьше и добавь кнопку «Сводка почты»</span><span class="ans">Готово.</span></div><p>Окно настроек можно не открывать.</p></article>
+      <article class="case"><span class="ico" aria-hidden="true">🧠</span><h3>Личные правила</h3><div class="mini"><span class="say">запомни: письма клиентам я пишу на «вы»</span><span class="ans">Запомнил.</span></div><p>Действует во всех будущих чатах.</p></article>
+      <article class="case"><span class="ico" aria-hidden="true">⏱️</span><h3>Таймер</h3><div class="mini"><span class="say">кнопка «20 минут»</span><span class="ans">Напомню через 20 минут.</span></div><p>Быстрая команда с инструкцией про таймер и перерыв.</p></article>
+    </div></section>
+  <div class="next"><a class="btn ghost" href="chat.html">Chat</a><a class="btn ghost" href="events.html">Events</a><a class="btn ghost" href="notes.html">Notes</a></div>
+
+</div>
+
+<footer><div class="w">
+  <span>© 2026 Sergey Donskov · код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
+  <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="about.html">Автор</a></span>
+  <p>Лицензия MIT распространяется только на код. Винни-Пух – персонаж фильмов Фёдора Хитрука («Союзмультфильм»), изображения сделаны для личного использования. Проект не связан с Anthropic, Google и Telegram.</p>
+</div></footer>
 <script src="site.js"></script>
 </body>
 </html>

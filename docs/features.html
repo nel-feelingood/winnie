@@ -1,119 +1,124 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Возможности Winnie</title>
-<meta name="description" content="Полный список возможностей Winnie: питомец, чат с Claude, скриншоты, напоминания, заметки, голос, быстрые действия, память и учёт расходов.">
-<meta property="og:title" content="Возможности Winnie">
-<meta property="og:description" content="Полный список возможностей Winnie: питомец, чат с Claude, скриншоты, напоминания, заметки, голос, быстрые действия, память и учёт расходов.">
+<title>Возможности – Winnie</title>
+<meta name="description" content="Все возможности Winnie по группам: медведь, Chat, Events, Notes, интеграции, память и характер, модель и расходы.">
+<meta property="og:title" content="Возможности – Winnie">
+<meta property="og:description" content="Все возможности Winnie по группам: медведь, Chat, Events, Notes, интеграции, память и характер, модель и расходы.">
 <meta property="og:image" content="https://nel-feelingood.github.io/winnie/images/sprites/hover.png">
 <meta property="og:url" content="https://nel-feelingood.github.io/winnie/features.html">
 <link rel="icon" href="images/favicon.png">
+<script>/* Theme before first paint: saved choice, otherwise the system's. */
+(function(){var t=null;try{t=localStorage.getItem('theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div class="wrap">
-  <nav>
+<div class="w">
+  <header class="top">
     <a class="brand" href="index.html"><img src="images/favicon.png" alt="">Winnie</a>
-    <div class="nav-links">
-      <a href="features.html" class="on">Возможности</a>
-      <a href="usecases.html">Сценарии</a>
-      <a href="settings.html">Настройки</a>
-      <a href="install.html">Установка</a>
-      <a href="about.html">Автор</a>
-      <a href="https://github.com/nel-feelingood/winnie">GitHub</a>
-    </div>
+    <nav class="seg compact" aria-label="Вкладки приложения"><a href="chat.html">Chat</a><a href="events.html">Events</a><a href="notes.html">Notes</a></nav>
+    <nav class="top-links"><a href="features.html" class="on">Возможности</a><a href="usecases.html">Сценарии</a><a href="settings.html">Настройки</a><a href="install.html">Установка</a><a href="about.html">Автор</a></nav>
+    <button class="pill icon" id="theme" type="button" aria-label="Тема: как в системе"></button>
+    <a class="pill gh" href="https://github.com/nel-feelingood/winnie"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+    <button class="pill icon" id="burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="drawer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg></button>
+  </header>
+</div>
+
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer-back" data-close></div>
+  <nav class="drawer-panel" aria-label="Меню">
+    <button class="pill icon" type="button" data-close aria-label="Закрыть меню"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <p class="drawer-label">Вкладки приложения</p>
+    <a href="chat.html">Chat</a><a href="events.html">Events</a><a href="notes.html">Notes</a>
+    <p class="drawer-label">Сайт</p>
+    <a href="features.html">Возможности</a><a href="usecases.html">Сценарии</a><a href="settings.html">Настройки</a><a href="install.html">Установка</a><a href="about.html">Автор</a>
+    <a href="https://github.com/nel-feelingood/winnie">GitHub</a>
   </nav>
 </div>
-<main class="wrap subpage">
-  <span class="eyebrow">Возможности</span>
-  <h1>Всё, что умеет Winnie</h1>
-  <p class="lead">Подробный список. Коротко — на <a href="index.html#features">главной</a>, в деле — в <a href="usecases.html">сценариях</a>.</p>
 
-  <div class="shots">
-    <figure><img src="images/chat.png" alt="Вкладка Chat" width="760" height="1040" loading="lazy"><figcaption><b>Chat</b>Быстрые одноразовые диалоги.</figcaption></figure>
-    <figure><img src="images/events.png" alt="Вкладка Events" width="760" height="1040" loading="lazy"><figcaption><b>Events</b>Все напоминания списком.</figcaption></figure>
-    <figure><img src="images/notes.png" alt="Вкладка Notes" width="760" height="1040" loading="lazy"><figcaption><b>Notes</b>Заметки без видимой разметки.</figcaption></figure>
-  </div>
-  <section class="block"><h2>🐻 Питомец</h2>
-    <ul>
-      <li>Живёт поверх всех окон и рабочих столов, не забирая фокус у других приложений.</li>
-      <li>Перетаскивается мышью, место запоминается; размер меняется в настройках или просьбой в чате.</li>
-      <li>Клик открывает последний чат, наведение показывает кнопку New dialog.</li>
-      <li>Значок в строке меню: показать или спрятать, новый чат, выбор модели, настройки.</li>
-      <li>Глобальные шорткаты: <code>⌃⌥Space</code> — показать или спрятать всё, <code>⇧⌘E</code> — диктовка. Оба меняются.</li>
-      <li>Состояния: покой, наведение, раздумье, речь, слушает, ошибка, перетаскивание, сон со снами, перекур в 16:20.</li>
-      <li>Спрайты — обычные PNG в папке приложения: можно нарисовать и подложить свои.</li>
-    </ul></section>
-  <section class="block"><h2>💬 Чат</h2>
-    <ul>
-      <li>Модели Claude Opus 5, Sonnet 5 и Haiku 4.5 — переключаются в меню и в настройках.</li>
-      <li>Ответы печатаются на лету, оформляются Markdown: заголовки, списки, таблицы, код.</li>
-      <li>Веб-поиск со списком источников под ответом; ссылку можно скопировать по наведению.</li>
-      <li>Несколько чатов, названия в одно–три слова придумываются сами, хранение 30 дней, удаление по одному и всех сразу.</li>
-      <li>Выделил текст в ответе — всплывает кнопка Copy.</li>
-      <li>Окно меняет размер и запоминает его; закрывается по <code>Esc</code>.</li>
-    </ul></section>
-  <section class="block"><h2>📸 Скриншоты и картинки</h2>
-    <ul>
-      <li>Кнопка с камерой прячет чат, даёт выделить область экрана и возвращает снимок уже во вложении.</li>
-      <li>Картинка из буфера вставляется по <code>⌘V</code>.</li>
-      <li>Изображения уменьшаются до 1000 px по длинной стороне — экономит токены.</li>
-    </ul></section>
-  <section class="block"><h2>⏰ События</h2>
-    <ul>
-      <li>Напоминания создаются обычной фразой; время понимается относительно текущего.</li>
-      <li>Разовые и повторяющиеся, с понятными короткими названиями.</li>
-      <li>Системное уведомление приходит, даже если Винни спрятан; медведь сам открывает чат и напоминает, не отбирая клавиатуру.</li>
-      <li>Изменить, отложить и удалить можно через медведя: «отложи на час», «удали все напоминания».</li>
-      <li>Пропущенные, пока приложение было закрыто, показываются при запуске.</li>
-    </ul></section>
-  <section class="block"><h2>📝 Заметки</h2>
-    <ul>
-      <li>Хранятся как обычные Markdown-файлы — их можно открыть чем угодно.</li>
-      <li>Редактор показывает готовый текст без значков разметки: заголовки, жирный, курсив, списки, цитаты, код, линии.</li>
-      <li>Меню блоков по <code>/</code>, панель форматирования при выделении, кликабельные чекбоксы, вставка картинок.</li>
-      <li>Закрепление, копирование, «обсудить в новом чате», дата последней правки.</li>
-      <li>Медведь создаёт, дополняет и находит заметки сам; в сообщении на заметку или событие можно сослаться через <code>@</code>.</li>
-    </ul></section>
-  <section class="block"><h2>🎙️ Голос</h2>
-    <ul>
-      <li>Диктовка по кнопке или шорткату из любого приложения; распознавание идёт на устройстве.</li>
-      <li>Озвучка ответов системным голосом, есть стилизация «как в мультике».</li>
-      <li>Отдельно включается: отвечать вслух на голосовые вопросы, проговаривать напоминания.</li>
-      <li>Бесплатно — никаких дополнительных подписок.</li>
-    </ul></section>
-  <section class="block"><h2>⚡ Быстрые действия</h2>
-    <ul>
-      <li>Кнопки в пустом чате: подпись плюс полная инструкция для медведя.</li>
-      <li>Переключатель «сразу» — отправлять по нажатию или подставлять в поле ввода.</li>
-      <li>Порядок меняется перетаскиванием или просьбой в чате.</li>
-    </ul></section>
-  <section class="block"><h2>🧠 Память, характер, расходы</h2>
-    <ul>
-      <li>«Запомни, что…» — заметка в памяти, которая действует во всех чатах; «забудь» — удаляет.</li>
-      <li>Мастер-промпт с характером Винни открыт для редактирования, стандартный возвращается одной кнопкой.</li>
-      <li>Экономный системный промпт с кэшированием, сжатые картинки, короткие названия чатов дешёвой моделью.</li>
-      <li>Расходы по моделям за день, 7 и 30 дней и ссылка на пополнение баланса.</li>
-    </ul></section>
-  <div class="next">
-    <a class="btn btn-primary" href="index.html#top">Установить по промпту</a>
-    <a class="btn btn-ghost" href="https://github.com/nel-feelingood/winnie"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
-  </div>
-</main>
+<div class="w">
+  <h1 class="ph"><span class="l"><i>Возможности.</i></span><span class="l"><i>Всё, что умеет приложение.</i></span></h1>
+  <p class="sub lone">Коротко по группам. Подробности на страницах вкладок, в сценариях и в настройках.</p>
+  <section>
+    <div class="head"><span class="n">01</span><h2>Медведь</h2></div>
+    <ul class="facts">
+      <li><b>Поверх всех окон</b><span>Живёт в углу экрана на всех рабочих столах и не забирает фокус.</span></li>
+      <li><b>Перетаскивание и размер</b><span>Место запоминается. Размер меняется в настройках или просьбой в чате.</span></li>
+      <li><b>Клик и наведение</b><span>Клик открывает последний чат, при наведении появляется кнопка нового диалога.</span></li>
+      <li><b>Строка меню</b><span>Значок с меню: показать или спрятать, новый чат, модель, настройки.</span></li>
+      <li><b>Свои кадры</b><span>Кадры лежат PNG-файлами в папке приложения, их можно заменить.</span></li>
+    </ul>
+  </section>
+  <section>
+    <div class="head"><span class="n">02</span><h2>Chat</h2></div>
+    <ul class="facts">
+      <li><b>Быстрые команды</b><span>Кнопки со своей инструкцией.</span></li>
+      <li><b>Голос</b><span>Диктовка по ⇧⌘E из любого приложения, ответ вслух.</span></li>
+      <li><b>Скриншоты</b><span>Область экрана или картинка из буфера во вложении.</span></li>
+      <li><b>Веб-поиск</b><span>Ссылки на источники под ответом.</span></li>
+    </ul>
+    <p class="more"><a class="btn ghost small" href="chat.html">Подробнее</a></p>
+  </section>
+  <section>
+    <div class="head"><span class="n">03</span><h2>Events</h2></div>
+    <ul class="facts">
+      <li><b>Напоминания фразой</b><span>Разовые и повторяющиеся.</span></li>
+      <li><b>Уведомления</b><span>Приходят, даже когда медведь спрятан.</span></li>
+      <li><b>Правка словами</b><span>Отложить, перенести, удалить.</span></li>
+    </ul>
+    <p class="more"><a class="btn ghost small" href="events.html">Подробнее</a></p>
+  </section>
+  <section>
+    <div class="head"><span class="n">04</span><h2>Notes</h2></div>
+    <ul class="facts">
+      <li><b>Markdown-файлы</b><span>Лежат на диске.</span></li>
+      <li><b>Редактор без разметки</b><span>Меню по /, чекбоксы, картинки.</span></li>
+      <li><b>Медведь пишет сам</b><span>Создаёт, дополняет, находит.</span></li>
+    </ul>
+    <p class="more"><a class="btn ghost small" href="notes.html">Подробнее</a></p>
+  </section>
+  <section>
+    <div class="head"><span class="n">05</span><h2>Интеграции</h2></div>
+    <ul class="facts">
+      <li><b>Claude API</b><span>Прямое подключение со своим ключом. Модели Opus, Sonnet, Haiku.</span></li>
+      <li><b>Gmail</b><span>Сводка и поиск писем. Доступ только на чтение.</span></li>
+      <li><b>Telegram-бот</b><span>Тот же чат с телефона, пока приложение запущено на Mac.</span></li>
+      <li><b>MCP-серверы</b><span>Подключаются по адресу, вход по токену или через OAuth.</span></li>
+      <li><b>Свои HTTP-API</b><span>Адрес, описание и токен. Запросы привязаны к хосту, запись включается отдельно.</span></li>
+    </ul>
+    <p class="more"><a class="btn ghost small" href="install.html#gmail">Подробнее</a></p>
+  </section>
+  <section>
+    <div class="head"><span class="n">06</span><h2>Память и характер</h2></div>
+    <ul class="facts">
+      <li><b>Память</b><span>«Запомни, что…» действует во всех будущих чатах. Записи видны и удаляются в настройках.</span></li>
+      <li><b>Мастер-промпт</b><span>Характер и манера речи редактируются. Стандартный возвращается кнопкой.</span></li>
+      <li><b>Управление из чата</b><span>«Стань побольше», «добавь кнопку» меняют настройки без окна настроек.</span></li>
+    </ul>
+    <p class="more"><a class="btn ghost small" href="settings.html#s-winnie">Подробнее</a></p>
+  </section>
+  <section>
+    <div class="head"><span class="n">07</span><h2>Модель и расходы</h2></div>
+    <ul class="facts">
+      <li><b>Выбор модели</b><span>В меню значка и в настройках.</span></li>
+      <li><b>Учёт</b><span>Запросы, токены и стоимость за день, 7 и 30 дней.</span></li>
+      <li><b>Экономия</b><span>Кэширование промпта, сжатые картинки, названия диалогов дешёвой моделью.</span></li>
+    </ul>
+    <p class="more"><a class="btn ghost small" href="settings.html#s-model">Подробнее</a></p>
+  </section>
+  <div class="next"><a class="btn ghost" href="usecases.html">Сценарии</a><a class="btn ghost" href="settings.html">Настройки</a><a class="btn ghost" href="install.html">Установка</a></div>
 
-<footer>
-  <div class="wrap">
-    <div class="row">
-      <span>© 2026 Sergey Donskov · исходный код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
-      <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="about.html">Об авторе</a> · <a href="mailto:nelfeelingood@gmail.com?subject=Winnie">nelfeelingood@gmail.com</a></span>
-    </div>
-    <p>Лицензия MIT распространяется только на код. Винни-Пух — персонаж фильмов Фёдора Хитрука («Союзмультфильм»);
-      изображения нарисованы для личного использования и лицензией не покрываются. Проект не связан с Anthropic, Google и Telegram.</p>
-  </div>
-</footer>
+</div>
+
+<footer><div class="w">
+  <span>© 2026 Sergey Donskov · код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
+  <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="about.html">Автор</a></span>
+  <p>Лицензия MIT распространяется только на код. Винни-Пух – персонаж фильмов Фёдора Хитрука («Союзмультфильм»), изображения сделаны для личного использования. Проект не связан с Anthropic, Google и Telegram.</p>
+</div></footer>
 <script src="site.js"></script>
 </body>
 </html>

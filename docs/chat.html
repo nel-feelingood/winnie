@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat – Winnie</title>
+<meta name="description" content="Вкладка Chat в Winnie: быстрые команды, диктовка по шорткату, скриншоты, веб-поиск, диалоги на 30 дней, окно с изменяемым размером.">
+<meta property="og:title" content="Chat – Winnie">
+<meta property="og:description" content="Вкладка Chat в Winnie: быстрые команды, диктовка по шорткату, скриншоты, веб-поиск, диалоги на 30 дней, окно с изменяемым размером.">
+<meta property="og:image" content="https://nel-feelingood.github.io/winnie/images/sprites/hover.png">
+<meta property="og:url" content="https://nel-feelingood.github.io/winnie/chat.html">
+<link rel="icon" href="images/favicon.png">
+<script>/* Theme before first paint: saved choice, otherwise the system's. */
+(function(){var t=null;try{t=localStorage.getItem('theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="w">
+  <header class="top">
+    <a class="brand" href="index.html"><img src="images/favicon.png" alt="">Winnie</a>
+    <nav class="seg compact" aria-label="Вкладки приложения"><a href="chat.html" class="on">Chat</a><a href="events.html">Events</a><a href="notes.html">Notes</a></nav>
+    <nav class="top-links"><a href="features.html">Возможности</a><a href="usecases.html">Сценарии</a><a href="settings.html">Настройки</a><a href="install.html">Установка</a><a href="about.html">Автор</a></nav>
+    <button class="pill icon" id="theme" type="button" aria-label="Тема: как в системе"></button>
+    <a class="pill gh" href="https://github.com/nel-feelingood/winnie"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+    <button class="pill icon" id="burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="drawer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg></button>
+  </header>
+</div>
+
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer-back" data-close></div>
+  <nav class="drawer-panel" aria-label="Меню">
+    <button class="pill icon" type="button" data-close aria-label="Закрыть меню"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <p class="drawer-label">Вкладки приложения</p>
+    <a href="chat.html">Chat</a><a href="events.html">Events</a><a href="notes.html">Notes</a>
+    <p class="drawer-label">Сайт</p>
+    <a href="features.html">Возможности</a><a href="usecases.html">Сценарии</a><a href="settings.html">Настройки</a><a href="install.html">Установка</a><a href="about.html">Автор</a>
+    <a href="https://github.com/nel-feelingood/winnie">GitHub</a>
+  </nav>
+</div>
+
+<div class="w">
+  <h1 class="ph"><span class="l"><i>Chat.</i></span><span class="l"><i>Одноразовые диалоги с Claude.</i></span></h1>
+  <div class="hero inner">
+    <div><p class="sub">Открывается по клику на медведя или по шорткату. Вопрос, ответ, окно закрыто. Диалог остаётся в списке на 30 дней.</p></div>
+    <div class="scene" role="img" aria-label="Окно приложения и медведь"><div class="panel"><div class="slot on"><img class="only-light" src="images/app/empty-light.png" alt="" loading="lazy"><img class="only-dark" src="images/app/empty-dark.png" alt="" loading="lazy"></div></div><img class="pet" src="images/sprites/talking.png" alt=""></div>
+  </div>
+  <section id="quick">
+    <div class="head"><span class="n">01</span><h2>Быстрые команды</h2></div>
+    <ul class="facts">
+      <li><b>Кнопки в пустом чате</b><span>У каждой короткая подпись и своя инструкция. На кнопке написано «Проверь почту», отправляется полный текст задания.</span></li>
+      <li><b>Переключатель «сразу»</b><span>Команда отправляется по нажатию или подставляется в поле ввода для правки.</span></li>
+      <li><b>Порядок</b><span>Меняется в настройках или просьбой в чате: «поставь перевод первым».</span></li>
+      <li><b>Шестерёнка в конце ряда</b><span>Открывает настройки команд.</span></li>
+    </ul>
+  </section>
+  <section id="voice">
+    <div class="head"><span class="n">02</span><h2>Голос</h2></div>
+    <ul class="facts">
+      <li><b>⇧⌘E из любого приложения</b><span>Первое нажатие включает микрофон в текущем чате, второе выключает. Закрытый чат сначала открывается. Новый диалог шорткат не создаёт.</span></li>
+      <li><b>Распознавание на устройстве</b><span>Средствами macOS, без сторонних сервисов и подписок.</span></li>
+      <li><b>Ответ вслух</b><span>На голосовой вопрос можно получить голосовой ответ. Голос системный, есть манера «как в мультике».</span></li>
+      <li><b>Шорткат настраивается</b><span>Как и шорткат показа медведя.</span></li>
+    </ul>
+  </section>
+  <section>
+    <div class="head"><span class="n">03</span><h2>Скриншоты и картинки</h2></div>
+    <ul class="facts">
+      <li><b>Камера в поле ввода</b><span>Чат прячется, выделяется область экрана, снимок возвращается во вложении.</span></li>
+      <li><b>Вставка из буфера</b><span>Картинка вставляется по ⌘V.</span></li>
+      <li><b>Размер</b><span>Изображения уменьшаются до 1000 px по длинной стороне.</span></li>
+    </ul>
+  </section>
+  <section>
+    <div class="head"><span class="n">04</span><h2>Ответы</h2></div>
+    <ul class="facts">
+      <li><b>Печатаются по мере прихода</b><span>Markdown: заголовки, списки, таблицы, код.</span></li>
+      <li><b>Веб-поиск</b><span>Под ответом ссылки на источники. Ссылка копируется по наведению.</span></li>
+      <li><b>Copy</b><span>Выделенный в ответе текст копируется кнопкой рядом с выделением.</span></li>
+      <li><b>Упоминания</b><span>@ в поле ввода вставляет ссылку на заметку или событие.</span></li>
+    </ul>
+  </section>
+  <section>
+    <div class="head"><span class="n">05</span><h2>Диалоги</h2></div>
+    <ul class="facts">
+      <li><b>Названия</b><span>В одно-три слова, придумываются сами.</span></li>
+      <li><b>Хранение</b><span>30 дней. Удаляются по одному или все сразу.</span></li>
+      <li><b>Переключение</b><span>Список диалогов под вкладками, «+» создаёт новый.</span></li>
+    </ul>
+  </section>
+  <section id="window">
+    <div class="head"><span class="n">06</span><h2>Окно</h2></div>
+    <div class="frame call"><div><ul class="facts">
+      <li><b>Размер</b><span>Тянется за край и запоминается.</span></li>
+      <li><b>Клавиши</b><span>Esc или ⌘W сворачивает, ⌘N создаёт диалог, ↩ отправляет, ⌥↩ переносит строку.</span></li>
+      <li><b>Фокус</b><span>Когда приходит напоминание, окно появляется, но клавиатуру не забирает.</span></li>
+    </ul></div>
+      <div class="resize"><h3>Размер окна</h3><p>Правый нижний угол тянется, как в приложении.</p>
+        <div class="resize-box" id="resize"><img class="only-light" src="images/app/chat-light.png" alt="" loading="lazy"><img class="only-dark" src="images/app/chat-dark.png" alt="" loading="lazy"></div><p class="resize-size" id="resize-size">380 × 520</p><p class="reqs">от 320 × 360 до 760 × 1000</p></div></div>
+  </section>
+  <div class="next"><a class="btn ghost" href="events.html">Events</a><a class="btn ghost" href="notes.html">Notes</a><a class="btn ghost" href="usecases.html">Сценарии</a></div>
+
+</div>
+
+<footer><div class="w">
+  <span>© 2026 Sergey Donskov · код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
+  <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="about.html">Автор</a></span>
+  <p>Лицензия MIT распространяется только на код. Винни-Пух – персонаж фильмов Фёдора Хитрука («Союзмультфильм»), изображения сделаны для личного использования. Проект не связан с Anthropic, Google и Telegram.</p>
+</div></footer>
+<script src="site.js"></script>
+</body>
+</html>

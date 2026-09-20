@@ -158,6 +158,33 @@ if (tabs) tabs.addEventListener('click', event => {
   document.querySelectorAll('[data-shot]').forEach(shot => shot.hidden = shot.dataset.shot !== tab.dataset.tab);
 });
 
+// ---------- Installation page: two tabs. A link to a heading inside the hidden tab opens that tab first.
+const installTabs = $('install-tabs');
+if (installTabs) {
+  const select = name => {
+    installTabs.querySelectorAll('[data-tab]').forEach(button => button.setAttribute('aria-selected', button.dataset.tab === name));
+    document.querySelectorAll('[data-panel]').forEach(panel => panel.hidden = panel.dataset.panel !== name);
+  };
+  const reveal = () => {
+    const target = location.hash && document.getElementById(location.hash.slice(1));
+    const panel = target && target.closest('[data-panel]');
+    if (panel && panel.hidden) { select(panel.dataset.panel); target.scrollIntoView(); }
+  };
+  installTabs.addEventListener('click', event => { const tab = event.target.closest('[data-tab]'); if (tab) select(tab.dataset.tab); });
+  addEventListener('hashchange', reveal);
+  reveal();
+}
+
+// ---------- Side index on reference pages follows the section in view.
+const side = document.querySelector('.side nav');
+if (side) {
+  const links = [...side.querySelectorAll('a')];
+  const spy = new IntersectionObserver(entries => entries.forEach(entry => {
+    if (entry.isIntersecting) links.forEach(link => link.classList.toggle('on', link.hash === `#${entry.target.id}`));
+  }), { rootMargin: '-10% 0px -75% 0px' });
+  links.forEach(link => { const target = document.getElementById(link.hash.slice(1)); if (target) spy.observe(target); });
+}
+
 // ---------- 03: the resizable window reports its size at the app's scale (the box is drawn at half size).
 const box = $('resize');
 if (box && 'ResizeObserver' in window) new ResizeObserver(() => {

@@ -1,61 +1,67 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Об авторе — Winnie</title>
-<meta name="description" content="Winnie задизайнил и собрал в паре с Claude Сергей Донсков — для себя и своих задач.">
-<meta property="og:title" content="Об авторе — Winnie">
-<meta property="og:description" content="Winnie задизайнил и собрал в паре с Claude Сергей Донсков — для себя и своих задач.">
+<title>Автор – Winnie</title>
+<meta name="description" content="Winnie задизайнил и собрал вместе с Claude Сергей Донсков.">
+<meta property="og:title" content="Автор – Winnie">
+<meta property="og:description" content="Winnie задизайнил и собрал вместе с Claude Сергей Донсков.">
 <meta property="og:image" content="https://nel-feelingood.github.io/winnie/images/sprites/hover.png">
 <meta property="og:url" content="https://nel-feelingood.github.io/winnie/about.html">
 <link rel="icon" href="images/favicon.png">
+<script>/* Theme before first paint: saved choice, otherwise the system's. */
+(function(){var t=null;try{t=localStorage.getItem('theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div class="wrap">
-  <nav>
+<div class="w">
+  <header class="top">
     <a class="brand" href="index.html"><img src="images/favicon.png" alt="">Winnie</a>
-    <div class="nav-links">
-      <a href="features.html">Возможности</a>
-      <a href="usecases.html">Сценарии</a>
-      <a href="settings.html">Настройки</a>
-      <a href="install.html">Установка</a>
-      <a href="about.html" class="on">Автор</a>
-      <a href="https://github.com/nel-feelingood/winnie">GitHub</a>
-    </div>
+    <nav class="seg compact" aria-label="Вкладки приложения"><a href="chat.html">Chat</a><a href="events.html">Events</a><a href="notes.html">Notes</a></nav>
+    <nav class="top-links"><a href="features.html">Возможности</a><a href="usecases.html">Сценарии</a><a href="settings.html">Настройки</a><a href="install.html">Установка</a><a href="about.html" class="on">Автор</a></nav>
+    <button class="pill icon" id="theme" type="button" aria-label="Тема: как в системе"></button>
+    <a class="pill gh" href="https://github.com/nel-feelingood/winnie"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+    <button class="pill icon" id="burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="drawer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg></button>
+  </header>
+</div>
+
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer-back" data-close></div>
+  <nav class="drawer-panel" aria-label="Меню">
+    <button class="pill icon" type="button" data-close aria-label="Закрыть меню"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <p class="drawer-label">Вкладки приложения</p>
+    <a href="chat.html">Chat</a><a href="events.html">Events</a><a href="notes.html">Notes</a>
+    <p class="drawer-label">Сайт</p>
+    <a href="features.html">Возможности</a><a href="usecases.html">Сценарии</a><a href="settings.html">Настройки</a><a href="install.html">Установка</a><a href="about.html">Автор</a>
+    <a href="https://github.com/nel-feelingood/winnie">GitHub</a>
   </nav>
 </div>
-<main class="wrap subpage">
+
+<div class="w">
   <div class="author">
     <img class="author-photo" src="images/author.jpg" alt="Сергей Донсков" width="900" height="1275">
     <div>
-      <span class="eyebrow">Автор</span>
-      <h1>Сергей Донсков</h1>
-      <p class="lead">Задизайнил и «наклодил» Winnie: придумал, нарисовал интерфейс и собрал приложение в паре с Claude.</p>
-      <p>Сделал для себя и своих задач — чтобы перевести фразу, что-то найти или поставить напоминание, не открывая
-        браузер. Код открыт под лицензией MIT: если пригодится и вам — пользуйтесь. Идеи и найденные ошибки присылайте на почту.</p>
-      <div class="cta">
-        <a class="btn btn-primary" href="mailto:nelfeelingood@gmail.com?subject=Winnie">Написать автору</a>
-        <a class="btn btn-ghost" href="https://github.com/nel-feelingood"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>nel-feelingood</a>
-        <a class="btn btn-ghost" href="https://t.me/otetslsd" rel="me"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.9 4.3 18.7 19.6c-.2 1.1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9-8.200c.4-.35-.1-.55-.6-.2L6.300 13.300 1.500 11.800c-1-.3-1.100-1 .2-1.500L20.500 3c.9-.3 1.700.2 1.400 1.300z"/></svg>Telegram</a>
-        <a class="btn btn-ghost" href="https://www.instagram.com/interrobong/" rel="me"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.500 2h9A5.500 5.500 0 0 1 22 7.500v9a5.500 5.500 0 0 1-5.500 5.500h-9A5.500 5.500 0 0 1 2 16.500v-9A5.500 5.500 0 0 1 7.500 2zm0 2A3.500 3.500 0 0 0 4 7.500v9A3.500 3.500 0 0 0 7.500 20h9a3.500 3.500 0 0 0 3.500-3.500v-9A3.500 3.500 0 0 0 16.500 4h-9zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm5.300-3.400a1.100 1.100 0 1 1 0 2.200 1.100 1.100 0 0 1 0-2.200z"/></svg>Instagram</a>
-      </div>
+      <h1 class="ph"><span class="l"><i>Сергей</i></span><span class="l"><i>Донсков.</i></span></h1>
+      <p class="sub">Задизайнил и собрал Winnie вместе с Claude. Для себя и своих задач: быстрый чат, напоминания и заметки без переключения окон.</p>
+      <ul class="links">
+        <li><a href="https://t.me/otetslsd" rel="me"><span>Telegram</span><span>@otetslsd</span></a></li>
+        <li><a href="https://www.instagram.com/interrobong/" rel="me"><span>Instagram</span><span>@interrobong</span></a></li>
+        <li><a href="mailto:nelfeelingood@gmail.com?subject=Winnie"><span>Почта</span><span>nelfeelingood@gmail.com</span></a></li>
+        <li><a href="https://github.com/nel-feelingood" rel="me"><span>GitHub</span><span>nel-feelingood</span></a></li>
+      </ul>
     </div>
   </div>
-</main>
 
-<footer>
-  <div class="wrap">
-    <div class="row">
-      <span>© 2026 Sergey Donskov · исходный код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
-      <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="about.html">Об авторе</a> · <a href="mailto:nelfeelingood@gmail.com?subject=Winnie">nelfeelingood@gmail.com</a></span>
-    </div>
-    <p>Лицензия MIT распространяется только на код. Винни-Пух — персонаж фильмов Фёдора Хитрука («Союзмультфильм»);
-      изображения нарисованы для личного использования и лицензией не покрываются. Проект не связан с Anthropic, Google и Telegram.</p>
-  </div>
-</footer>
+</div>
+
+<footer><div class="w">
+  <span>© 2026 Sergey Donskov · код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
+  <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="about.html">Автор</a></span>
+  <p>Лицензия MIT распространяется только на код. Винни-Пух – персонаж фильмов Фёдора Хитрука («Союзмультфильм»), изображения сделаны для личного использования. Проект не связан с Anthropic, Google и Telegram.</p>
+</div></footer>
 <script src="site.js"></script>
 </body>
 </html>

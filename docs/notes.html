@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notes – Winnie</title>
+<meta name="description" content="Вкладка Notes в Winnie: заметки в Markdown-файлах, редактор без видимой разметки, меню по /, чекбоксы, картинки, медведь пишет и находит заметки сам.">
+<meta property="og:title" content="Notes – Winnie">
+<meta property="og:description" content="Вкладка Notes в Winnie: заметки в Markdown-файлах, редактор без видимой разметки, меню по /, чекбоксы, картинки, медведь пишет и находит заметки сам.">
+<meta property="og:image" content="https://nel-feelingood.github.io/winnie/images/sprites/hover.png">
+<meta property="og:url" content="https://nel-feelingood.github.io/winnie/notes.html">
+<link rel="icon" href="images/favicon.png">
+<script>/* Theme before first paint: saved choice, otherwise the system's. */
+(function(){var t=null;try{t=localStorage.getItem('theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="w">
+  <header class="top">
+    <a class="brand" href="index.html"><img src="images/favicon.png" alt="">Winnie</a>
+    <nav class="seg compact" aria-label="Вкладки приложения"><a href="chat.html">Chat</a><a href="events.html">Events</a><a href="notes.html" class="on">Notes</a></nav>
+    <nav class="top-links"><a href="features.html">Возможности</a><a href="usecases.html">Сценарии</a><a href="settings.html">Настройки</a><a href="install.html">Установка</a><a href="about.html">Автор</a></nav>
+    <button class="pill icon" id="theme" type="button" aria-label="Тема: как в системе"></button>
+    <a class="pill gh" href="https://github.com/nel-feelingood/winnie"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+    <button class="pill icon" id="burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="drawer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg></button>
+  </header>
+</div>
+
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer-back" data-close></div>
+  <nav class="drawer-panel" aria-label="Меню">
+    <button class="pill icon" type="button" data-close aria-label="Закрыть меню"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <p class="drawer-label">Вкладки приложения</p>
+    <a href="chat.html">Chat</a><a href="events.html">Events</a><a href="notes.html">Notes</a>
+    <p class="drawer-label">Сайт</p>
+    <a href="features.html">Возможности</a><a href="usecases.html">Сценарии</a><a href="settings.html">Настройки</a><a href="install.html">Установка</a><a href="about.html">Автор</a>
+    <a href="https://github.com/nel-feelingood/winnie">GitHub</a>
+  </nav>
+</div>
+
+<div class="w">
+  <h1 class="ph"><span class="l"><i>Notes.</i></span><span class="l"><i>Заметки в Markdown без разметки на экране.</i></span></h1>
+  <div class="hero inner">
+    <div><p class="sub">Хранятся обычными файлами. Пишутся руками, голосом или просьбой к медведю.</p></div>
+    <div class="scene" role="img" aria-label="Окно приложения и медведь"><div class="panel"><div class="slot on"><img class="only-light" src="images/app/note-light.png" alt="" loading="lazy"><img class="only-dark" src="images/app/note-dark.png" alt="" loading="lazy"></div></div><img class="pet" src="images/sprites/thinking.png" alt=""></div>
+  </div>
+  <section>
+    <div class="head"><span class="n">01</span><h2>Редактор</h2></div>
+    <ul class="facts">
+      <li><b>Текст выглядит готовым</b><span>Заголовки, жирный, курсив, списки, цитаты, код, линии. Значков разметки не видно.</span></li>
+      <li><b>Меню по /</b><span>Вставляет блок: заголовок, список, чекбокс, цитату, код, линию.</span></li>
+      <li><b>Панель форматирования</b><span>Появляется при выделении текста.</span></li>
+      <li><b>Чекбоксы и картинки</b><span>Чекбоксы нажимаются, картинки вставляются из буфера. ⌘-клик открывает ссылку.</span></li>
+    </ul>
+  </section>
+  <section>
+    <div class="head"><span class="n">02</span><h2>Медведь и заметки</h2></div>
+    <div class="says"><span>запиши в Идеи: прогулка по экрану</span><span>что у меня в заметке про отпуск?</span></div>
+    <ul class="facts">
+      <li><b>Пишет сам</b><span>Создаёт и дополняет заметки по просьбе в чате или голосом.</span></li>
+      <li><b>Находит</b><span>Ищет по заметкам и пересказывает нужную.</span></li>
+      <li><b>Ссылки</b><span>@ в сообщении вставляет ссылку на заметку. Кнопка «обсудить» открывает новый чат с этой заметкой.</span></li>
+      <li><b>Защита</b><span>Прочитав письмо или веб-страницу, медведь в том же ответе не может изменить или удалить заметку.</span></li>
+    </ul>
+  </section>
+  <section>
+    <div class="head"><span class="n">03</span><h2>Список и файлы</h2></div>
+    <ul class="facts">
+      <li><b>Список</b><span>Заголовок и первые строки. Закреплённые заметки наверху.</span></li>
+      <li><b>Действия</b><span>Закрепить, скопировать, обсудить, удалить. Внизу дата последней правки.</span></li>
+      <li><b>Файлы</b><span>Лежат в ~/Library/Application Support/Winnie/Notes и открываются любым редактором.</span></li>
+    </ul>
+  </section>
+  <div class="next"><a class="btn ghost" href="chat.html">Chat</a><a class="btn ghost" href="events.html">Events</a><a class="btn ghost" href="usecases.html">Сценарии</a></div>
+
+</div>
+
+<footer><div class="w">
+  <span>© 2026 Sergey Donskov · код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
+  <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="about.html">Автор</a></span>
+  <p>Лицензия MIT распространяется только на код. Винни-Пух – персонаж фильмов Фёдора Хитрука («Союзмультфильм»), изображения сделаны для личного использования. Проект не связан с Anthropic, Google и Telegram.</p>
+</div></footer>
+<script src="site.js"></script>
+</body>
+</html>
