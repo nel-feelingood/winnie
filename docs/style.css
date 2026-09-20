@@ -146,20 +146,20 @@ h2 span { color: var(--soft); }
 @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
 .stage-pet { position: absolute; right: 20px; bottom: 14px; width: 190px; }
 @media (max-width: 820px) { .stage-pet { width: 120px; } .out { padding-right: 0; } .stage { padding-bottom: 150px; } }
-.case-note { display: none; }
-.list button:focus-visible { outline: 1px solid var(--soft); outline-offset: -4px; }
+.list button:focus-visible { outline: none; }
+.list button:focus-visible b { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 /* Phones: the preview on top, the scenarios as a row of tabs that scrolls sideways under it. */
 @media (max-width: 820px) {
   .cases { display: flex; flex-direction: column; }
   .stage { order: 1; min-height: 0; height: 400px; overflow: hidden; }
-  .case-note { order: 2; display: block; margin: 0; padding: 12px 18px; border-top: 1px solid var(--line); font-size: 14.5px; color: var(--soft); min-height: 3.4em; }
-  .list { order: 3; flex-direction: row; overflow-x: auto; border-right: 0; border-top: 1px solid var(--line); scroll-snap-type: x proximity; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .list { order: 2; flex-direction: row; overflow-x: auto; border-right: 0; border-top: 1px solid var(--line); scroll-snap-type: x proximity; scrollbar-width: none; overscroll-behavior-x: contain; }
   .list::-webkit-scrollbar { display: none; }
-  .list button { flex: 0 0 auto; grid-template-columns: auto auto; gap: 8px; align-items: center; padding: 13px 16px; border-bottom: 0; border-right: 1px solid var(--line); scroll-snap-align: center; }
+  .list button { flex: 0 0 236px; grid-template-columns: 34px 1fr; gap: 1px 12px; align-content: center; padding: 14px 16px; border-bottom: 0; border-right: 1px solid var(--line); scroll-snap-align: center; }
   .list button:last-child { border-right: 0; }
-  .list .ico { grid-row: auto; font-size: 22px; }
-  .list b { align-self: center; font-size: 16px; white-space: nowrap; }
-  .list small { display: none; }
+  .list .ico { font-size: 26px; }
+  .list b { font-size: 17px; }
+  .list small { font-size: 13.5px; }
+}
 }
 
 /* 02 — three tabs */
