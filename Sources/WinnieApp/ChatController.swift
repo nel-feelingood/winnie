@@ -278,7 +278,8 @@ final class ChatController: ObservableObject {
                                                                  }
                                                              },
                                                              offersMail: gmail.isConnected,
-                                                             memory: memory.notes) {
+                                                             memory: memory.notes,
+                                                             apps: settings.activeServers) {
                 switch event {
                 case .textDelta(let piece):
                     if searchStatus != nil { searchStatus = nil }
@@ -294,14 +295,7 @@ final class ChatController: ObservableObject {
                     searchStatus = query.map { "Ищу: \($0)" } ?? "Ищу в интернете…"
                     onActivity(.thinking)
                 case .toolUse(let name):
-                    searchStatus = switch name {
-                    case "list_emails": "Смотрю почту…"
-                    case "read_email": "Читаю письмо…"
-                    case "list_reminders": "Смотрю напоминания…"
-                    case "remember": "Запоминаю…"
-                    case "forget": "Забываю…"
-                    default: "Записываю напоминание…"
-                    }
+                    searchStatus = Self.status(forTool: name)
                     onActivity(.thinking)
                 case .usage(let sample):
                     usage.record(sample)
@@ -335,6 +329,18 @@ final class ChatController: ObservableObject {
             if isEmpty { store.removeMessage(replyID, from: sessionID) }
             store.save()
             if !speaker.isSpeaking { onActivity(.none) }
+        }
+    }
+
+    private static func status(forTool name: String) -> String {
+        if name.hasPrefix("app:") { return "Спрашиваю \(name.dropFirst(4))…" }
+        switch name {
+        case "list_emails": return "Смотрю почту…"
+        case "read_email": return "Читаю письмо…"
+        case "list_reminders": return "Смотрю напоминания…"
+        case "remember": return "Запоминаю…"
+        case "forget": return "Забываю…"
+        default: return "Записываю напоминание…"
         }
     }
 

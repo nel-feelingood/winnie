@@ -83,6 +83,9 @@ public struct TurnAccumulator {
                block["name"] as? String == "web_search" {
                 return [.searching(query: nil)]
             }
+            if block["type"] as? String == "mcp_tool_use" {
+                return [.toolUse(name: "app:" + (block["server_name"] as? String ?? ""))]
+            }
             return []
 
         case "content_block_delta":

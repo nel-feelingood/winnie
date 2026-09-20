@@ -72,6 +72,23 @@ final class AppSettings: ObservableObject {
     static let voicePitchRange = 0.6...1.6
     static let voiceRateRange = 0.35...0.65
 
+    /// Other applications reachable through their MCP servers. Tokens are in the Keychain.
+    @Published var connectors: [AppConnector] {
+        didSet { defaults.set(try? JSONEncoder().encode(connectors), forKey: "connectors") }
+    }
+
+    /// Enabled connectors with their tokens, ready to go into a request.
+    var activeServers: [MCPServer] {
+        connectors.filter(\.isUsable).map {
+            MCPServer(name: $0.serverName, url: $0.url, token: Keychain.load(named: $0.secretName))
+        }
+    }
+
+    func removeConnector(_ connector: AppConnector) {
+        Keychain.save("", named: connector.secretName)
+        connectors.removeAll { $0.id == connector.id }
+    }
+
     /// One-tap prompts offered in an empty chat.
     @Published var quickActions: [String] {
         didSet { defaults.set(quickActions, forKey: "quickActions") }
@@ -91,6 +108,8 @@ final class AppSettings: ObservableObject {
 
     init() {
         speaksReminders = defaults.bool(forKey: "speaksReminders")
+        connectors = defaults.data(forKey: "connectors")
+            .flatMap { try? JSONDecoder().decode([AppConnector].self, from: $0) } ?? []
         quickActions = defaults.stringArray(forKey: "quickActions") ?? Self.defaultQuickActions
         voiceIdentifier = defaults.string(forKey: "voiceIdentifier") ?? ""
         let pitch = defaults.double(forKey: "voicePitch"), rate = defaults.double(forKey: "voiceRate")

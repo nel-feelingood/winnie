@@ -11,7 +11,7 @@ struct SettingsActions {
 }
 
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case winnie, quick, claude, voice, shortcuts, mail
+    case winnie, quick, api, usage, voice, shortcuts
 
     var id: String { rawValue }
 
@@ -19,10 +19,10 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         switch self {
         case .winnie: "Винни"
         case .quick: "Быстрые действия"
-        case .claude: "Claude и расходы"
+        case .api: "API"
+        case .usage: "Модель и расходы"
         case .voice: "Голос"
         case .shortcuts: "Шорткаты"
-        case .mail: "Почта"
         }
     }
 
@@ -30,10 +30,10 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         switch self {
         case .winnie: "pawprint"
         case .quick: "bolt"
-        case .claude: "sparkles"
+        case .api: "link"
+        case .usage: "chart.bar"
         case .voice: "waveform"
         case .shortcuts: "keyboard"
-        case .mail: "envelope"
         }
     }
 }
@@ -77,10 +77,10 @@ struct SettingsView: View {
                 switch pane {
                 case .winnie: winniePane
                 case .quick: quickPane
-                case .claude: claudePane
+                case .api: apiPane
+                case .usage: usagePane
                 case .voice: voicePane
                 case .shortcuts: shortcutsPane
-                case .mail: mailPane
                 }
             }
             .formStyle(.grouped)
@@ -166,10 +166,16 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Claude и расходы
+    // MARK: - API
 
-    @ViewBuilder private var claudePane: some View {
-        Section("API-ключ") {
+    @ViewBuilder private var apiPane: some View {
+        claudeSection
+        mailSection
+        appsSection
+    }
+
+    @ViewBuilder private var claudeSection: some View {
+        Section {
             SecureField("Ключ", text: $apiKey, prompt: Text(hasStoredKey ? "Сохранён — вставь новый, чтобы заменить" : "sk-ant-…"))
             HStack {
                 Button("Сохранить") {
@@ -181,7 +187,16 @@ struct SettingsView: View {
                 Spacer()
                 Link("Получить ключ", destination: URL(string: "https://console.anthropic.com/settings/keys")!)
             }
+        } header: {
+            Text("Claude")
+        } footer: {
+            Footnote("Ключ Anthropic API. Хранится в Связке ключей.")
         }
+    }
+
+    // MARK: - Модель и расходы
+
+    @ViewBuilder private var usagePane: some View {
         Section("Модель") {
             Picker("Отвечает", selection: $settings.model) {
                 ForEach(ModelOption.allCases, id: \.self) { Text($0.displayName).tag($0) }
@@ -269,9 +284,7 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Почта
-
-    @ViewBuilder private var mailPane: some View {
+    @ViewBuilder private var mailSection: some View {
         Section {
             if gmail.isConnected {
                 HStack {
@@ -293,9 +306,65 @@ struct SettingsView: View {
                 }
             }
         } header: {
-            Text("Gmail")
+            Text("Почта · Gmail")
         } footer: {
             Footnote("Только чтение. Нужен собственный OAuth-клиент типа «Desktop app» из Google Cloud. Пока проект в статусе Testing, Google просит входить заново раз в 7 дней.")
+        }
+    }
+}
+
+extension SettingsView {
+    @ViewBuilder var appsSection: some View {
+        Section {
+            ForEach($settings.connectors) { $connector in
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(connector.name)
+                        Text(connector.url).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $connector.isEnabled).labelsHidden()
+                    Button { settings.removeConnector(connector) } label: { Image(systemName: "trash") }
+                        .buttonStyle(.borderless)
+                        .help("Удалить подключение и его токен")
+                }
+            }
+            NewConnectorForm { name, url, token in
+                let connector = AppConnector(name: name, url: url)
+                Keychain.save(token, named: connector.secretName)
+                settings.connectors.append(connector)
+            }
+        } header: {
+            Text("Приложения")
+        } footer: {
+            Footnote("Любое приложение с удалённым MCP-сервером: адрес https://… и токен доступа. Claude сам получает список его инструментов. Перед действием, которое что-то меняет в приложении, Винни спросит подтверждение. Токен хранится в Связке ключей и уходит только в Anthropic API вместе с запросом.")
+        }
+    }
+}
+
+private struct NewConnectorForm: View {
+    let onAdd: (_ name: String, _ url: String, _ token: String) -> Void
+
+    @State private var name = ""
+    @State private var url = ""
+    @State private var token = ""
+
+    private var isValid: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty && URL(string: url.trimmingCharacters(in: .whitespaces))?.scheme == "https"
+    }
+
+    var body: some View {
+        TextField("Название", text: $name, prompt: Text("Bridge"))
+        TextField("Адрес MCP-сервера", text: $url, prompt: Text("https://…/mcp"))
+        SecureField("Токен", text: $token, prompt: Text("если сервер его требует"))
+        HStack {
+            Button("Добавить приложение") {
+                onAdd(name.trimmingCharacters(in: .whitespaces), url.trimmingCharacters(in: .whitespaces),
+                      token.trimmingCharacters(in: .whitespacesAndNewlines))
+                name = ""; url = ""; token = ""
+            }
+            .disabled(!isValid)
+            if !url.isEmpty, !isValid { Text("нужен адрес, начинающийся с https://").font(.caption).foregroundStyle(.secondary) }
         }
     }
 }

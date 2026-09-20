@@ -95,7 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         newVoiceHotKey.register(settings.newVoiceShortcut)
 
-        if !Keychain.hasAPIKey { settingsWindow.show(.claude) }
+        if !Keychain.hasAPIKey { settingsWindow.show(.api) }
     }
 
     // MARK: - Show / hide

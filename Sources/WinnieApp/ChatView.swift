@@ -6,12 +6,14 @@ struct ChatView: View {
     @ObservedObject var controller: ChatController
     @ObservedObject var store: ChatStore
     @FocusState private var inputFocused: Bool
-    @State private var confirmsDeleteAll: Bool
+    enum PendingDeletion { case current, all }
 
-    init(controller: ChatController, store: ChatStore, confirmsDeleteAll: Bool = false) {
+    @State private var pendingDeletion: PendingDeletion?
+
+    init(controller: ChatController, store: ChatStore, pendingDeletion: PendingDeletion? = nil) {
         self.controller = controller
         self.store = store
-        _confirmsDeleteAll = State(initialValue: confirmsDeleteAll)
+        _pendingDeletion = State(initialValue: pendingDeletion)
     }
 
     private let bottomID = "bottom"
@@ -22,7 +24,7 @@ struct ChatView: View {
             Hairline()
             switch controller.tab {
             case .chat:
-                if confirmsDeleteAll { deleteAllConfirmation } else { sessionPicker }
+                if let pendingDeletion { deletionConfirmation(pendingDeletion) } else { sessionPicker }
                 Hairline()
                 messages
                 Hairline()
@@ -61,7 +63,10 @@ struct ChatView: View {
 
                 Spacer()
 
-                HeaderButton(symbol: "minus", help: "Свернуть чат (Esc)") { controller.minimize() }
+                if controller.tab == .chat, !(store.current?.isEmpty ?? true) {
+                    HeaderButton(symbol: "trash", help: "Удалить этот чат") { pendingDeletion = .current }
+                }
+                HeaderButton(symbol: "arrow.down.right.and.arrow.up.left", help: "Свернуть чат (Esc)") { controller.minimize() }
             }
         }
         .padding(.horizontal, 12)
@@ -70,19 +75,19 @@ struct ChatView: View {
 
     /// Replaces the picker row while asking. Inline rather than an alert: a modal would take
     /// key status from the panel, which is this chat's cue to close.
-    private var deleteAllConfirmation: some View {
+    private func deletionConfirmation(_ deletion: PendingDeletion) -> some View {
         HStack(spacing: 8) {
-            Text("Удалить все чаты (\(store.sessions.filter { !$0.isEmpty }.count))?")
+            Text(deletion == .all ? "Удалить все чаты (\(store.sessions.filter { !$0.isEmpty }.count))?" : "Удалить этот чат?")
                 .font(.system(size: 13, weight: .semibold))
                 .lineLimit(1)
             Spacer(minLength: 0)
-            Button("Отмена") { confirmsDeleteAll = false }
+            Button("Отмена") { pendingDeletion = nil }
                 .buttonStyle(.plain)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Button {
-                controller.deleteAllChats()
-                confirmsDeleteAll = false
+                deletion == .all ? controller.deleteAllChats() : controller.deleteCurrent()
+                pendingDeletion = nil
             } label: {
                 Text("Удалить")
                     .font(.system(size: 12, weight: .semibold))
@@ -110,12 +115,15 @@ struct ChatView: View {
             .pickerStyle(.inline)
             .labelsHidden()
             Divider()
-            Button("Удалить этот чат", role: .destructive) { controller.deleteCurrent() }
-            Button(role: .destructive) { confirmsDeleteAll = true } label: {
+            Button("Удалить этот чат", role: .destructive) { pendingDeletion = .current }
+            Button(role: .destructive) { pendingDeletion = .all } label: {
                 Label("Удалить все чаты…", systemImage: "trash")
             }
         } label: {
             HStack(spacing: 8) {
+                Image(systemName: "bubble.left")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
                 Text(store.current?.title ?? "Новый чат")
                     .font(.system(size: 13, weight: .semibold))
                     .lineLimit(1)

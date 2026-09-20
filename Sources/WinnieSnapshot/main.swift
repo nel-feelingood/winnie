@@ -87,7 +87,7 @@ MainActor.assumeIsolated {
     let panel = InertWindow(contentRect: NSRect(origin: NSPoint(x: -3000, y: -3000), size: ChatPanel.chatSize),
                             styleMask: [.borderless], backing: .buffered, defer: false)
     panel.backgroundColor = .textBackgroundColor
-    panel.contentView = NSHostingView(rootView: ChatView(controller: controller, store: store, confirmsDeleteAll: mode == "confirm"))
+    panel.contentView = NSHostingView(rootView: ChatView(controller: controller, store: store, pendingDeletion: mode == "confirm" ? .all : nil))
     panel.orderFrontRegardless()
 
     DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
