@@ -8,7 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let sprites = SpriteProvider()
     private lazy var store = ChatStore(directory: AppSettings.supportDirectory)
     private lazy var reminders = ReminderStore(directory: AppSettings.supportDirectory)
-    private lazy var controller = ChatController(store: store, reminders: reminders, settings: settings)
+    private let gmail = GmailAuth()
+    private lazy var controller = ChatController(store: store, reminders: reminders, gmail: gmail, settings: settings)
     private var scheduler: ReminderScheduler!
 
     private var petWindow: PetWindow!
@@ -47,6 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         settingsWindow = SettingsWindowController(
             settings: settings,
+            gmail: gmail,
             onShortcutChange: { [unowned self] in hotKey.register($0) },
             onVoiceShortcutChange: { [unowned self] in voiceHotKey.register($0) },
             onScaleChange: { [unowned self] in
