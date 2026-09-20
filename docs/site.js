@@ -129,6 +129,10 @@ if (list) {
   async function play(index) {
     const id = ++run, item = cases[index], alive = () => id === run;
     [...list.children].forEach((button, i) => button.setAttribute('aria-selected', i === index));
+    $('case-note').textContent = item.note;
+    // On phones the list is a sideways-scrolling row: keep the playing tab in view without moving the page.
+    const tab = list.children[index];
+    if (list.scrollWidth > list.clientWidth) list.scrollTo({ left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2, behavior: calm ? 'auto' : 'smooth' });
     stage.style.setProperty('--c', `var(${item.c})`);
     hint.innerHTML = say.textContent = out.innerHTML = '';
     say.classList.remove('done');
