@@ -92,14 +92,17 @@ h1 em { font-style: normal; color: var(--acc); }
 .prompt-note { margin: 12px 0 0; font-size: 15px; color: var(--soft); }
 
 /* The bear and the chat above him, on a still gradient. The chat turns its own tabs. */
-.scene { position: relative; aspect-ratio: 1 / 1.04; border-radius: 28px; overflow: hidden; container-type: inline-size;
-         background: linear-gradient(160deg, #ffd3b8 0%, #f4d3ff 52%, #c9dcff 100%); }
-[data-theme="dark"] .scene { background: linear-gradient(160deg, #4a1f08 0%, #2c1246 52%, #0b2050 100%); }
-.scene .panel { position: absolute; right: 9%; top: 5%; height: 71%; aspect-ratio: 760 / 1040; border-radius: 3.4cqw; overflow: hidden; box-shadow: 0 5cqw 9cqw -4cqw rgba(0, 0, 0, .45); }
-.scene .slot { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; }
+.scene { position: relative; aspect-ratio: 1 / 1.04; border-radius: 28px; overflow: hidden; container-type: inline-size; border: 1px solid var(--line);
+         background: radial-gradient(125% 62% at 50% 106%, #ff5b14 0%, #ff8a3c 20%, #ffb886 40%, #ffe2cf 60%, rgba(255, 255, 255, 0) 82%), #fff; }
+[data-theme="dark"] .scene { background: radial-gradient(125% 62% at 50% 106%, #ffd98a 0%, #ff8f1f 14%, #ff4a0a 32%, #a31a02 52%, #3a0700 68%, rgba(0, 0, 0, 0) 84%), #000; }
+/* Fine grain keeps the glow from banding. */
+.scene::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .22; mix-blend-mode: overlay;
+                background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.scene .panel { position: absolute; right: 9%; top: 5%; height: 71%; aspect-ratio: 760 / 1040; border-radius: 3.4cqw; overflow: hidden; box-shadow: 0 5cqw 9cqw -4cqw rgba(0, 0, 0, .45); z-index: 1; }
+.scene .slot { position: absolute; inset: 0; opacity: 0; transition: opacity .25s ease; }
 .scene .slot.on { opacity: 1; }
 .scene .slot img { width: 100%; height: 100%; display: block; }
-.scene .pet { position: absolute; right: 7%; bottom: 2.5%; width: 23%; cursor: pointer; animation: breathe 3.6s ease-in-out infinite; transform-origin: 50% 100%;
+.scene .pet { position: absolute; z-index: 1; right: 7%; bottom: 2.5%; width: 23%; cursor: pointer; animation: breathe 3.6s ease-in-out infinite; transform-origin: 50% 100%;
               filter: drop-shadow(0 2cqw 2cqw rgba(0, 0, 0, .3)); }
 @keyframes breathe { 50% { transform: scale(1.018, .985); } }
 
