@@ -48,8 +48,9 @@
 
 ## Состояния и спрайты
 
-`idle`, `hover`, `thinking`, `talking`, `drag`, `error`, `sleep` — файлы `<state>.png` в
+`idle`, `hover`, `thinking`, `talking`, `drag`, `error`, `sleep`, `listening` — файлы `<state>.png` в
 `~/Library/Application Support/Winnie/Sprites/`. Приоритет: drag > error > thinking/talking > hover > sleep > idle.
+Новая поза добавляется командой `swift scripts/add-sprite.swift <картинка> <состояние>` (убирает белый фон, подгоняет рост, линию ступней и цвет меха под `idle`), затем `swift scripts/import-sprites.swift`.
 Нет файла состояния → берётся `idle.png`; нет и его → нарисованная заглушка.
 
 ## Структура

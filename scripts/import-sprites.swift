@@ -5,7 +5,7 @@
 // scaled down: the pet is ~150 pt on screen, so 1024 px frames only cost memory.
 import AppKit
 
-let states = ["idle", "hover", "thinking", "talking", "drag", "error", "sleep"]
+let states = ["idle", "hover", "thinking", "talking", "drag", "error", "sleep", "listening"]
 let outputSide = 512
 let padding = 12
 
