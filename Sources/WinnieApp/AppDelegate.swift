@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 import WinnieCore
 
@@ -15,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var controller = ChatController(store: store, reminders: reminders, memory: memory, usage: usage,
                                                  mcp: mcp, gmail: gmail, settings: settings)
     private var scheduler: ReminderScheduler!
+    private var scaleSubscription: AnyCancellable?
 
     private var petWindow: PetWindow!
     private var petView: PetView!
@@ -46,6 +48,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         chatPanel = ChatPanel(content: ChatView(controller: controller, store: store))
         chatPanel.onClose = { [unowned self] in closeChat() }
 
+        // The size can change from the settings window or from the chat ("стань побольше").
+        scaleSubscription = settings.$petScale.dropFirst().removeDuplicates().sink { [unowned self] scale in
+            petView.apply(scale: scale)
+            settings.petOrigin = petWindow.frame.origin
+            if chatPanel.isVisible { chatPanel.position(relativeTo: petWindow.frame) }
+        }
+
         controller.onActivity = { [unowned self] in petView.setActivity($0) }
         controller.onCaptureRequest = { [unowned self] in captureScreenshot() }
         controller.onMinimize = { [unowned self] in closeChat() }
@@ -57,12 +66,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             actions: SettingsActions(
                 onShortcutChange: { [unowned self] in hotKey.register($0) },
                 onNewVoiceShortcutChange: { [unowned self] in newVoiceHotKey.register($0) },
-                onVoicePreview: { [unowned self] in controller.previewVoice() },
-                onScaleChange: { [unowned self] in
-                    petView.apply(scale: $0)
-                    settings.petOrigin = petWindow.frame.origin
-                    if chatPanel.isVisible { chatPanel.position(relativeTo: petWindow.frame) }
-                }
+                onVoicePreview: { [unowned self] in controller.previewVoice() }
             )
         )
         statusMenu = StatusMenu(settings: settings, actions: .init(

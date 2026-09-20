@@ -7,7 +7,6 @@ struct SettingsActions {
     var onShortcutChange: (Shortcut) -> Void
     var onNewVoiceShortcutChange: (Shortcut) -> Void
     var onVoicePreview: () -> Void
-    var onScaleChange: (Double) -> Void
 }
 
 enum SettingsPane: String, CaseIterable, Identifiable {
@@ -101,7 +100,6 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(width: 720, height: 560)
-        .onChange(of: settings.petScale) { _, scale in actions.onScaleChange(scale) }
         .onChange(of: settings.shortcut) { _, shortcut in actions.onShortcutChange(shortcut) }
         .onChange(of: settings.newVoiceShortcut) { _, shortcut in actions.onNewVoiceShortcutChange(shortcut) }
     }

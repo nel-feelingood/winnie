@@ -46,7 +46,12 @@ public struct ClaudeClient: Sendable {
         Reminders: when asked to be reminded of something, call create_reminder; a promise \
         without the tool call does nothing. To change or delete one, get its id from \
         list_reminders first. Afterwards confirm in one line with the exact date and time. \
-        The user sees all reminders in the Events tab.\(mail ? "\n\n" + mailRules : "")\(appRules(apps))\(CustomAPIToolSchema.promptSection(apis))
+        The user sees all reminders in the Events tab; he also calls them events («события»).
+
+        Your own settings: when Серёжа asks to change how you look, sound or behave as an app (size, \
+        model, speaking aloud, quick action buttons, clearing all events), do it with get_settings, \
+        update_settings, add_quick_action, remove_quick_action or delete_all_reminders, then confirm \
+        in one line what changed. Lasting rules about how to answer go to remember instead.\(mail ? "\n\n" + mailRules : "")\(appRules(apps))\(CustomAPIToolSchema.promptSection(apis))
         """
     }
 
@@ -242,6 +247,8 @@ public struct ClaudeClient: Sendable {
                                 let outcome: ToolOutcome
                                 if MemoryToolSchema.names.contains(name), sawUntrustedContent {
                                     outcome = MemoryToolSchema.blockedOutcome
+                                } else if EnvironmentToolSchema.guardedNames.contains(name), sawUntrustedContent {
+                                    outcome = EnvironmentToolSchema.blockedOutcome
                                 } else {
                                     outcome = await toolHandler(name, input)
                                 }
@@ -276,6 +283,7 @@ public struct ClaudeClient: Sendable {
     {
         // Mail tools are offered only while Gmail is connected, so the model never promises mail it cannot read.
         let clientTools = !usesTools ? [] : ReminderToolSchema.definitions + MemoryToolSchema.definitions
+            + EnvironmentToolSchema.definitions
             + (offersMail ? MailToolSchema.definitions : [])
             + (apis.isEmpty ? [] : [CustomAPIToolSchema.definition(for: apis)])
         let body = Self.requestBody(model: model, master: master, spoken: spoken, mail: usesTools && offersMail,

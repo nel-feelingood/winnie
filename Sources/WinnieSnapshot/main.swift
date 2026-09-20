@@ -64,7 +64,7 @@ MainActor.assumeIsolated {
         usage.record(UsageSample(model: "claude-opus-5", input: 210_000, output: 31_000, searches: 9), at: Date().addingTimeInterval(-3 * 86_400))
         let memory = MemoryStore(directory: sandbox)
         memory.add("Лёва — брат Серёжи")
-        let actions = SettingsActions(onShortcutChange: { _ in }, onNewVoiceShortcutChange: { _ in }, onVoicePreview: {}, onScaleChange: { _ in })
+        let actions = SettingsActions(onShortcutChange: { _ in }, onNewVoiceShortcutChange: { _ in }, onVoicePreview: {})
         let navigation = SettingsNavigation()
         navigation.pane = pane
         let view = SettingsView(settings: AppSettings(), gmail: GmailAuth(), memory: memory, usage: usage, mcp: MCPAuth(), actions: actions,

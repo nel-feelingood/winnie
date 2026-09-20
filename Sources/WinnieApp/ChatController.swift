@@ -275,11 +275,16 @@ final class ChatController: ObservableObject {
                                                              masterPrompt: settings.masterPrompt, history: history,
                                                              spoken: speaks,
                                                              imageLoader: { ImageStore.data(for: $0) },
-                                                             toolHandler: { [reminders, memory, mail = MailTools(client: gmail.client),
+                                                             toolHandler: { [reminders, memory, settings, mail = MailTools(client: gmail.client),
                                                                              custom = CustomAPITools(apis: apis)] name, input in
                                                                  if name == CustomAPIToolSchema.name { return await custom.execute(input: input) }
                                                                  if MailToolSchema.names.contains(name) {
                                                                      return await mail.execute(name: name, input: input)
+                                                                 }
+                                                                 if EnvironmentToolSchema.names.contains(name) {
+                                                                     return await MainActor.run {
+                                                                         EnvironmentTools(settings: settings, reminders: reminders).execute(name: name, input: input)
+                                                                     }
                                                                  }
                                                                  if MemoryToolSchema.names.contains(name) {
                                                                      return await MainActor.run {
@@ -350,6 +355,9 @@ final class ChatController: ObservableObject {
         if name.hasPrefix("app:") { return "Спрашиваю \(name.dropFirst(4))…" }
         switch name {
         case "call_api": return "Обращаюсь к API…"
+        case "get_settings": return "Смотрю настройки…"
+        case "update_settings", "add_quick_action", "remove_quick_action": return "Меняю настройки…"
+        case "delete_all_reminders": return "Удаляю события…"
         case "list_emails": return "Смотрю почту…"
         case "read_email": return "Читаю письмо…"
         case "list_reminders": return "Смотрю напоминания…"
