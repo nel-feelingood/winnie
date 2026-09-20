@@ -7,14 +7,21 @@ const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ---------- Theme: Auto follows the system; a manual choice is remembered.
 const themeButton = $('theme');
 if (themeButton) {
-  const order = ['auto', 'light', 'dark'], labels = { auto: 'Авто', light: 'Светлая', dark: 'Тёмная' };
+  const order = ['auto', 'light', 'dark'], labels = { auto: 'как в системе', light: 'светлая', dark: 'тёмная' };
+  const icons = {
+    auto: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.500 8.500 0 0 0 0-17z" fill="currentColor" stroke="none"/>',
+    light: '<circle cx="12" cy="12" r="4"/><path d="M12 2.500v2.500M12 19v2.500M2.500 12H5M19 12h2.500M5.300 5.300l1.800 1.800M16.900 16.900l1.800 1.800M5.300 18.700l1.800-1.800M16.900 7.100l1.800-1.800"/>',
+    dark: '<path d="M20 14.500A8.500 8.500 0 0 1 9.500 4 8.500 8.500 0 1 0 20 14.500z"/>',
+  };
   const system = matchMedia('(prefers-color-scheme: dark)');
   let choice = 'auto';
   try { choice = localStorage.getItem('theme') || 'auto'; } catch {}
   if (!order.includes(choice)) choice = 'auto';
   const apply = () => {
     document.documentElement.dataset.theme = choice === 'auto' ? (system.matches ? 'dark' : 'light') : choice;
-    themeButton.textContent = labels[choice];
+    themeButton.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${icons[choice]}</svg>`;
+    themeButton.title = `Тема: ${labels[choice]}`;
+    themeButton.setAttribute('aria-label', themeButton.title);
   };
   apply();
   system.addEventListener('change', apply);
@@ -29,6 +36,21 @@ if (themeButton) {
     const transition = document.startViewTransition(apply);
     [transition.ready, transition.finished].forEach(promise => promise.catch(() => {}));
   });
+}
+
+// ---------- Menu drawer for widths where the full menu does not fit.
+const drawer = $('drawer'), burger = $('burger');
+if (drawer && burger) {
+  const setOpen = open => {
+    burger.setAttribute('aria-expanded', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+    if (open) { drawer.hidden = false; requestAnimationFrame(() => requestAnimationFrame(() => drawer.classList.add('open'))); drawer.querySelector('button').focus(); }
+    else { drawer.classList.remove('open'); setTimeout(() => { if (!drawer.classList.contains('open')) drawer.hidden = true; }, calm ? 0 : 450); burger.focus(); }
+  };
+  burger.addEventListener('click', () => setOpen(true));
+  drawer.addEventListener('click', event => { if (event.target.closest('[data-close], a')) setOpen(false); });
+  addEventListener('keydown', event => { if (event.key === 'Escape' && !drawer.hidden) setOpen(false); });
+  matchMedia('(min-width: 1181px)').addEventListener('change', event => { if (event.matches && !drawer.hidden) setOpen(false); });
 }
 
 // ---------- Copy buttons: data-copy holds the id of the element whose text goes to the clipboard.
