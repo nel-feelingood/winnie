@@ -91,6 +91,20 @@ import Testing
         #expect(run(tools, "create_note", ["title": " ", "body": ""]).isError)
     }
 
+    @Test func aReferenceResolvesWhateverLettersTheIDStartsWith() {
+        let store = NoteStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("winnie-notes-\(UUID().uuidString)"))
+        // Ids are random hex, so one note proves little: «e» is both a hex digit and a letter of "note",
+        // and an id starting with it is exactly what a careless trim breaks. Enough notes to be sure to meet some.
+        for _ in 0..<120 {
+            let created = store.create(title: "цель")
+            for handle in [created.shortID, "[note:\(created.shortID)]", " note:\(created.shortID) ", created.id.uuidString] {
+                #expect(store.note(matching: handle)?.id == created.id, "\(handle) must resolve")
+            }
+        }
+        #expect(store.notes.contains { $0.shortID.hasPrefix("e") || $0.shortID.hasSuffix("e") })
+        #expect(store.note(matching: "[note:]") == nil)
+    }
+
     @Test func overwritingAndDeletingAreGuardedButCreatingIsNot() {
         #expect(NoteToolSchema.guardedNames == ["update_note", "delete_note"])
         #expect(Set(NoteToolSchema.definitions.compactMap { $0["name"] as? String }) == NoteToolSchema.names)

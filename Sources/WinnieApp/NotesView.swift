@@ -141,10 +141,24 @@ private struct NotePage: View {
                     if text.isEmpty {
                         Text("Пусто. Дважды кликни, чтобы писать.").font(.system(size: 13)).foregroundStyle(.tertiary)
                     } else {
-                        Markdown(text, imageBaseURL: notes.directory)
-                            .markdownTheme(.winnie)
-                            .markdownImageProvider(LocalImageProvider())
-                            .textSelection(.enabled)
+                        // Task lines are drawn as real controls, each tied to its line of the text;
+                        // everything between them is ordinary rendered Markdown.
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(TaskList.segments(of: text)) { segment in
+                                switch segment {
+                                case .markdown(_, let chunk):
+                                    Markdown(chunk, imageBaseURL: notes.directory)
+                                        .markdownTheme(.winnie)
+                                        .markdownImageProvider(LocalImageProvider())
+                                        .textSelection(.enabled)
+                                case .task(let line, let indent, let isDone, let label):
+                                    TaskRow(isDone: isDone, label: label, indent: indent) {
+                                        text = TaskList.toggling(line: line, in: text)
+                                        save()
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -227,6 +241,33 @@ private struct NotePage: View {
         // An untouched blank note is not worth keeping.
         if title.isEmpty, text.isEmpty, note.title.isEmpty, note.body.isEmpty { return }
         notes.update(note.id, title: title, body: text)
+    }
+}
+
+/// One «- [ ]» line in the rendered note. The box toggles; the label is still Markdown.
+private struct TaskRow: View {
+    let isDone: Bool
+    let label: String
+    let indent: Int
+    let onToggle: () -> Void
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Button(action: onToggle) {
+                Image(systemName: isDone ? "checkmark.square.fill" : "square")
+                    .font(.system(size: 14))
+                    .foregroundStyle(isDone ? Color.accentColor : Color.secondary)
+                    .frame(width: 18, height: 18)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(isDone ? "Снять отметку" : "Отметить")
+            Markdown(label)
+                .markdownTheme(.winnie)
+                .opacity(isDone ? 0.55 : 1)
+                .strikethrough(isDone)
+        }
+        .padding(.leading, CGFloat(indent) * 18 + 4)
     }
 }
 

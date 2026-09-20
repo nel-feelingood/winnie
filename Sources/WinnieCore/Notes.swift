@@ -106,7 +106,13 @@ public final class NoteStore: ObservableObject {
     }
 
     public func note(matching handle: String) -> Note? {
-        let handle = handle.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "[]note: "))
+        // Accepts a bare id or a whole «[note:ID]» reference. The wrapper is removed as text, not as a
+        // character set: trimming the letters of "note" would also eat ids that start or end with them.
+        var handle = handle.lowercased().trimmingCharacters(in: .whitespaces)
+        if handle.hasPrefix("[") { handle.removeFirst() }
+        if handle.hasSuffix("]") { handle.removeLast() }
+        if handle.hasPrefix("note:") { handle.removeFirst(5) }
+        handle = handle.trimmingCharacters(in: .whitespaces)
         return notes.first { $0.shortID == handle || $0.id.uuidString.lowercased() == handle }
     }
 
