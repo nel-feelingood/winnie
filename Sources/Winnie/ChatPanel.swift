@@ -1,6 +1,33 @@
 import AppKit
 import SwiftUI
 
+/// Solid, rounded chat background: white in light mode, dark in dark mode.
+///
+/// Deliberately not an NSVisualEffectView: its blur is not clipped by the layer's corner
+/// radius, which left square corners showing around the rounded panel.
+private final class ChatBackgroundView: NSView {
+    init() {
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.cornerRadius = 14
+        layer?.cornerCurve = .continuous
+        layer?.masksToBounds = true
+        layer?.borderWidth = 1
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    override var wantsUpdateLayer: Bool { true }
+
+    /// Called again whenever the system appearance flips, so the colours follow the theme.
+    override func updateLayer() {
+        layer?.backgroundColor = NSColor.textBackgroundColor.cgColor
+        layer?.borderColor = NSColor.separatorColor.cgColor
+        window?.invalidateShadow()
+    }
+}
+
 /// The mini chat. Non-activating like Spotlight: it takes keyboard input
 /// without pulling Winnie's app in front of what the user was doing.
 final class ChatPanel: NSPanel {
@@ -25,23 +52,17 @@ final class ChatPanel: NSPanel {
         isReleasedWhenClosed = false
         animationBehavior = .utilityWindow
 
-        let blur = NSVisualEffectView()
-        blur.material = .popover
-        blur.state = .active
-        blur.wantsLayer = true
-        blur.layer?.cornerRadius = 14
-        blur.layer?.masksToBounds = true
-
+        let background = ChatBackgroundView()
         let host = NSHostingView(rootView: content)
         host.translatesAutoresizingMaskIntoConstraints = false
-        blur.addSubview(host)
+        background.addSubview(host)
         NSLayoutConstraint.activate([
-            host.leadingAnchor.constraint(equalTo: blur.leadingAnchor),
-            host.trailingAnchor.constraint(equalTo: blur.trailingAnchor),
-            host.topAnchor.constraint(equalTo: blur.topAnchor),
-            host.bottomAnchor.constraint(equalTo: blur.bottomAnchor),
+            host.leadingAnchor.constraint(equalTo: background.leadingAnchor),
+            host.trailingAnchor.constraint(equalTo: background.trailingAnchor),
+            host.topAnchor.constraint(equalTo: background.topAnchor),
+            host.bottomAnchor.constraint(equalTo: background.bottomAnchor),
         ])
-        contentView = blur
+        contentView = background
         copyButton = SelectionCopyButton(panel: self)
     }
 
