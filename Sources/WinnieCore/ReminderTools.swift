@@ -31,11 +31,12 @@ public enum ReminderToolSchema {
                 "type": "object",
                 "properties": [
                     "title": ["type": "string", "description": "What to remind about, as a short imperative phrase in the user's language, e.g. «Ответить Лёве по поводу поездки»."],
+                    "short_title": ["type": "string", "description": "A one to three word name for this reminder in the user's language, used as the title of the chat that opens when it fires, e.g. «Ответ Лёве», «Зарядка», «Плита»."],
                     "fire_at": ["type": "string", "description": timeRule],
                     "repeat": ["type": "string", "enum": Reminder.Repeat.allCases.map(\.rawValue),
                                "description": "none = once (default). daily, weekdays (Mon–Fri), weekly (same weekday as fire_at), monthly (same day of month as fire_at)."],
                 ],
-                "required": ["title", "fire_at"],
+                "required": ["title", "short_title", "fire_at"],
             ],
         ],
         [
@@ -51,6 +52,7 @@ public enum ReminderToolSchema {
                 "properties": [
                     "id": ["type": "string", "description": "The reminder's id from list_reminders."],
                     "title": ["type": "string"],
+                    "short_title": ["type": "string", "description": "Update it when the title changes."],
                     "fire_at": ["type": "string", "description": timeRule],
                     "repeat": ["type": "string", "enum": Reminder.Repeat.allCases.map(\.rawValue)],
                 ],
@@ -98,7 +100,8 @@ public struct ReminderTools {
         switch Self.parseTime(arguments["fire_at"], now: now()) {
         case .failure(let problem): return problem
         case .success(let date):
-            let reminder = Reminder(title: title, fireAt: date, repeats: repeats, createdAt: now())
+            let reminder = Reminder(title: title, label: arguments["short_title"] as? String, fireAt: date,
+                                    repeats: repeats, createdAt: now())
             store.add(reminder)
             return ToolOutcome("Created. \(Self.describe(reminder))")
         }
@@ -123,7 +126,12 @@ public struct ReminderTools {
             }
         }
         store.update(reminder.id) { stored in
-            if let title = arguments["title"] as? String, !title.isEmpty { stored.title = title }
+            if let title = arguments["title"] as? String, !title.isEmpty {
+                stored.title = title
+                // A stale label would name the chat after what the reminder used to be.
+                stored.label = nil
+            }
+            if let label = arguments["short_title"] as? String, !label.isEmpty { stored.label = label }
             if let newDate { stored.fireAt = newDate }
             if let repeats = (arguments["repeat"] as? String).flatMap(Reminder.Repeat.init) { stored.repeats = repeats }
         }

@@ -13,13 +13,33 @@ public struct Reminder: Codable, Identifiable, Equatable, Sendable {
     public var fireAt: Date
     public var repeats: Repeat
     public var createdAt: Date
+    /// One to three words naming the reminder, written by the model. Optional so
+    /// reminders saved before labels existed still decode.
+    public var label: String?
 
-    public init(id: UUID = UUID(), title: String, fireAt: Date, repeats: Repeat = .none, createdAt: Date = Date()) {
+    public init(id: UUID = UUID(), title: String, label: String? = nil, fireAt: Date, repeats: Repeat = .none,
+                createdAt: Date = Date()) {
         self.id = id
+        self.label = label
         self.title = title
         self.fireAt = fireAt
         self.repeats = repeats
         self.createdAt = createdAt
+    }
+
+    /// Name for the chat Winnie opens when this reminder fires.
+    public var chatTitle: String {
+        if let label = label?.trimmingCharacters(in: .whitespacesAndNewlines), !label.isEmpty { return label }
+        return Self.shortened(title)
+    }
+
+    /// First three words, minus a dangling preposition: «Ответить Лёве по поводу поездки» → «Ответить Лёве».
+    public static func shortened(_ title: String) -> String {
+        let dangling: Set<String> = ["в", "во", "на", "по", "к", "ко", "с", "со", "о", "об", "у", "за", "из", "от", "до",
+                                     "для", "про", "и", "а", "не", "что", "чтобы"]
+        var words = title.split(whereSeparator: \.isWhitespace).prefix(3).map(String.init)
+        while let last = words.last, words.count > 1, dangling.contains(last.lowercased()) { words.removeLast() }
+        return words.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: ".,:;!?«»\"*"))
     }
 
     /// Short handle the model uses to refer to a reminder.

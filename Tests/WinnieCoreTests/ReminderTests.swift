@@ -62,6 +62,21 @@ private func date(_ year: Int, _ month: Int, _ day: Int, _ hour: Int = 0, _ minu
         #expect(store.reminders.first?.repeats == Reminder.Repeat.none)
     }
 
+    @Test func chatTitleUsesTheModelsLabelOrShortensTheTitle() {
+        let (tools, store) = makeTools()
+        _ = run(tools, "create_reminder", ["title": "Ответить Лёве по поводу поездки", "short_title": "Ответ Лёве",
+                                           "fire_at": "2026-09-20T19:00"])
+        #expect(store.reminders.first?.chatTitle == "Ответ Лёве")
+        #expect(Reminder.shortened("Ответить Лёве по поводу поездки") == "Ответить Лёве")
+        #expect(Reminder.shortened("Выключить плиту!") == "Выключить плиту")
+        #expect(Reminder.shortened("Зарядка") == "Зарядка")
+
+        // Renaming the reminder without a new label must not keep the old one.
+        let id = store.reminders[0].shortID
+        _ = run(tools, "update_reminder", ["id": id, "title": "Позвонить маме в субботу"])
+        #expect(store.reminders.first?.chatTitle == "Позвонить маме")
+    }
+
     @Test func rejectsATimeThatHasAlreadyPassedAndSaysWhatTimeItIs() {
         let (tools, store) = makeTools()
         let outcome = run(tools, "create_reminder", ["title": "x", "fire_at": "2026-09-20T09:00"])

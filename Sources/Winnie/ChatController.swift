@@ -39,6 +39,7 @@ final class ChatController: ObservableObject {
         self.reminders = reminders
         self.settings = settings
 
+        renameGenericReminderChats()
         listener.onTranscript = { [weak self] in self?.draft = $0 }
         listener.onFinished = { [weak self] in self?.finishListening(heard: $0) }
         listener.onFailure = { [weak self] failure in
@@ -54,13 +55,23 @@ final class ChatController: ObservableObject {
 
     // MARK: - Reminders
 
+    /// Reminder chats used to share one title; name the existing ones after what they remind about.
+    private func renameGenericReminderChats() {
+        let prefix = "Напоминаю: **"
+        for session in store.sessions where session.title == "Напоминание" {
+            guard let text = session.messages.first?.text, text.hasPrefix(prefix) else { continue }
+            let subject = text.dropFirst(prefix.count).replacingOccurrences(of: "**", with: "")
+            store.setTitle(Reminder.shortened(subject), for: session.id)
+        }
+    }
+
     /// A due reminder, said by Winnie in a chat of its own. Written locally rather than by
     /// the model: it must work offline and cost nothing. Being an ordinary assistant
     /// message, it is context for a follow-up like «отложи на час».
     func present(_ reminder: Reminder) {
         discardPendingImages()
         let session = store.startNew()
-        store.setTitle("Напоминание", for: session.id)
+        store.setTitle(reminder.chatTitle, for: session.id)
         store.append(ChatMessage(role: .assistant, text: "Напоминаю: **\(reminder.title)**"), to: session.id)
         tab = .chat
         onActivity(.talking)
