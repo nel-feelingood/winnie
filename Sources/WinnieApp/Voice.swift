@@ -119,33 +119,34 @@ final class SpeechListener {
     }
 }
 
-/// Reads answers aloud with a system voice. The 1969 cartoon got its Winnie by speeding
-/// the actor's tape up by about a third; the same trick (higher pitch, faster pace) is
-/// what gives a stock voice some of that bustle.
+/// Reads answers aloud with a system voice. Which voice, how high and how fast are the
+/// user's to tune in Settings: the 1969 cartoon got its Winnie by speeding the actor's
+/// tape up by about a third, and raising pitch and pace imitates that on a good voice,
+/// but on a basic one it only adds distortion.
 @MainActor
 final class Speaker: NSObject, AVSpeechSynthesizerDelegate {
     var onFinished: () -> Void = {}
 
+    private let settings: AppSettings
     private let synthesizer = AVSpeechSynthesizer()
     private var voice: AVSpeechSynthesisVoice?
     private var queued = 0
 
     var isSpeaking: Bool { queued > 0 }
 
-    override init() {
+    init(settings: AppSettings) {
+        self.settings = settings
         super.init()
         synthesizer.delegate = self
     }
 
     func speak(_ sentence: String) {
         // Looked up per answer, so a voice downloaded in System Settings is picked up without a restart.
-        if queued == 0 { voice = Self.bestRussianVoice() }
+        if queued == 0 { voice = Self.voice(for: settings.voiceIdentifier) }
         let utterance = AVSpeechUtterance(string: sentence)
         utterance.voice = voice
-        // The sped-up-tape trick suits a male voice; a female one is lowered instead,
-        // which lands closer to a bear than raising it further would.
-        utterance.pitchMultiplier = voice?.gender == .female ? 0.78 : 1.22
-        utterance.rate = 0.56
+        utterance.pitchMultiplier = Float(settings.voicePitch)
+        utterance.rate = Float(settings.voiceRate)
         utterance.postUtteranceDelay = 0.04
         queued += 1
         synthesizer.speak(utterance)
@@ -157,15 +158,24 @@ final class Speaker: NSObject, AVSpeechSynthesizerDelegate {
         synthesizer.stopSpeaking(at: .immediate)
     }
 
-    /// Prefers a male voice and the highest quality that has been downloaded.
-    private static func bestRussianVoice() -> AVSpeechSynthesisVoice? {
+    /// Installed Russian voices, best quality first.
+    static func russianVoices() -> [AVSpeechSynthesisVoice] {
         AVSpeechSynthesisVoice.speechVoices()
             .filter { $0.language.hasPrefix("ru") }
-            .max { lhs, rhs in
-                let left = (lhs.quality.rawValue, lhs.gender == .male ? 1 : 0)
-                let right = (rhs.quality.rawValue, rhs.gender == .male ? 1 : 0)
-                return left < right
-            } ?? AVSpeechSynthesisVoice(language: "ru-RU")
+            .sorted { ($0.quality.rawValue, $0.name) > ($1.quality.rawValue, $1.name) }
+    }
+
+    static func label(for voice: AVSpeechSynthesisVoice) -> String {
+        let quality = switch voice.quality {
+        case .premium: "премиум"
+        case .enhanced: "улучшенный"
+        default: "базовый"
+        }
+        return "\(voice.name) — \(quality)"
+    }
+
+    private static func voice(for identifier: String) -> AVSpeechSynthesisVoice? {
+        AVSpeechSynthesisVoice(identifier: identifier) ?? russianVoices().first ?? AVSpeechSynthesisVoice(language: "ru-RU")
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {

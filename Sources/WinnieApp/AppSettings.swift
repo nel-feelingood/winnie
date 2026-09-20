@@ -59,6 +59,21 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(speaksReplies, forKey: "speaksReplies") }
     }
 
+    /// Identifier of the chosen system voice; empty means "best installed Russian voice".
+    @Published var voiceIdentifier: String {
+        didSet { defaults.set(voiceIdentifier, forKey: "voiceIdentifier") }
+    }
+    /// 1.0 is the voice as recorded. The cartoon's sped-up-tape effect is roughly 1.2 on a male voice.
+    @Published var voicePitch: Double {
+        didSet { defaults.set(voicePitch, forKey: "voicePitch") }
+    }
+    /// AVSpeechUtterance scale: 0.5 is normal speed.
+    @Published var voiceRate: Double {
+        didSet { defaults.set(voiceRate, forKey: "voiceRate") }
+    }
+    static let voicePitchRange = 0.6...1.6
+    static let voiceRateRange = 0.35...0.65
+
     /// Say a due reminder out loud. Off by default: a voice out of nowhere is a bad surprise on a call.
     @Published var speaksReminders: Bool {
         didSet { defaults.set(speaksReminders, forKey: "speaksReminders") }
@@ -66,6 +81,11 @@ final class AppSettings: ObservableObject {
 
     init() {
         speaksReminders = defaults.bool(forKey: "speaksReminders")
+        voiceIdentifier = defaults.string(forKey: "voiceIdentifier") ?? ""
+        let pitch = defaults.double(forKey: "voicePitch"), rate = defaults.double(forKey: "voiceRate")
+        // Neutral by default: an altered pitch only suits a good voice, and that is for the ear to judge.
+        voicePitch = Self.voicePitchRange.contains(pitch) ? pitch : 1.0
+        voiceRate = Self.voiceRateRange.contains(rate) ? rate : 0.52
         voiceShortcut = defaults.data(forKey: "voiceShortcut")
             .flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .defaultVoice
         newVoiceShortcut = defaults.data(forKey: "newVoiceShortcut")

@@ -57,6 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onShortcutChange: { [unowned self] in hotKey.register($0) },
             onVoiceShortcutChange: { [unowned self] in voiceHotKey.register($0) },
             onNewVoiceShortcutChange: { [unowned self] in newVoiceHotKey.register($0) },
+            onVoicePreview: { [unowned self] in controller.previewVoice() },
             onScaleChange: { [unowned self] in
                 petView.apply(scale: $0)
                 settings.petOrigin = petWindow.frame.origin

@@ -31,7 +31,7 @@ final class ChatController: ObservableObject {
     private let client = ClaudeClient()
     private var streamTask: Task<Void, Never>?
     private let listener = SpeechListener()
-    private let speaker = Speaker()
+    private let speaker: Speaker
 
     /// MarkdownUI re-parses the whole message on every change, so deltas are
     /// flushed to the UI at most this often instead of per token.
@@ -41,6 +41,7 @@ final class ChatController: ObservableObject {
         self.store = store
         self.reminders = reminders
         self.memory = memory
+        self.speaker = Speaker(settings: settings)
         self.gmail = gmail
         self.settings = settings
 
@@ -106,6 +107,12 @@ final class ChatController: ObservableObject {
         guard !text.isEmpty else { return onActivity(.none) }
         draft = text
         send(spoken: true)
+    }
+
+    /// The "Прослушать" button in Settings.
+    func previewVoice() {
+        speaker.stop()
+        speaker.speak("Привет, Серёжа! Это я, Винни. Вот так я буду с тобой разговаривать. Кажется, пора немного подкрепиться.")
     }
 
     /// Closing the chat is the "be quiet" gesture.

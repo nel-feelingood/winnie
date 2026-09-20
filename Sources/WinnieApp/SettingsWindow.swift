@@ -9,6 +9,7 @@ struct SettingsView: View {
     var onShortcutChange: (Shortcut) -> Void
     var onVoiceShortcutChange: (Shortcut) -> Void
     var onNewVoiceShortcutChange: (Shortcut) -> Void
+    var onVoicePreview: () -> Void
     var onScaleChange: (Double) -> Void
 
     /// Left empty on purpose: showing the stored key would mean reading the secret
@@ -110,6 +111,37 @@ struct SettingsView: View {
             } footer: {
                 Text("Эти заметки Винни дописывает к промпту сам, когда ты просишь что-то запомнить. Твой мастер-промпт он не меняет.")
             }
+            Section {
+                Picker("Голос", selection: $settings.voiceIdentifier) {
+                    Text("Авто — лучший установленный").tag("")
+                    ForEach(Speaker.russianVoices(), id: \.identifier) { voice in
+                        Text(Speaker.label(for: voice)).tag(voice.identifier)
+                    }
+                }
+                HStack {
+                    Text("Тон")
+                    Slider(value: $settings.voicePitch, in: AppSettings.voicePitchRange, step: 0.02)
+                    Text(String(format: "%.2f", settings.voicePitch)).monospacedDigit().frame(width: 40, alignment: .trailing)
+                }
+                HStack {
+                    Text("Темп")
+                    Slider(value: $settings.voiceRate, in: AppSettings.voiceRateRange, step: 0.01)
+                    Text(String(format: "%.2f", settings.voiceRate)).monospacedDigit().frame(width: 40, alignment: .trailing)
+                }
+                HStack {
+                    Button("Прослушать") { onVoicePreview() }
+                    Button("Как в мультике") { settings.voicePitch = 1.22; settings.voiceRate = 0.56 }
+                    Button("Обычный") { settings.voicePitch = 1.0; settings.voiceRate = 0.52 }
+                    Spacer()
+                    Button("Скачать голоса…") {
+                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.universalaccess?SpokenContent")!)
+                    }
+                }
+            } header: {
+                Text("Звучание")
+            } footer: {
+                Text("Улучшенные и премиум-голоса бесплатны: Системные настройки → Универсальный доступ → Устный контент → Системный голос → Управлять голосами → Русский.")
+            }
             Section("Голос") {
                 Toggle("Отвечать вслух на голосовые вопросы", isOn: $settings.speaksReplies)
                 Toggle("Проговаривать напоминания вслух", isOn: $settings.speaksReminders)
@@ -121,7 +153,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 930)
+        .frame(width: 520, height: 760)
         .onChange(of: settings.shortcut) { _, shortcut in onShortcutChange(shortcut) }
         .onChange(of: settings.voiceShortcut) { _, shortcut in onVoiceShortcutChange(shortcut) }
         .onChange(of: settings.newVoiceShortcut) { _, shortcut in onNewVoiceShortcutChange(shortcut) }
@@ -173,11 +205,13 @@ final class SettingsWindowController {
     private let onShortcutChange: (Shortcut) -> Void
     private let onVoiceShortcutChange: (Shortcut) -> Void
     private let onNewVoiceShortcutChange: (Shortcut) -> Void
+    private let onVoicePreview: () -> Void
     private let onScaleChange: (Double) -> Void
 
     init(settings: AppSettings, gmail: GmailAuth, memory: MemoryStore, onShortcutChange: @escaping (Shortcut) -> Void,
          onVoiceShortcutChange: @escaping (Shortcut) -> Void,
          onNewVoiceShortcutChange: @escaping (Shortcut) -> Void,
+         onVoicePreview: @escaping () -> Void,
          onScaleChange: @escaping (Double) -> Void) {
         self.settings = settings
         self.gmail = gmail
@@ -185,6 +219,7 @@ final class SettingsWindowController {
         self.onShortcutChange = onShortcutChange
         self.onVoiceShortcutChange = onVoiceShortcutChange
         self.onNewVoiceShortcutChange = onNewVoiceShortcutChange
+        self.onVoicePreview = onVoicePreview
         self.onScaleChange = onScaleChange
     }
 
@@ -193,13 +228,14 @@ final class SettingsWindowController {
             let view = SettingsView(settings: settings, gmail: gmail, memory: memory, onShortcutChange: onShortcutChange,
                                     onVoiceShortcutChange: onVoiceShortcutChange,
                                     onNewVoiceShortcutChange: onNewVoiceShortcutChange,
+                                    onVoicePreview: onVoicePreview,
                                     onScaleChange: onScaleChange)
             let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable],
                                   backing: .buffered, defer: false)
             window.title = "Настройки Винни"
             window.contentView = NSHostingView(rootView: view)
             window.isReleasedWhenClosed = false
-            window.setContentSize(NSSize(width: 520, height: 930))
+            window.setContentSize(NSSize(width: 520, height: 760))
             window.center()
             self.window = window
         }
