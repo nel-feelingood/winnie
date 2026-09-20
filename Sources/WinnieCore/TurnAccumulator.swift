@@ -7,6 +7,8 @@ public enum StreamEvent: Equatable, Sendable {
     case sources([Source])
     /// The model is calling one of the app's own tools (reminders).
     case toolUse(name: String)
+    /// Token counts of one finished API response.
+    case usage(UsageSample)
 }
 
 public enum ClaudeError: Error, Equatable, LocalizedError {
@@ -47,6 +49,8 @@ public struct TurnAccumulator {
     public private(set) var stopReason: String?
     public private(set) var text = ""
     public private(set) var sources: [Source] = []
+    /// Filled from `message_start` and refined by `message_delta`, which carries the final counts.
+    public private(set) var usage: UsageSample?
 
     private var blocks: [Int: [String: Any]] = [:]
     private var partialJSON: [Int: String] = [:]
@@ -65,6 +69,12 @@ public struct TurnAccumulator {
         else { return [] }
 
         switch type {
+        case "message_start":
+            let message = event["message"] as? [String: Any] ?? [:]
+            usage = UsageSample(model: message["model"] as? String ?? "")
+            absorb(message["usage"] as? [String: Any])
+            return []
+
         case "content_block_start":
             guard let index = event["index"] as? Int,
                   let block = event["content_block"] as? [String: Any] else { return [] }
@@ -90,6 +100,7 @@ public struct TurnAccumulator {
                let reason = delta["stop_reason"] as? String {
                 stopReason = reason
             }
+            absorb(event["usage"] as? [String: Any])
             return []
 
         case "error":
@@ -99,6 +110,15 @@ public struct TurnAccumulator {
         default:
             return []
         }
+    }
+
+    private mutating func absorb(_ reported: [String: Any]?) {
+        guard let reported, usage != nil else { return }
+        if let value = reported["input_tokens"] as? Int { usage?.input = value }
+        if let value = reported["output_tokens"] as? Int { usage?.output = value }
+        if let value = reported["cache_read_input_tokens"] as? Int { usage?.cacheRead = value }
+        if let value = reported["cache_creation_input_tokens"] as? Int { usage?.cacheWrite = value }
+        if let value = (reported["server_tool_use"] as? [String: Any])?["web_search_requests"] as? Int { usage?.searches = value }
     }
 
     private mutating func applyDelta(_ type: String, _ delta: [String: Any], at index: Int) -> [StreamEvent] {

@@ -72,6 +72,12 @@ final class AppSettings: ObservableObject {
     static let voicePitchRange = 0.6...1.6
     static let voiceRateRange = 0.35...0.65
 
+    /// One-tap prompts offered in an empty chat.
+    @Published var quickActions: [String] {
+        didSet { defaults.set(quickActions, forKey: "quickActions") }
+    }
+    static let defaultQuickActions = ["Проверь почту", "Какие у меня напоминания?", "Что нового в мире?"]
+
     /// Say a due reminder out loud. Off by default: a voice out of nowhere is a bad surprise on a call.
     @Published var speaksReminders: Bool {
         didSet { defaults.set(speaksReminders, forKey: "speaksReminders") }
@@ -85,6 +91,7 @@ final class AppSettings: ObservableObject {
 
     init() {
         speaksReminders = defaults.bool(forKey: "speaksReminders")
+        quickActions = defaults.stringArray(forKey: "quickActions") ?? Self.defaultQuickActions
         voiceIdentifier = defaults.string(forKey: "voiceIdentifier") ?? ""
         let pitch = defaults.double(forKey: "voicePitch"), rate = defaults.double(forKey: "voiceRate")
         // Neutral by default: an altered pitch only suits a good voice, and that is for the ear to judge.

@@ -21,12 +21,14 @@ final class ChatController: ObservableObject {
     let store: ChatStore
     let reminders: ReminderStore
     let memory: MemoryStore
+    let usage: UsageStore
     let gmail: GmailAuth
     let settings: AppSettings
     var onActivity: (ChatActivity) -> Void = { _ in }
     /// The window layer owns hiding the chat during a capture and bringing it back.
     var onCaptureRequest: () -> Void = {}
     var onMinimize: () -> Void = {}
+    var onOpenQuickActionSettings: () -> Void = {}
 
     private let client = ClaudeClient()
     private var streamTask: Task<Void, Never>?
@@ -37,10 +39,12 @@ final class ChatController: ObservableObject {
     /// flushed to the UI at most this often instead of per token.
     private static let flushInterval: Duration = .milliseconds(60)
 
-    init(store: ChatStore, reminders: ReminderStore, memory: MemoryStore, gmail: GmailAuth, settings: AppSettings) {
+    init(store: ChatStore, reminders: ReminderStore, memory: MemoryStore, usage: UsageStore, gmail: GmailAuth,
+         settings: AppSettings) {
         self.store = store
         self.reminders = reminders
         self.memory = memory
+        self.usage = usage
         self.speaker = Speaker(settings: settings)
         self.gmail = gmail
         self.settings = settings
@@ -192,6 +196,21 @@ final class ChatController: ObservableObject {
         speaker.stop()
     }
 
+    func openQuickActionSettings() { onOpenQuickActionSettings() }
+
+    /// A quick action is just a message the user did not have to type.
+    func run(quickAction text: String) {
+        guard !isStreaming, !isListening else { return }
+        draft = text
+        send()
+    }
+
+    /// Non-empty quick actions, shown only while the current chat has no messages.
+    var visibleQuickActions: [String] {
+        guard store.current?.isEmpty ?? true, !isStreaming else { return [] }
+        return settings.quickActions.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    }
+
     func send(spoken: Bool = false) {
         guard canSend else { return }
         speaker.stop()
@@ -284,6 +303,8 @@ final class ChatController: ObservableObject {
                     default: "Записываю напоминание…"
                     }
                     onActivity(.thinking)
+                case .usage(let sample):
+                    usage.record(sample)
                 case .sources(let sources):
                     store.update(replyID, in: sessionID) { $0.sources = sources }
                 }
@@ -319,10 +340,11 @@ final class ChatController: ObservableObject {
 
     private func requestTitle(for sessionID: UUID, firstMessage: String, apiKey: String) {
         guard !apiKey.isEmpty else { return }
-        Task { [client, weak store] in
-            guard let title = try? await client.makeTitle(apiKey: apiKey, firstUserMessage: firstMessage)
+        Task { [client, weak store, weak usage] in
+            guard let result = try? await client.makeTitle(apiKey: apiKey, firstUserMessage: firstMessage)
             else { return }
-            store?.setTitle(title, for: sessionID)
+            store?.setTitle(result.title, for: sessionID)
+            usage?.record(result.usage)
         }
     }
 

@@ -202,6 +202,7 @@ public struct ClaudeClient: Sendable {
                                                      now: startedAt, messages: messages) {
                             continuation.yield($0)
                         }
+                        if let usage = turn.usage { continuation.yield(.usage(usage)) }
                         if turn.contentBlocks.contains(where: { Self.isUntrustedSource($0) }) { sawUntrustedContent = true }
                         switch turn.stopReason {
                         case "pause_turn":
@@ -293,7 +294,7 @@ public struct ClaudeClient: Sendable {
 
     /// Names a chat in one to three words. Runs on the small model: it is a
     /// background nicety and must not slow down or add cost to the real answer.
-    public func makeTitle(apiKey: String, firstUserMessage: String) async throws -> String {
+    public func makeTitle(apiKey: String, firstUserMessage: String) async throws -> (title: String, usage: UsageSample) {
         let body: [String: Any] = [
             "model": ModelOption.haiku.rawValue,
             "max_tokens": 40,
@@ -315,7 +316,10 @@ public struct ClaudeClient: Sendable {
         let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         let blocks = object?["content"] as? [[String: Any]] ?? []
         let text = blocks.compactMap { $0["text"] as? String }.joined()
-        return Self.cleanTitle(text)
+        let reported = object?["usage"] as? [String: Any] ?? [:]
+        let usage = UsageSample(model: ModelOption.haiku.rawValue, input: reported["input_tokens"] as? Int ?? 0,
+                                output: reported["output_tokens"] as? Int ?? 0)
+        return (Self.cleanTitle(text), usage)
     }
 
     static func cleanTitle(_ raw: String) -> String {

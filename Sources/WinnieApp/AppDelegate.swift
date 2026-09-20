@@ -10,8 +10,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var reminders = ReminderStore(directory: AppSettings.supportDirectory)
     private let gmail = GmailAuth()
     private lazy var memory = MemoryStore(directory: AppSettings.supportDirectory)
-    private lazy var controller = ChatController(store: store, reminders: reminders, memory: memory, gmail: gmail,
-                                                 settings: settings)
+    private lazy var usage = UsageStore(directory: AppSettings.supportDirectory)
+    private lazy var controller = ChatController(store: store, reminders: reminders, memory: memory, usage: usage,
+                                                 gmail: gmail, settings: settings)
     private var scheduler: ReminderScheduler!
 
     private var petWindow: PetWindow!
@@ -47,20 +48,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller.onActivity = { [unowned self] in petView.setActivity($0) }
         controller.onCaptureRequest = { [unowned self] in captureScreenshot() }
         controller.onMinimize = { [unowned self] in closeChat() }
+        controller.onOpenQuickActionSettings = { [unowned self] in settingsWindow.show(.quick) }
         ImageStore.removeOrphans(keeping: store.referencedImageFiles)
 
         settingsWindow = SettingsWindowController(
-            settings: settings,
-            gmail: gmail,
-            memory: memory,
-            onShortcutChange: { [unowned self] in hotKey.register($0) },
-            onNewVoiceShortcutChange: { [unowned self] in newVoiceHotKey.register($0) },
-            onVoicePreview: { [unowned self] in controller.previewVoice() },
-            onScaleChange: { [unowned self] in
-                petView.apply(scale: $0)
-                settings.petOrigin = petWindow.frame.origin
-                if chatPanel.isVisible { chatPanel.position(relativeTo: petWindow.frame) }
-            }
+            settings: settings, gmail: gmail, memory: memory, usage: usage,
+            actions: SettingsActions(
+                onShortcutChange: { [unowned self] in hotKey.register($0) },
+                onNewVoiceShortcutChange: { [unowned self] in newVoiceHotKey.register($0) },
+                onVoicePreview: { [unowned self] in controller.previewVoice() },
+                onScaleChange: { [unowned self] in
+                    petView.apply(scale: $0)
+                    settings.petOrigin = petWindow.frame.origin
+                    if chatPanel.isVisible { chatPanel.position(relativeTo: petWindow.frame) }
+                }
+            )
         )
         statusMenu = StatusMenu(settings: settings, actions: .init(
             togglePet: { [unowned self] in petWindow.isVisible ? hideEverything() : showPet() },
@@ -93,7 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         newVoiceHotKey.register(settings.newVoiceShortcut)
 
-        if !Keychain.hasAPIKey { settingsWindow.show() }
+        if !Keychain.hasAPIKey { settingsWindow.show(.claude) }
     }
 
     // MARK: - Show / hide
