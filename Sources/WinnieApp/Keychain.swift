@@ -17,6 +17,9 @@ enum Keychain {
     /// most once per launch and kept in memory afterwards.
     private static var cache: [String: String] = [:]
 
+    /// Status of the most recent failed read, for an honest error message.
+    private(set) static var lastFailure: OSStatus?
+
     private static func baseQuery(_ account: String) -> [String: Any] {
         [kSecClass as String: kSecClassGenericPassword,
          kSecAttrService as String: service,
@@ -46,7 +49,12 @@ enum Keychain {
         let status = SecItemCopyMatching(query as CFDictionary, &item)
         let value = (item as? Data).flatMap { String(data: $0, encoding: .utf8) } ?? ""
         // A denied prompt is not cached, so the next attempt can ask again.
-        if status == errSecSuccess || status == errSecItemNotFound { cache[account] = value }
+        if status == errSecSuccess || status == errSecItemNotFound {
+            cache[account] = value
+            lastFailure = nil
+        } else {
+            lastFailure = status
+        }
         return value
     }
 

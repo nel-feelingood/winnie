@@ -90,6 +90,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             controller.notify("Разреши Winnie уведомления в Системных настройках, иначе напоминания не всплывут")
         }
 
+        // After the chat panel exists, so a reminder missed while Winnie was closed can be shown.
+        scheduler.catchUp()
+
         hotKey = HotKey(id: 1) { [unowned self] in toggleFromShortcut() }
         hotKey.register(settings.shortcut)
         newVoiceHotKey = HotKey(id: 3) { [unowned self] in

@@ -18,7 +18,22 @@ final class ReminderScheduler: NSObject, UNUserNotificationCenterDelegate {
     private let store: ReminderStore
     private let center = UNUserNotificationCenter.current()
     private var timer: Timer?
-    private var lastCheck = Date()
+
+    /// Up to when due reminders have been presented. Persisted, so a reminder that came due
+    /// while Winnie was not running (quit, updated, crashed) is still shown at the next
+    /// launch instead of being silently skipped.
+    private var lastCheck: Date {
+        get {
+            let stored = UserDefaults.standard.double(forKey: Self.lastCheckKey)
+            // First launch has nothing to catch up on; never look back further than a day.
+            let earliest = Date().addingTimeInterval(-Self.catchUpWindow)
+            return stored == 0 ? Date() : max(Date(timeIntervalSince1970: stored), earliest)
+        }
+        set { UserDefaults.standard.set(newValue.timeIntervalSince1970, forKey: Self.lastCheckKey) }
+    }
+
+    private static let lastCheckKey = "remindersCheckedUntil"
+    private static let catchUpWindow: TimeInterval = 24 * 60 * 60
     private var subscription: AnyCancellable?
 
     init(store: ReminderStore) {
@@ -31,7 +46,11 @@ final class ReminderScheduler: NSObject, UNUserNotificationCenterDelegate {
             .sink { [weak self] _ in self?.sync() }
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(didWake),
                                                           name: NSWorkspace.didWakeNotification, object: nil)
+        if UserDefaults.standard.double(forKey: Self.lastCheckKey) == 0 { lastCheck = Date() }
     }
+
+    /// Call once the app can present: shows whatever came due while Winnie was away.
+    func catchUp() { fireDue() }
 
     // MARK: - System notifications
 
@@ -104,7 +123,7 @@ final class ReminderScheduler: NSObject, UNUserNotificationCenterDelegate {
         let timer = Timer(fire: next, interval: 0, repeats: false) { [weak self] _ in
             MainActor.assumeIsolated { self?.fireDue() }
         }
-        timer.tolerance = 1
+        timer.tolerance = 0.5
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
     }

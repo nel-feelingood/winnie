@@ -16,6 +16,8 @@ find "$BIN" -maxdepth 1 -name "*.bundle" -exec cp -R {} "$APP/Contents/Resources
 cp Assets/icon/Winnie.icns "$APP/Contents/Resources/Winnie.icns"
 cp Assets/icon/menubar.svg "$APP/Contents/Resources/menubar.svg"
 
+# NSAppSleepDisabled: App Nap may hold a background app's timers back by minutes, and a reminder
+# that fires late is a broken reminder. Winnie is idle between events, so this costs no energy.
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -32,6 +34,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
+    <key>NSAppSleepDisabled</key><true/>
     <key>NSMicrophoneUsageDescription</key><string>Винни слушает вопрос, когда ты нажимаешь кнопку микрофона.</string>
     <key>NSSpeechRecognitionUsageDescription</key><string>Винни превращает сказанное в текст вопроса. Распознавание идёт на этом Mac.</string>
 </dict>

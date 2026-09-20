@@ -13,6 +13,8 @@ public enum StreamEvent: Equatable, Sendable {
 
 public enum ClaudeError: Error, Equatable, LocalizedError {
     case missingAPIKey
+    /// The key exists, but the Keychain would not hand it over this time.
+    case keychainUnavailable(code: Int)
     case http(status: Int, message: String)
     case stream(message: String)
     case refusal
@@ -22,6 +24,8 @@ public enum ClaudeError: Error, Equatable, LocalizedError {
         switch self {
         case .missingAPIKey:
             "Не задан API-ключ. Добавь его в меню Винни → «Настройки…»."
+        case .keychainUnavailable(let code):
+            "Ключ сохранён, но Связка ключей сейчас его не отдала (код \(code)). Отправь сообщение ещё раз; если появится запрос доступа — нажми «Разрешать всегда»."
         case .http(401, _):
             "API-ключ не подошёл. Проверь его в меню Винни → «Настройки…»."
         case .http(429, _):

@@ -235,6 +235,9 @@ final class ChatController: ObservableObject {
         store.append(reply, to: session.id)
 
         let apiKey = Keychain.loadAPIKey()
+        // A stored key that could not be read is a different problem from a missing one.
+        let keyProblem: ClaudeError? = apiKey.isEmpty && Keychain.hasAPIKey
+            ? .keychainUnavailable(code: Int(Keychain.lastFailure ?? 0)) : nil
         if session.title == nil {
             if text.isEmpty {
                 store.setTitle("Скриншот", for: session.id)
@@ -247,12 +250,12 @@ final class ChatController: ObservableObject {
         onActivity(.thinking)
         streamTask = Task { [weak self] in
             await self?.stream(into: reply.id, sessionID: session.id, history: history, apiKey: apiKey,
-                               spoken: spoken)
+                               spoken: spoken, keyProblem: keyProblem)
         }
     }
 
     private func stream(into replyID: UUID, sessionID: UUID, history: [ChatMessage], apiKey: String,
-                        spoken: Bool) async {
+                        spoken: Bool, keyProblem: ClaudeError?) async {
         let speaks = spoken && settings.speaksReplies
         var unspoken = ""
         var pending = ""
@@ -271,6 +274,7 @@ final class ChatController: ObservableObject {
         let apps = await mcp.servers(for: settings.connectors)
         let apis = settings.resolvedAPIs
         do {
+            if let keyProblem { throw keyProblem }
             for try await event in client.streamReply(apiKey: apiKey, model: settings.model,
                                                              masterPrompt: settings.masterPrompt, history: history,
                                                              spoken: speaks,
