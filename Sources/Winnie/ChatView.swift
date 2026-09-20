@@ -54,10 +54,6 @@ struct ChatView: View {
             HeaderButton(symbol: "camera.viewfinder", help: "Скриншот области экрана") {
                 controller.requestCapture()
             }
-            HeaderButton(symbol: "arrow.up.forward.app", help: "Открыть в Claude") {
-                controller.openInClaude()
-            }
-            .disabled(store.current?.isEmpty ?? true)
             HeaderButton(symbol: "plus", help: "Новый чат (⌘N)") { controller.newChat() }
         }
         .padding(.horizontal, 12)

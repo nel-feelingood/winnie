@@ -185,30 +185,7 @@ final class ChatController: ObservableObject {
         }
     }
 
-    // MARK: - Hand-off to the Claude app
-
-    /// One-way hand-off: Claude's own chats are not reachable through the API,
-    /// so the transcript travels via the clipboard into a fresh Claude chat.
-    func openInClaude() {
-        guard let session = store.current, !session.isEmpty else { return }
-        let transcript = session.messages
-            .filter { !$0.isError && !$0.text.isEmpty }
-            .map { ($0.role == .user ? "**Я:** " : "**Ассистент:** ") + $0.text }
-            .joined(separator: "\n\n")
-        let text = "Продолжим разговор, начатый в другом чате. Вот его содержание:\n\n\(transcript)"
-
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.setString(text, forType: .string)
-
-        let workspace = NSWorkspace.shared
-        if let app = workspace.urlForApplication(withBundleIdentifier: "com.anthropic.claudefordesktop") {
-            workspace.openApplication(at: app, configuration: .init())
-        } else if let web = URL(string: "https://claude.ai/new") {
-            workspace.open(web)
-        }
-        show(toast: "Диалог скопирован — вставь его в Claude (⌘V)")
-    }
+    // MARK: - Toast
 
     private func show(toast message: String) {
         toast = message
