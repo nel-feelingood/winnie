@@ -68,7 +68,7 @@ struct MarkdownEditor: NSViewRepresentable {
 
         func textDidChange(_ notification: Notification) {
             guard let view = notification.object as? SlashTextView else { return }
-            view.restyle()
+            view.restyle(edited: view.takeEditedRange())
             parent.text = view.string
         }
     }
@@ -100,6 +100,26 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
     // MARK: - Styling
 
     private var lastCaret = 0
+
+    /// Where the most recent change landed, for the incremental restyle.
+    private var lastEditedRange: NSRange?
+
+    /// Every edit passes through here first, with the exact range it will occupy afterwards. A multi-line
+    /// paste is thus restyled in full, not just the paragraph the caret ends up in.
+    override func shouldChangeText(in affectedCharRange: NSRange, replacementString: String?) -> Bool {
+        let allowed = super.shouldChangeText(in: affectedCharRange, replacementString: replacementString)
+        if allowed {
+            let inserted = NSRange(location: affectedCharRange.location, length: ((replacementString ?? "") as NSString).length)
+            lastEditedRange = lastEditedRange.map { NSUnionRange($0, inserted) } ?? inserted
+        }
+        return allowed
+    }
+
+    /// Hands the pending range to the restyle and forgets it.
+    func takeEditedRange() -> NSRange? {
+        defer { lastEditedRange = nil }
+        return lastEditedRange
+    }
 
     /// Syntax characters are never shown, so the caret must not rest between them either: an arrow key
     /// that landed inside «**» would seem to do nothing. It is carried on to the far side instead.
@@ -248,7 +268,12 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
     ///
     /// The look is that of rendered Markdown: syntax characters are never drawn. Formatting is changed with the
     /// selection bar and the «/» menu, and removed with Backspace at its start.
-    func restyle() {
+    ///
+    /// `edited` narrows the work to the paragraphs a keystroke touched. The text is always parsed in full
+    /// (that is what gives the drawn boxes and bars their positions), but attributes are re-applied and
+    /// glyphs rebuilt only there, which is where nearly all the time goes. Code fences change the meaning
+    /// of every line after them, so an edit near one falls back to the whole text.
+    func restyle(edited: NSRange? = nil) {
         guard let storage = textStorage else { return }
         let text = string
         let source = text as NSString
@@ -262,16 +287,43 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
         }
 
         let spans = MarkdownSpans.spans(in: text).filter { NSMaxRange($0.range) <= whole.length }
+        var scope = whole
+        if let edited, edited.location <= whole.length {
+            let paragraphs = source.paragraphRange(for: NSRange(location: edited.location, length: min(edited.length, whole.length - edited.location)))
+            let touchesCode = source.substring(with: paragraphs).contains("```") || spans.contains {
+                NSIntersectionRange($0.range, paragraphs).length > 0 && ($0.style == .codeBlock || $0.style == .fence)
+            }
+            // A keystroke that just broke a fence apart leaves nothing in the text to find, but the count gives it
+            // away: `fences` still holds what the previous pass saw.
+            let fenceCount = spans.reduce(0) { $0 + ($1.style == .fence ? 1 : 0) }
+            if !touchesCode, fenceCount == fences.count { scope = paragraphs }
+        }
+        func inScope(_ range: NSRange) -> Bool {
+            scope.length == whole.length || NSIntersectionRange(source.paragraphRange(for: range), scope).length > 0
+        }
         let taskLines = Set(spans.compactMap { span -> Int? in
             if case .checkbox = span.style { return source.paragraphRange(for: span.range).location }
             return nil
         })
 
         storage.beginEditing()
-        storage.setAttributes([.font: body, .foregroundColor: NSColor.labelColor, .paragraphStyle: paragraph], range: whole)
+        storage.setAttributes([.font: body, .foregroundColor: NSColor.labelColor, .paragraphStyle: paragraph], range: scope)
         pictures = []; checkboxes = []; codeBlocks = []; fences = []; quotes = []; rules = []
 
-        for span in spans {
+        // Positions are collected for every span; attributes are touched only inside the scope.
+        for span in spans where !inScope(span.range) {
+            switch span.style {
+            case .fence: fences.append(span.range)
+            case .rule: rules.append(span.range)
+            case .codeBlock: codeBlocks.append(span.range)
+            case .quote: quotes.append(span.range)
+            case .checkbox(let isDone): checkboxes.append((span.range, isDone))
+            case .image(let path):
+                if let image = picture(at: path) { pictures.append((span.range, image, pictureSize(image))) }
+            default: break
+            }
+        }
+        for span in spans where inScope(span.range) {
             switch span.style {
             case .marker:
                 markup(span.range)
@@ -336,8 +388,8 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
         }
         storage.endEditing()
         // Hidden-ness is decided when glyphs are generated, so an attribute change alone would not show.
-        layoutManager?.invalidateGlyphs(forCharacterRange: whole, changeInLength: 0, actualCharacterRange: nil)
-        layoutManager?.invalidateLayout(forCharacterRange: whole, actualCharacterRange: nil)
+        layoutManager?.invalidateGlyphs(forCharacterRange: scope, changeInLength: 0, actualCharacterRange: nil)
+        layoutManager?.invalidateLayout(forCharacterRange: scope, actualCharacterRange: nil)
         needsDisplay = true
     }
 
@@ -389,13 +441,17 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
     /// Makes room under the line that names a picture; `draw` fills it.
     private func reservePicture(_ path: String, for range: NSRange, in storage: NSTextStorage, base: NSParagraphStyle) {
         guard let image = picture(at: path) else { return }
-        let available = max(120, (textContainer?.size.width ?? 340) - 2 * (textContainer?.lineFragmentPadding ?? 5))
-        let scale = min(1, available / image.size.width, Self.maxPictureHeight / image.size.height)
-        let size = NSSize(width: (image.size.width * scale).rounded(), height: (image.size.height * scale).rounded())
+        let size = pictureSize(image)
         let style = base.mutableCopy() as! NSMutableParagraphStyle
         style.paragraphSpacing = size.height + Self.pictureGap * 2
         storage.addAttribute(.paragraphStyle, value: style, range: (storage.string as NSString).paragraphRange(for: range))
         pictures.append((range, image, size))
+    }
+
+    private func pictureSize(_ image: NSImage) -> NSSize {
+        let available = max(120, (textContainer?.size.width ?? 340) - 2 * (textContainer?.lineFragmentPadding ?? 5))
+        let scale = min(1, available / image.size.width, Self.maxPictureHeight / image.size.height)
+        return NSSize(width: (image.size.width * scale).rounded(), height: (image.size.height * scale).rounded())
     }
 
     private func picture(at path: String) -> NSImage? {

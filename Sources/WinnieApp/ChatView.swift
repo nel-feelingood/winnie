@@ -60,7 +60,8 @@ struct ChatView: View {
             // Centred on the panel itself, not on the space the side buttons leave over.
             TabPills(selection: $controller.tab)
 
-            HStack {
+            // Tight spacing: at the default width three icons and the centred tabs only just fit side by side.
+            HStack(spacing: 2) {
                 // The «+» makes whatever the current tab holds: a dialog, or a note.
                 Button { controller.tab == .notes ? controller.newNote() : controller.newChat() } label: {
                     Label(controller.tab == .notes ? "New note" : "New dialog", systemImage: "plus")

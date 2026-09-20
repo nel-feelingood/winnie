@@ -90,10 +90,15 @@ final class ReminderScheduler: NSObject, UNUserNotificationCenterDelegate {
         func repeating(_ components: DateComponents) -> UNCalendarNotificationTrigger {
             UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
         }
+        let exact = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: reminder.fireAt)
+        // A repeating trigger has no start date: «daily at 9, from Monday» would already fire tomorrow. Until the
+        // first occurrence has passed, only that one is scheduled; `fireDue` re-syncs and the repeat takes over.
+        if reminder.repeats == .none || reminder.fireAt > Date() {
+            return [("", UNCalendarNotificationTrigger(dateMatching: exact, repeats: false))]
+        }
         switch reminder.repeats {
         case .none:
-            let exact = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: reminder.fireAt)
-            return [("", UNCalendarNotificationTrigger(dateMatching: exact, repeats: false))]
+            return []
         case .daily:
             return [("", repeating(time))]
         case .weekdays:
@@ -137,7 +142,8 @@ final class ReminderScheduler: NSObject, UNUserNotificationCenterDelegate {
         }
         lastCheck = now
         due.forEach(onFire)
-        armTimer()
+        // Not just the timer: a repeating reminder whose first occurrence just passed now gets its repeating trigger.
+        sync()
     }
 
     @objc private func didWake() { fireDue() }

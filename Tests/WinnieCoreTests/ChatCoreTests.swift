@@ -132,6 +132,16 @@ import Testing
         #expect(messages.first?.images.isEmpty == true)
     }
 
+    @Test func aChatOpenedByTheAppStillStartsWithAUserTurn() {
+        // A due reminder: Winnie speaks first, then the user answers.
+        let history = [ChatMessage(role: .assistant, text: "Напоминаю: **Перерыв**"), ChatMessage(role: .user, text: "отложи на час")]
+        let messages = ClaudeClient.apiMessages(from: history)
+        #expect(messages.map { $0["role"] as? String } == ["user", "assistant", "user"])
+        #expect(messages.last?["content"] as? String == "отложи на час")
+        // An ordinary chat is left exactly as it is.
+        #expect(ClaudeClient.apiMessages(from: [ChatMessage(role: .user, text: "привет")]).count == 1)
+    }
+
     @Test func titlesAreTrimmedToThreeWords() {
         #expect(ClaudeClient.cleanTitle("«Перевод слова на английский».\n") == "Перевод слова на")
         #expect(ClaudeClient.cleanTitle("Weather") == "Weather")

@@ -23,6 +23,9 @@ final class TelegramBridge: ObservableObject {
 
     private let defaults = UserDefaults.standard
     private var loop: Task<Void, Never>?
+    /// Wrong codes since the current one was issued. Six digits are no protection if guessing is free.
+    private var failedPairings = 0
+    private static let maxFailedPairings = 5
     private let session: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.timeoutIntervalForRequest = TimeInterval(TelegramAPI.pollTimeout + 15)
@@ -59,6 +62,8 @@ final class TelegramBridge: ObservableObject {
 
     func saveToken(_ token: String) {
         Keychain.save(token, for: .telegramBotToken)
+        // Update ids are per bot. Keeping the old bot's offset could make a new one skip every message.
+        defaults.removeObject(forKey: "telegramOffset")
         unpair()
     }
 
@@ -73,6 +78,7 @@ final class TelegramBridge: ObservableObject {
     func disconnect() {
         loop?.cancel()
         Keychain.save("", for: .telegramBotToken)
+        defaults.removeObject(forKey: "telegramOffset")
         ownerChatID = nil
         ownerName = ""
         pairingCode = ""
@@ -163,9 +169,16 @@ final class TelegramBridge: ObservableObject {
                 ownerChatID = message.chatID
                 ownerName = message.senderName
                 pairingCode = ""
+                failedPairings = 0
                 status = .connected(message.senderName)
                 await send("Готово, теперь я отвечаю только тебе. Пиши как в обычный чат; /new начинает разговор заново.", to: message.chatID)
             } else {
+                failedPairings += 1
+                if failedPairings >= Self.maxFailedPairings {
+                    // A fresh code after a handful of misses: the owner sees it in Settings, a guesser starts over.
+                    failedPairings = 0
+                    pairingCode = TelegramAPI.makePairingCode()
+                }
                 await send("Я ещё ни к кому не привязан. Пришли код из настроек Winnie на маке (раздел API → Telegram).", to: message.chatID)
             }
             return

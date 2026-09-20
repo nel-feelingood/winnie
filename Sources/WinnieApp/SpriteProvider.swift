@@ -27,8 +27,6 @@ final class SpriteProvider {
         return frames
     }
 
-    var hasCustomSprites: Bool { load(.idle) != nil }
-
     private func load(_ state: PetState) -> NSImage? {
         let url = AppSettings.spritesDirectory.appendingPathComponent("\(state.rawValue).png")
         return NSImage(contentsOf: url)

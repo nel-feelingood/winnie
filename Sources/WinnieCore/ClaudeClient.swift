@@ -153,8 +153,13 @@ public struct ClaudeClient: Sendable {
     /// would be re-billed as input on every later turn of a throwaway chat.
     /// Screenshots are replayed, since follow-up questions are usually about them.
     static func apiMessages(from history: [ChatMessage], imageLoader: ImageLoader = { _ in nil }) -> [[String: Any]] {
-        history
-            .filter { !$0.isError && !($0.text.isEmpty && $0.images.isEmpty) }
+        var kept = history.filter { !$0.isError && !($0.text.isEmpty && $0.images.isEmpty) }
+        // The API wants the user to speak first. A chat the app opened itself (a due reminder) starts with
+        // Winnie, and so can a long history cut to its tail; a stand-in user turn keeps that context valid.
+        if kept.first?.role == .assistant {
+            kept.insert(ChatMessage(role: .user, text: "(The app showed the next message on its own; the user had not written anything yet.)"), at: 0)
+        }
+        return kept
             .map { message in
                 let images: [[String: Any]] = message.images.compactMap(imageLoader).map {
                     ["type": "image",

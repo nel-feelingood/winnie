@@ -77,6 +77,42 @@ MainActor.assumeIsolated {
         check("moving right skips the hidden mark", String(view.selectedRange().location), "4")
         view.setSelectedRange(NSRange(location: 3, length: 0)); view.caretMoved()      // ← lands inside again
         check("moving left skips it the other way", String(view.selectedRange().location), "2")
+
+        // Incremental restyling must end up exactly where a full one would.
+        func type(_ text: String, at location: Int, replacing length: Int = 0, in view: SlashTextView) {
+            let range = NSRange(location: location, length: length)
+            guard view.shouldChangeText(in: range, replacementString: text) else { return }
+            view.replaceCharacters(in: range, with: text)
+            view.restyle(edited: view.takeEditedRange())
+        }
+        func matchesFullRestyle(_ view: SlashTextView) -> Bool {
+            let fresh = editor(view.string)
+            return view.textStorage!.isEqual(to: fresh.textStorage!)
+        }
+        let sample = "# Заголовок\nобычный текст\n- пункт\n\n```\nкод\n```\nпосле кода\n> цитата"
+        view = editor(sample)
+        type("**жирный** ", at: 12, in: view)
+        check("typing in a paragraph", String(matchesFullRestyle(view)), "true")
+        type("- [ ] раз\n- [x] два\n## Подзаголовок\n", at: 0, in: view)
+        check("pasting several lines", String(matchesFullRestyle(view)), "true")
+        let fence = (view.string as NSString).range(of: "```")
+        type("", at: fence.location, replacing: 1, in: view)                     // break the opening fence
+        check("breaking a code fence", String(matchesFullRestyle(view)), "true")
+        type("`", at: fence.location, in: view)                                   // and restore it
+        check("restoring the fence", String(matchesFullRestyle(view)), "true")
+        type("", at: 0, replacing: 2, in: view)                                   // «- [ ] раз» loses its marker
+        check("turning a task into plain text", String(matchesFullRestyle(view)), "true")
+
+        // What one keystroke costs as a note grows: the whole text, then only the edited paragraph.
+        let paragraph = "## Заголовок\n**Жирный** и *курсив*, `код`, [ссылка](https://a.b).\n- пункт\n- [ ] задача\n> цитата\n\n"
+        for repeats in [50, 200, 800] {
+            let big = editor(String(repeating: paragraph, count: repeats))
+            let clock = ContinuousClock()
+            let full = clock.measure { for _ in 0..<5 { big.restyle() } } / 5
+            let middle = NSRange(location: big.string.utf16.count / 2, length: 1)
+            let partial = clock.measure { for _ in 0..<5 { big.restyle(edited: middle) } } / 5
+            print("restyle \(big.string.count) chars: full \(full), one paragraph \(partial)")
+        }
         exit(0)
     }
 
