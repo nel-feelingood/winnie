@@ -93,9 +93,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotKey = HotKey(id: 1) { [unowned self] in toggleFromShortcut() }
         hotKey.register(settings.shortcut)
         newVoiceHotKey = HotKey(id: 3) { [unowned self] in
-            // While already listening, the same key ends the question instead of discarding it.
-            if controller.isListening { return controller.toggleListening() }
-            openChat(new: true)
+            // With the chat already open the key is just the microphone switch for that chat:
+            // on, or off (which sends what was heard). Only from a closed chat does it start a new dialog.
+            if !chatPanel.isVisible { openChat(new: true) }
             controller.toggleListening()
         }
         newVoiceHotKey.register(settings.newVoiceShortcut)
