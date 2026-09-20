@@ -53,6 +53,22 @@
   </ul>
 
   <h2 id="build">2. Сборка и установка</h2>
+  <h3>Быстрый путь: попросить ИИ-агента</h3>
+  <p>Если пользуешься Claude Code или другим агентом с доступом к терминалу, скопируй промпт — агент проверит
+    требования, скачает исходники, соберёт и запустит приложение. Ключи он не спрашивает: ты вставишь их сам на шаге 3.</p>
+  <div class="prompt">
+      <div class="prompt-head"><span>Промпт для ИИ-агента</span><button type="button" class="copy" data-copy="install-prompt">Скопировать</button></div>
+      <pre id="install-prompt">Установи на этот Mac приложение Winnie — десктоп-питомца с чатом Claude (открытый код, MIT).
+Репозиторий: https://github.com/nel-feelingood/winnie
+
+1. Проверь, что это macOS 14 или новее и что стоят Command Line Tools (xcode-select -p). Если их нет, запусти xcode-select --install и попроси меня дождаться конца установки.
+2. Клонируй репозиторий в ~/Developer/winnie. Если папка уже есть — сделай в ней git pull.
+3. Запусти ./scripts/install.sh. Скрипт соберёт приложение, положит его в /Applications и запустит. Первая сборка идёт пару минут.
+4. Убедись, что /Applications/Winnie.app существует и процесс Winnie запущен. Если сборка упала — покажи ошибку и предложи, как её исправить.
+5. Не проси у меня ключи API и не вводи их сам: ключ Anthropic я вставлю в настройках приложения, в разделе «API». Не меняй системные настройки безопасности.
+6. В конце коротко напиши, что сделано и что осталось мне: вставить ключ, выдать разрешения (уведомления, микрофон, запись экрана) и, по желанию, создать сертификат «Winnie Dev». Подробности: https://nel-feelingood.github.io/winnie/install.html</pre>
+    </div>
+  <h3>Руками</h3>
   <p>Открой Терминал. Если Command Line Tools ещё не стоят, сначала установи их (появится системное окно, дождись окончания):</p>
   <pre>xcode-select --install</pre>
   <p>Затем скачай исходники и запусти установщик:</p>
@@ -170,5 +186,17 @@ tccutil reset All local.winnie.pet             <span class="c"># выданны�
     </div>
   </div>
 </footer>
+<script>
+  // Copy buttons: data-copy holds the id of the element whose text goes to the clipboard.
+  document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => {
+    const text = document.getElementById(button.dataset.copy).textContent;
+    try { await navigator.clipboard.writeText(text); }
+    catch { const r = document.createRange(); r.selectNodeContents(document.getElementById(button.dataset.copy));
+            const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('copy'); s.removeAllRanges(); }
+    const target = button.querySelector('.label') || button, label = target.textContent;
+    target.textContent = 'Скопировано ✓';
+    setTimeout(() => target.textContent = label, 1800);
+  }));
+</script>
 </body>
 </html>

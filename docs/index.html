@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Winnie — Винни-Пух на рабочем столе Mac</title>
-<meta name="description" content="Десктоп-питомец для macOS: Винни-Пух живёт поверх всех окон и по клику открывает карманный чат на Claude. Напоминания, заметки, почта, Telegram. Открытый код, MIT.">
+<meta name="description" content="Winnie — десктоп-питомец и ИИ-помощник для macOS: Винни-Пух поверх всех окон с чатом Claude. Веб-поиск, напоминания, заметки, голос, Gmail, Telegram. Открытый код, MIT.">
 <meta property="og:title" content="Winnie — Винни-Пух на рабочем столе Mac">
 <meta property="og:description" content="Питомец поверх всех окон с карманным чатом на Claude: напоминания, заметки, почта, Telegram.">
 <meta property="og:image" content="https://nel-feelingood.github.io/winnie/images/sprites/hover.png">
@@ -21,29 +21,35 @@
       <a href="#features">Возможности</a>
       <a href="#cases">Сценарии</a>
       <a href="#screens">Экраны</a>
-      <a href="install.html">Установка</a>
+      <a href="#install">Установка</a>
       <a class="keep" href="https://github.com/nel-feelingood/winnie">GitHub</a>
     </div>
   </nav>
 
   <header class="hero" id="top">
     <div>
-      <span class="eyebrow">macOS · открытый код · MIT</span>
-      <h1>Винни-Пух, который живёт <em>на твоём рабочем столе</em></h1>
+      <span class="eyebrow">Приложение для macOS · открытый код</span>
+      <h1>Винни-Пух на рабочем столе <em>с чатом Claude внутри</em></h1>
       <div class="badge" title="Ачивка разблокирована">
         <span class="badge-ico" aria-hidden="true">🏆</span>
         <span class="badge-text"><small>Ачивка разблокирована</small><b>Накожено Серёжей · 20 сент. 2026</b></span>
       </div>
-      <p class="lead">Маленький медведь поверх всех окон. Кликни — откроется карманный чат на Claude: перевести, найти,
-        напомнить, записать. Без браузера, вкладок и переключения контекста.</p>
+      <p class="lead">Winnie — десктоп-питомец и ИИ-помощник в одном. Медведь из советского мультфильма живёт поверх
+        всех окон, а по клику или шорткату открывает компактный чат: спросил, получил ответ, закрыл — без браузера и вкладок.</p>
+      <ul class="hero-features">
+        <li><b>Чат с Claude</b> — веб-поиск, скриншоты, Markdown</li>
+        <li><b>Напоминания</b> обычными словами, с уведомлениями</li>
+        <li><b>Заметки</b> в Markdown, которые медведь ведёт сам</li>
+        <li><b>Голос</b> — диктовка и озвучка, бесплатно</li>
+        <li><b>Почта</b> — сводка Gmail, доступ только на чтение</li>
+        <li><b>Telegram-бот</b>, MCP-серверы и свои API</li>
+      </ul>
       <div class="cta">
-        <a class="btn btn-primary" href="https://github.com/nel-feelingood/winnie">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-          Открыть на GitHub
-        </a>
-        <a class="btn btn-ghost" href="install.html">Как установить</a>
+        <button type="button" class="btn btn-primary" data-copy="install-prompt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6a2 2 0 0 1 2 2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2-2zm0 2v2h6V4H9zM5 6v14h14V6h-2a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2H5zm3 5h8v2H8v-2zm0 4h6v2H8v-2z"/></svg><span class="label">Скопировать промпт для установки</span></button>
+        <a class="btn btn-ghost" href="https://github.com/nel-feelingood/winnie"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
       </div>
-      <p class="note">macOS 14 и новее · нужен свой ключ Anthropic API · собирается из исходников одной командой</p>
+      <p class="cta-hint">Вставь промпт в Claude Code или другого ИИ-агента с терминалом — он сам скачает, соберёт и запустит Winnie. <a href="#install">Посмотреть промпт</a> · <a href="install.html">установить руками</a></p>
+      <p class="note">Бесплатно, MIT · macOS 14+ · нужен свой ключ Anthropic API · данные хранятся только на твоём Mac</p>
     </div>
     <div class="pet">
       <img id="pet" src="images/sprites/idle.png" alt="Винни-Пух" width="360" height="360">
@@ -145,7 +151,24 @@
 <section class="band" id="install">
   <div class="wrap">
     <h2>Установка</h2>
-    <p class="sub">Готовых сборок нет — приложение собирается из исходников. Xcode не нужен, хватит Command Line Tools.</p>
+    <p class="sub">Готовых сборок нет — приложение собирается из исходников прямо на твоём Mac. Xcode не нужен. Есть два пути.</p>
+
+    <h3 class="way"><span>1</span>Попросить ИИ-агента</h3>
+    <p class="way-sub">Скопируй промпт и вставь его в Claude Code или другого агента с доступом к терминалу — он всё сделает сам.</p>
+    <div class="prompt">
+      <div class="prompt-head"><span>Промпт для ИИ-агента</span><button type="button" class="copy" data-copy="install-prompt">Скопировать</button></div>
+      <pre id="install-prompt">Установи на этот Mac приложение Winnie — десктоп-питомца с чатом Claude (открытый код, MIT).
+Репозиторий: https://github.com/nel-feelingood/winnie
+
+1. Проверь, что это macOS 14 или новее и что стоят Command Line Tools (xcode-select -p). Если их нет, запусти xcode-select --install и попроси меня дождаться конца установки.
+2. Клонируй репозиторий в ~/Developer/winnie. Если папка уже есть — сделай в ней git pull.
+3. Запусти ./scripts/install.sh. Скрипт соберёт приложение, положит его в /Applications и запустит. Первая сборка идёт пару минут.
+4. Убедись, что /Applications/Winnie.app существует и процесс Winnie запущен. Если сборка упала — покажи ошибку и предложи, как её исправить.
+5. Не проси у меня ключи API и не вводи их сам: ключ Anthropic я вставлю в настройках приложения, в разделе «API». Не меняй системные настройки безопасности.
+6. В конце коротко напиши, что сделано и что осталось мне: вставить ключ, выдать разрешения (уведомления, микрофон, запись экрана) и, по желанию, создать сертификат «Winnie Dev». Подробности: https://nel-feelingood.github.io/winnie/install.html</pre>
+    </div>
+
+    <h3 class="way"><span>2</span>Или руками — три команды</h3>
     <div class="install">
       <pre><span class="c"># один раз, если ещё не стоят</span>
 xcode-select --install
@@ -182,12 +205,10 @@ cd winnie
 <section class="final band">
   <div class="wrap">
     <h2>Заведи себе медведя</h2>
-    <p class="sub">Исходники, инструкция и история решений — в репозитории. Идеи, вопросы и найденные ошибки — на почту автору.</p>
+    <p class="sub">Скопируй промпт, отдай его своему ИИ-агенту — и через пару минут Винни будет на экране. Идеи, вопросы и найденные ошибки — на почту автору.</p>
     <div class="cta">
-      <a class="btn btn-primary" href="https://github.com/nel-feelingood/winnie">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-        Открыть на GitHub
-      </a>
+      <button type="button" class="btn btn-primary" data-copy="install-prompt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6a2 2 0 0 1 2 2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2-2zm0 2v2h6V4H9zM5 6v14h14V6h-2a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2H5zm3 5h8v2H8v-2zm0 4h6v2H8v-2z"/></svg><span class="label">Скопировать промпт для установки</span></button>
+      <a class="btn btn-ghost" href="https://github.com/nel-feelingood/winnie"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
       <a class="btn btn-ghost" href="mailto:nelfeelingood@gmail.com?subject=Winnie">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1.6 2 7.4 5.6L19.4 7H4.6zM20 8.25l-8 6.05-8-6.05V17h16V8.25z"/></svg>
         Написать автору
@@ -208,6 +229,16 @@ cd winnie
 </footer>
 
 <script>
+  // Copy buttons: data-copy holds the id of the element whose text goes to the clipboard.
+  document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => {
+    const text = document.getElementById(button.dataset.copy).textContent;
+    try { await navigator.clipboard.writeText(text); }
+    catch { const r = document.createRange(); r.selectNodeContents(document.getElementById(button.dataset.copy));
+            const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('copy'); s.removeAllRanges(); }
+    const target = button.querySelector('.label') || button, label = target.textContent;
+    target.textContent = 'Скопировано ✓';
+    setTimeout(() => target.textContent = label, 1800);
+  }));
   // The hero bear reacts the way the real one does: notices the pointer, talks when clicked.
   const pet = document.getElementById('pet'), bubble = document.getElementById('bubble');
   const lines = ['Чем могу помочь?', 'Напомнить? Перевести? Найти?', 'Мёд сам себя не съест.', 'Сижу тут в опилках, урчу.'];

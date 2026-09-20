@@ -53,6 +53,9 @@
 
 ## Установка
 
+Проще всего — отдать ИИ-агенту с терминалом (например, Claude Code)
+[готовый промпт с сайта](https://nel-feelingood.github.io/winnie/#install). Или руками:
+
 ```bash
 git clone https://github.com/nel-feelingood/winnie.git
 cd winnie
