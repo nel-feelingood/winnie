@@ -99,25 +99,25 @@ if (panel && !calm) {
 const list = $('list');
 if (list) {
   const cases = [
-    { c: '--violet', icon: '🎙️', title: 'Слушать по шорткату', note: 'Диктовка из любого приложения, ответ вслух.',
-      keys: ['⇧', '⌘', 'E'], pose: 'listening', ask: 'сколько граммов в стакане муки?', text: 'Около 130 граммов.' },
-    { c: '--acc', icon: '⏰', title: 'Напомнить', note: 'Время берётся из фразы.',
+    { c: '--violet', icon: '🎙️', title: 'Слушать по шорткату', poses: ['listening', 'thinking', 'talking'], note: 'Диктовка из любого приложения, ответ вслух.',
+      keys: ['⇧', '⌘', 'E'], ask: 'сколько граммов в стакане муки?', text: 'Около 130 граммов.' },
+    { c: '--acc', icon: '⏰', title: 'Напомнить', poses: ['idle', 'thinking', 'hover'], note: 'Время берётся из фразы.',
       ask: 'напомни через 40 минут достать пирог', card: ['Достать пирог', 'сегодня, 14:40'] },
-    { c: '--blue', icon: '⚡', title: 'Быстрая команда', note: 'Кнопка в пустом чате со своей инструкцией.',
+    { c: '--blue', icon: '⚡', title: 'Быстрая команда', poses: ['hover', 'thinking', 'talking'], note: 'Кнопка в пустом чате со своей инструкцией.',
       chip: 'Проверь почту', ask: 'Собери сводку непрочитанной почты: что ждёт ответа, что можно пропустить',
       items: ['Лёва ждёт ответ по поездке', 'Счёт за хостинг до пятницы', 'Остальное – рассылки'] },
-    { c: '--yellow', icon: '📝', title: 'Записать', note: 'Заметки – Markdown-файлы на диске.',
+    { c: '--yellow', icon: '📝', title: 'Записать', poses: ['thinking', 'thinking', 'idle'], note: 'Заметки – Markdown-файлы на диске.',
       ask: 'запиши в Идеи: прогулка по экрану', text: 'Добавил в заметку «Идеи».' },
-    { c: '--blue', icon: '🌍', title: 'Перевести', note: 'Ответ выделяется и копируется.',
+    { c: '--blue', icon: '🌍', title: 'Перевести', poses: ['idle', 'thinking', 'talking'], note: 'Ответ выделяется и копируется.',
       ask: 'переведи вежливо: давайте перенесём созвон на четверг', text: 'Could we please move the call to Thursday?' },
-    { c: '--blue', icon: '🔎', title: 'Найти', note: 'Поиск в вебе со ссылками на источники.',
+    { c: '--blue', icon: '🔎', title: 'Найти', poses: ['hover', 'thinking', 'talking'], note: 'Поиск в вебе со ссылками на источники.',
       ask: 'до скольки сегодня работает мэрия?', text: 'До 18:00, приём документов до 17:30.', source: '1. Сайт мэрии' },
-    { c: '--green', icon: '📬', title: 'Разобрать почту', note: 'Gmail, доступ только на чтение.',
+    { c: '--green', icon: '📬', title: 'Разобрать почту', poses: ['idle', 'thinking', 'talking'], note: 'Gmail, доступ только на чтение.',
       ask: 'что важного в почте?', items: ['Лёва ждёт ответ по поездке', 'Счёт за хостинг до пятницы', 'Остальное – рассылки'] },
   ];
   const stage = $('stage'), hint = $('hint'), say = $('say'), out = $('out'), bear = $('stage-pet');
   let run = 0;
-  ['listening', 'thinking', 'talking'].forEach(name => { new Image().src = sprite(name); });
+  ['listening', 'thinking', 'talking', 'hover'].forEach(name => { new Image().src = sprite(name); });
   cases.forEach((item, index) => {
     const button = document.createElement('button');
     button.type = 'button'; button.role = 'tab';
@@ -132,13 +132,13 @@ if (list) {
     stage.style.setProperty('--c', `var(${item.c})`);
     hint.innerHTML = say.textContent = out.innerHTML = '';
     say.classList.remove('done');
-    bear.src = sprite(item.pose || 'idle');
+    bear.src = sprite(item.poses[0]);
     if (item.keys) hint.innerHTML = item.keys.map(key => `<kbd>${key}</kbd>`).join('') + ' слушаю';
     if (item.chip) { hint.innerHTML = `<span class="chip">${item.chip}</span>`; await sleep(calm ? 0 : 700); }
     for (const char of item.ask) { if (!alive()) return; say.textContent += char; if (!calm) await sleep(item.chip ? 12 : 30); }
     say.classList.add('done');
-    bear.src = sprite('thinking'); await sleep(900); if (!alive()) return;
-    bear.src = sprite('talking');
+    bear.src = sprite(item.poses[1]); await sleep(900); if (!alive()) return;
+    bear.src = sprite(item.poses[2]);
     if (item.text) for (const word of item.text.split(' ')) { if (!alive()) return; out.append(`${word} `); if (!calm) await sleep(90); }
     if (item.source) out.insertAdjacentHTML('beforeend', `<span class="src">${item.source}</span>`);
     if (item.card) out.innerHTML = `<div class="card"><img src="images/favicon.png" alt="" width="40"><div>${item.card[0]}<small>Winnie · ${item.card[1]}</small></div></div>`;
