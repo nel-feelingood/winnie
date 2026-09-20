@@ -1,5 +1,8 @@
 // Normalises a new pose so it matches the existing sprite set:
-//   swift scripts/add-sprite.swift <image> <state>
+//   swift scripts/add-sprite.swift <image> <state> [--colour-only]
+//
+// With --colour-only the picture keeps its size and position and only step 3 runs:
+// for poses that already fit the set but were drawn in a slightly different tone.
 //
 // 1. If the picture has an opaque white background, removes it by flood-filling from the
 //    borders (so the whites of the eyes, enclosed by the outline, are untouched) and
@@ -11,8 +14,10 @@
 //    shifted, so the whites of the eyes and the black outline stay as drawn.
 import AppKit
 
-let arguments = CommandLine.arguments
-guard arguments.count == 3 else { print("usage: add-sprite.swift <image> <state>"); exit(1) }
+var arguments = CommandLine.arguments
+let colourOnly = arguments.contains("--colour-only")
+arguments.removeAll { $0 == "--colour-only" }
+guard arguments.count == 3 else { print("usage: add-sprite.swift <image> <state> [--colour-only]"); exit(1) }
 let state = arguments[2]
 
 func rgba(_ url: URL) -> (pixels: [UInt8], width: Int, height: Int)? {
@@ -77,8 +82,8 @@ if corners.allSatisfy({ isWhite($0, 245) }) {
 guard let reference = rgba(URL(fileURLWithPath: "Assets/sprites/idle.png")) else { print("Assets/sprites/idle.png missing"); exit(1) }
 let ref = bounds(reference.pixels, reference.width, reference.height)
 let own = bounds(pixels, width, height)
-let scale = Double(ref.maxY - ref.minY) / Double(own.maxY - own.minY)
-let canvas = 1024
+let scale = colourOnly ? 1 : Double(ref.maxY - ref.minY) / Double(own.maxY - own.minY)
+let canvas = colourOnly ? width : 1024
 let source = CGContext(data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
                        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!.makeImage()!
 let out = CGContext(data: nil, width: canvas, height: canvas, bitsPerComponent: 8, bytesPerRow: canvas * 4,
@@ -87,8 +92,8 @@ out.interpolationQuality = .high
 let drawnWidth = Double(width) * scale, drawnHeight = Double(height) * scale
 // Feet on the reference baseline; character centred where the reference is centred.
 let refCentreX = Double(ref.minX + ref.maxX) / 2, ownCentreX = Double(own.minX + own.maxX) / 2 * scale
-let left = refCentreX - ownCentreX
-let topOfImage = Double(ref.maxY) - Double(own.maxY) * scale             // in top-left coordinates
+let left = colourOnly ? 0 : refCentreX - ownCentreX
+let topOfImage = colourOnly ? 0 : Double(ref.maxY) - Double(own.maxY) * scale   // in top-left coordinates
 out.draw(source, in: CGRect(x: left, y: Double(canvas) - topOfImage - drawnHeight, width: drawnWidth, height: drawnHeight))
 
 // --- 3. colour match
