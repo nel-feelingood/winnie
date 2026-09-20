@@ -9,7 +9,7 @@ import AppKit
 @MainActor
 final class SelectionCopyButton: NSObject {
     private weak var panel: NSPanel?
-    private let pill = PillButton()
+    private let pill = PillButton(title: "Copy", fontSize: 12, height: 26)
     private var monitor: Any?
     private weak var textView: NSTextView?
     private var pendingShow: Task<Void, Never>?
@@ -94,47 +94,4 @@ final class SelectionCopyButton: NSObject {
             if !Task.isCancelled { self?.hide() }
         }
     }
-}
-
-/// High-contrast in both appearances: text-coloured background, background-coloured text.
-private final class PillButton: NSView {
-    var onClick: () -> Void = {}
-    private let label = NSTextField(labelWithString: "Copy")
-
-    init() {
-        super.init(frame: NSRect(x: 0, y: 0, width: 60, height: 26))
-        wantsLayer = true
-        layer?.cornerRadius = 13
-        layer?.shadowOpacity = 0.25
-        layer?.shadowRadius = 4
-        layer?.shadowOffset = CGSize(width: 0, height: -1)
-        label.font = .systemFont(ofSize: 12, weight: .semibold)
-        label.alignment = .center
-        addSubview(label)
-        setTitle("Copy")
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
-
-    func setTitle(_ title: String) {
-        label.stringValue = title
-        label.sizeToFit()
-        setFrameSize(NSSize(width: label.frame.width + 24, height: 26))
-        label.frame.origin = NSPoint(x: 12, y: (26 - label.frame.height) / 2)
-    }
-
-    override func updateLayer() {
-        layer?.backgroundColor = NSColor.labelColor.cgColor
-        label.textColor = NSColor.textBackgroundColor
-    }
-
-    override func viewDidChangeEffectiveAppearance() { needsDisplay = true }
-    override var wantsUpdateLayer: Bool { true }
-    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
-    override func mouseDown(with event: NSEvent) {}
-    override func mouseUp(with event: NSEvent) {
-        if bounds.contains(convert(event.locationInWindow, from: nil)) { onClick() }
-    }
-    override func resetCursorRects() { addCursorRect(bounds, cursor: .pointingHand) }
 }

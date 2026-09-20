@@ -7,9 +7,9 @@ final class PetWindow: NSPanel {
     /// Sprite edge at 100% scale, in points.
     static let baseSpriteSide: CGFloat = 150
     /// Strip above the sprite where the "New dialog" button appears.
-    static let buttonStrip: CGFloat = 40
+    static let buttonStrip: CGFloat = 44
     /// The button keeps its size at any scale, so the window never gets narrower than it.
-    static let minimumWidth: CGFloat = 110
+    static let minimumWidth: CGFloat = 130
 
     static func size(forScale scale: Double) -> NSSize {
         let side = (baseSpriteSide * scale).rounded()
@@ -43,7 +43,7 @@ final class PetView: NSView {
 
     private let sprites: SpriteProvider
     private let spriteLayer = CALayer()
-    private let newDialogButton = NSButton()
+    private let newDialogButton = PillButton(title: "New dialog", fontSize: 13, height: 30)
     private var mood = PetMood()
     private var dragStart: NSPoint?
     private var windowStart: NSPoint = .zero
@@ -63,13 +63,7 @@ final class PetView: NSView {
         spriteLayer.contentsGravity = .resizeAspect
         layer?.addSublayer(spriteLayer)
 
-        newDialogButton.title = "New dialog"
-        newDialogButton.bezelStyle = .rounded
-        newDialogButton.controlSize = .small
-        newDialogButton.font = .systemFont(ofSize: 11, weight: .medium)
-        newDialogButton.target = self
-        newDialogButton.action = #selector(newDialogPressed)
-        newDialogButton.sizeToFit()
+        newDialogButton.onClick = { [unowned self] in onNewDialog() }
         newDialogButton.isHidden = true
         addSubview(newDialogButton)
         layoutContents()
@@ -104,7 +98,7 @@ final class PetView: NSView {
         spriteLayer.position = CGPoint(x: bounds.midX, y: 0)
         CATransaction.commit()
         newDialogButton.frame.origin = NSPoint(x: (bounds.width - newDialogButton.frame.width) / 2,
-                                               y: bounds.height - newDialogButton.frame.height - 6)
+                                               y: bounds.height - newDialogButton.frame.height - 8)
     }
 
     // MARK: - State
@@ -227,7 +221,4 @@ final class PetView: NSView {
         }
     }
 
-    @objc private func newDialogPressed() {
-        onNewDialog()
-    }
 }
