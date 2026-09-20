@@ -42,6 +42,14 @@ final class ChatPanel: NSPanel {
             host.bottomAnchor.constraint(equalTo: blur.bottomAnchor),
         ])
         contentView = blur
+        copyButton = SelectionCopyButton(panel: self)
+    }
+
+    private var copyButton: SelectionCopyButton?
+
+    override func orderOut(_ sender: Any?) {
+        copyButton?.hide()
+        super.orderOut(sender)
     }
 
     override var canBecomeKey: Bool { true }
