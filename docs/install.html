@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Установка Winnie — пошаговая инструкция</title>
+<meta name="description" content="Как собрать и настроить Winnie на Mac: требования, установка одной командой, ключ API, разрешения macOS, подключение Gmail, Telegram и MCP, обновление и удаление.">
+<link rel="icon" href="images/favicon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <a class="brand" href="index.html"><img src="images/favicon.png" alt="">Winnie</a>
+    <div class="nav-links">
+      <a href="index.html#features">Возможности</a>
+      <a href="index.html#cases">Сценарии</a>
+      <a href="install.html">Установка</a>
+      <a class="keep" href="https://github.com/nel-feelingood/winnie">GitHub</a>
+    </div>
+  </nav>
+</div>
+
+<main class="wrap guide">
+  <span class="eyebrow">Инструкция</span>
+  <h1>Установка и настройка</h1>
+  <p class="lead">Готовых сборок нет: приложение собирается из исходников прямо на твоём Mac. Это занимает
+    несколько минут и не требует Xcode.</p>
+
+  <div class="toc">
+    <ol>
+      <li><a href="#req">Что понадобится</a></li>
+      <li><a href="#build">Сборка и установка</a></li>
+      <li><a href="#key">Ключ Anthropic API</a></li>
+      <li><a href="#perm">Разрешения macOS</a></li>
+      <li><a href="#cert">Сертификат для подписи</a></li>
+      <li><a href="#first">Первые шаги</a></li>
+      <li><a href="#gmail">Gmail</a></li>
+      <li><a href="#telegram">Telegram-бот</a></li>
+      <li><a href="#mcp">MCP и свои API</a></li>
+      <li><a href="#update">Обновление и удаление</a></li>
+      <li><a href="#trouble">Если что-то не так</a></li>
+    </ol>
+  </div>
+
+  <h2 id="req">1. Что понадобится</h2>
+  <ul>
+    <li><b>Mac с macOS 14 (Sonoma) или новее.</b> Проверено на macOS 15 и Apple Silicon.</li>
+    <li><b>Command Line Tools</b> — компилятор Swift и git. Полный Xcode не нужен.</li>
+    <li><b>Ключ Anthropic API</b> с положительным балансом. Приложение бесплатное, но за запросы к Claude
+      платишь ты — напрямую Anthropic, по их тарифам. Расходы видны в настройках.</li>
+  </ul>
+
+  <h2 id="build">2. Сборка и установка</h2>
+  <p>Открой Терминал. Если Command Line Tools ещё не стоят, сначала установи их (появится системное окно, дождись окончания):</p>
+  <pre>xcode-select --install</pre>
+  <p>Затем скачай исходники и запусти установщик:</p>
+  <pre>git clone https://github.com/nel-feelingood/winnie.git
+cd winnie
+./scripts/install.sh</pre>
+  <p>Скрипт соберёт релизную версию, подпишет её, положит <code>Winnie.app</code> в <code>/Applications</code>,
+    при первой установке разложит спрайты и запустит приложение. Первая сборка идёт пару минут — скачивается
+    и компилируется единственная зависимость.</p>
+  <p>Винни появится в правом нижнем углу экрана, а его значок — в строке меню. В Dock приложения нет, так задумано.</p>
+
+  <h2 id="key">3. Ключ Anthropic API</h2>
+  <ol>
+    <li>Зайди в <a href="https://console.anthropic.com/">console.anthropic.com</a>, пополни баланс и создай ключ в разделе API Keys.</li>
+    <li>При первом запуске Winnie сам откроет настройки на разделе <b>«API»</b>. Вставь ключ в поле Claude и нажми «Сохранить».</li>
+  </ol>
+  <p>Ключ сохраняется в системной Связке ключей и больше нигде. Когда macOS спросит, можно ли Winnie читать
+    его из Связки, нажми <b>«Разрешать всегда»</b>.</p>
+  <div class="tip">Модель выбирается в разделе «Модель и расходы». Opus — самый умный и дорогой, Haiku — быстрый
+    и дешёвый, его хватает для переводов и напоминаний.</div>
+
+  <h2 id="perm">4. Разрешения macOS</h2>
+  <p>Система спросит о них сама — в тот момент, когда разрешение впервые понадобится.</p>
+  <table>
+    <tr><th>Разрешение</th><th>Зачем</th><th>Когда спросит</th></tr>
+    <tr><td>Уведомления</td><td>Напоминания всплывают, даже если Винни спрятан</td><td>При запуске</td></tr>
+    <tr><td>Микрофон и распознавание речи</td><td>Диктовка. Речь распознаётся на устройстве</td><td>При первом нажатии на микрофон</td></tr>
+    <tr><td>Запись экрана</td><td>Скриншот области экрана из чата</td><td>При первом скриншоте; после выдачи перезапусти Winnie</td></tr>
+  </table>
+  <p>Изменить решение можно в Системных настройках → Конфиденциальность и безопасность.</p>
+
+  <h2 id="cert">5. Сертификат для подписи (по желанию)</h2>
+  <p>Без сертификата приложение подписывается «на лету», и после <em>каждой пересборки</em> macOS считает его новым:
+    заново спрашивает доступ к Связке ключей, микрофону и записи экрана. Если собираешься обновляться или менять
+    код, один раз создай собственный сертификат:</p>
+  <ol>
+    <li>Открой «Связку ключей» → меню «Связка ключей» → «Ассистент сертификации» → «Создать сертификат…».</li>
+    <li>Имя — <code>Winnie Dev</code>, тип удостоверения — «Самоподписанный корневой», тип сертификата — «Подпись кода».</li>
+    <li>Нажми «Создать» и снова запусти <code>./scripts/install.sh</code> — скрипт найдёт сертификат сам.</li>
+  </ol>
+
+  <h2 id="first">6. Первые шаги</h2>
+  <table>
+    <tr><th>Действие</th><th>Что произойдёт</th></tr>
+    <tr><td>Клик по Винни</td><td>Откроется последний чат; ещё клик — закроется</td></tr>
+    <tr><td>Навести курсор</td><td>Появится кнопка New dialog — новый чат</td></tr>
+    <tr><td>Перетащить</td><td>Винни переедет, место запомнится</td></tr>
+    <tr><td><code>⌃⌥Space</code></td><td>Показать Винни с чатом или спрятать всё</td></tr>
+    <tr><td><code>⇧⌘E</code></td><td>Включить или выключить диктовку в текущем чате</td></tr>
+    <tr><td>Шестерёнка в чате</td><td>Настройки: размер, поведение, голос, шорткаты, быстрые действия</td></tr>
+  </table>
+  <p>Попробуй: «напомни через 10 минут выпить воды», «запиши в заметку список покупок», «стань побольше».</p>
+
+  <h2 id="gmail">7. Gmail (по желанию)</h2>
+  <p>Google не даёт сторонним приложениям общий доступ к почте, поэтому нужен собственный бесплатный OAuth-клиент.
+    Winnie получает право <b>только на чтение</b>.</p>
+  <ol>
+    <li>В <a href="https://console.cloud.google.com/">Google Cloud Console</a> создай проект и включи в нём <b>Gmail API</b>.</li>
+    <li>Настрой экран согласия OAuth: тип «External», в тестовые пользователи добавь свой адрес.</li>
+    <li>Создай учётные данные → OAuth client ID → тип приложения <b>Desktop app</b>.</li>
+    <li>В Winnie: настройки → «API» → «Почта · Gmail». Вставь Client ID и Client Secret, нажми «Войти» и разреши доступ в браузере.</li>
+  </ol>
+  <div class="tip">Пока проект в статусе Testing, Google просит входить заново раз в 7 дней. Кнопка Publish app
+    на экране согласия это убирает; для личного использования проверка Google не требуется, но при входе будет
+    предупреждение о непроверенном приложении.</div>
+
+  <h2 id="telegram">8. Telegram-бот (по желанию)</h2>
+  <ol>
+    <li>Напиши <a href="https://t.me/BotFather">@BotFather</a> команду <code>/newbot</code>, придумай имя и получи токен.</li>
+    <li>В Winnie: настройки → «API» → «Telegram». Вставь токен и нажми «Подключить бота» — приложение проверит его и покажет шестизначный код.</li>
+    <li>Отправь этот код своему боту в личном чате. Теперь бот привязан к тебе и больше никому не отвечает.</li>
+  </ol>
+  <p>Бот работает, пока Winnie запущен на Mac, и принимает только текст. После пяти неверных кодов код меняется.</p>
+
+  <h2 id="mcp">9. MCP и свои API (по желанию)</h2>
+  <ul>
+    <li><b>MCP-серверы</b> — раздел «MCP»: укажи адрес сервера. Если сервер использует OAuth, вход откроется
+      в браузере; если токен — вставь его, он уйдёт в Связку ключей.</li>
+    <li><b>Свои HTTP-API</b> — раздел «API»: базовый адрес, описание для медведя и токен. Запросы привязаны
+      к указанному хосту и по умолчанию только читают; запись включается отдельным переключателем.</li>
+  </ul>
+
+  <h2 id="update">10. Обновление и удаление</h2>
+  <h3>Обновить</h3>
+  <pre>cd winnie
+git pull
+./scripts/install.sh</pre>
+  <p>Чаты, заметки, настройки и свои спрайты сохраняются.</p>
+  <h3>Удалить полностью</h3>
+  <pre>pkill -x Winnie
+rm -rf /Applications/Winnie.app
+rm -rf ~/Library/Application\ Support/Winnie   <span class="c"># чаты, заметки, события, память</span>
+defaults delete local.winnie.pet               <span class="c"># настройки</span>
+tccutil reset All local.winnie.pet             <span class="c"># выданные разрешения</span></pre>
+  <p>Секреты удаляются в «Связке ключей»: найди записи сервиса <code>local.winnie.pet</code> и удали их.</p>
+
+  <h2 id="trouble">11. Если что-то не так</h2>
+  <table>
+    <tr><th>Симптом</th><th>Что делать</th></tr>
+    <tr><td>Не видно значка в строке меню</td><td>На MacBook с вырезом значок может уйти под вырез, если в строке меню тесно. Закрой лишние значки или перетащи его с зажатым ⌘</td></tr>
+    <tr><td>Запрос Связки ключей после каждой сборки</td><td>Создай сертификат из шага 5 и нажми «Разрешать всегда»</td></tr>
+    <tr><td>Запись экрана спрашивают снова и снова</td><td>Выполни <code>tccutil reset ScreenCapture local.winnie.pet</code>, выдай разрешение заново и перезапусти Winnie</td></tr>
+    <tr><td>Напоминания не всплывают</td><td>Системные настройки → Уведомления → Winnie: включи и выбери стиль «Предупреждения»</td></tr>
+    <tr><td>Ошибка в чате про баланс или ключ</td><td>Проверь баланс в консоли Anthropic и ключ в разделе «API»</td></tr>
+    <tr><td>Вместо Винни — коричневый овал</td><td>Спрайты не разложены: выполни <code>swift scripts/import-sprites.swift</code> в папке проекта и выбери «Перезагрузить спрайты» в меню значка</td></tr>
+  </table>
+  <p>Не помогло — <a href="mailto:nelfeelingood@gmail.com?subject=Winnie">напиши автору</a>.</p>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <span>© 2026 Sergey Donskov · исходный код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
+      <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="mailto:nelfeelingood@gmail.com?subject=Winnie">nelfeelingood@gmail.com</a></span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
