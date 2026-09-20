@@ -32,39 +32,17 @@
   <span class="eyebrow">Инструкция</span>
   <h1>Установка и настройка</h1>
   <p class="lead">Готовых сборок нет: приложение собирается из исходников прямо на твоём Mac. Это занимает
-    несколько минут и не требует Xcode.</p>
+    несколько минут и не требует Xcode. Выбери способ.</p>
 
-  <div class="toc">
-    <ol>
-      <li><a href="#req">Что понадобится</a></li>
-      <li><a href="#build">Сборка и установка</a></li>
-      <li><a href="#key">Ключ Anthropic API</a></li>
-      <li><a href="#perm">Разрешения macOS</a></li>
-      <li><a href="#cert">Сертификат для подписи</a></li>
-      <li><a href="#first">Первые шаги</a></li>
-      <li><a href="#gmail">Gmail</a></li>
-      <li><a href="#telegram">Telegram-бот</a></li>
-      <li><a href="#mcp">MCP и свои API</a></li>
-      <li><a href="#update">Обновление и удаление</a></li>
-      <li><a href="#trouble">Если что-то не так</a></li>
-    </ol>
+  <div class="tabs" role="tablist" aria-label="Способ установки">
+    <button type="button" role="tab" id="tab-quick" aria-controls="panel-quick" aria-selected="true">⚡ Быстрая установка</button>
+    <button type="button" role="tab" id="tab-manual" aria-controls="panel-manual" aria-selected="false" tabindex="-1">🛠 Ручная</button>
   </div>
 
-  <h2 id="req">1. Что понадобится</h2>
-  <ul>
-    <li><b>Mac с macOS 14 (Sonoma) или новее.</b> Проверено на macOS 15 и Apple Silicon.</li>
-    <li><b>Command Line Tools</b> — компилятор Swift и git. Полный Xcode не нужен.</li>
-    <li><b>Ключ Anthropic API</b> с положительным балансом. Приложение бесплатное, но за запросы к Claude
-      платишь ты — напрямую Anthropic, по их тарифам. Расходы видны в настройках.</li>
-  </ul>
-
-  <h2 id="build">2. Сборка и установка</h2>
-  <h3>Быстрый путь: попросить ИИ-агента</h3>
-  <p>Если пользуешься Claude Code или другим агентом с доступом к терминалу, скопируй промпт. Агент проверит
-    требования, скачает исходники, соберёт и запустит приложение, а затем проведёт по настройке: ключ Claude, Gmail,
-    Telegram, разрешения macOS. Перед каждым шагом он спросит, подключать сейчас или позже. Ключи и токены агенту
-    не нужны — ты вставляешь их сам в настройках Winnie.</p>
-  <div class="prompt">
+  <section class="tab-panel" id="panel-quick" role="tabpanel" aria-labelledby="tab-quick">
+    <p>Если пользуешься Claude Code или другим ИИ-агентом с доступом к терминалу, скопируй промпт и вставь его агенту.
+      Ключи и токены агенту не нужны — ты вставляешь их сам в настройках Winnie.</p>
+    <div class="prompt">
       <div class="prompt-head"><span>Промпт для ИИ-агента</span><button type="button" class="copy" data-copy="install-prompt">Скопировать</button></div>
       <pre id="install-prompt">Установи и настрой на этом Mac приложение Winnie — десктоп-питомца с чатом Claude (открытый код, MIT).
 Репозиторий: https://github.com/nel-feelingood/winnie
@@ -109,7 +87,44 @@
 
 9. Итог. Коротко напиши: что установлено, что подключено, что отложено и как к этому вернуться (настройки Winnie → «API»; подробная инструкция: https://nel-feelingood.github.io/winnie/install.html). Упомяни, что MCP-серверы, свои API и сертификат «Winnie Dev» для пересборок описаны там же.</pre>
     </div>
-  <h3>Руками</h3>
+    <h3>Что сделает агент</h3>
+    <ol>
+      <li><b>Установит.</b> Проверит macOS и Command Line Tools, скачает исходники, соберёт приложение, положит в <code>/Applications</code> и запустит.</li>
+      <li><b>Поможет настроить.</b> По шагам проведёт через ключ Claude API, Gmail и Telegram. Перед каждым шагом спросит: подключить сейчас или позже.</li>
+      <li><b>Расскажет про разрешения macOS</b> — уведомления, микрофон, запись экрана.</li>
+      <li><b>Подведёт итог:</b> что подключено, что отложено и как к этому вернуться.</li>
+    </ol>
+    <div class="tip">Обновление, удаление, сертификат для подписи, MCP и решение проблем — во вкладке
+      <a href="#req" data-tab="manual">«Ручная»</a>.</div>
+  </section>
+
+  <section class="tab-panel" id="panel-manual" role="tabpanel" aria-labelledby="tab-manual" hidden>
+
+  <div class="toc">
+    <ol>
+      <li><a href="#req">Что понадобится</a></li>
+      <li><a href="#build">Сборка и установка</a></li>
+      <li><a href="#key">Ключ Anthropic API</a></li>
+      <li><a href="#perm">Разрешения macOS</a></li>
+      <li><a href="#cert">Сертификат для подписи</a></li>
+      <li><a href="#first">Первые шаги</a></li>
+      <li><a href="#gmail">Gmail</a></li>
+      <li><a href="#telegram">Telegram-бот</a></li>
+      <li><a href="#mcp">MCP и свои API</a></li>
+      <li><a href="#update">Обновление и удаление</a></li>
+      <li><a href="#trouble">Если что-то не так</a></li>
+    </ol>
+  </div>
+
+  <h2 id="req">1. Что понадобится</h2>
+  <ul>
+    <li><b>Mac с macOS 14 (Sonoma) или новее.</b> Проверено на macOS 15 и Apple Silicon.</li>
+    <li><b>Command Line Tools</b> — компилятор Swift и git. Полный Xcode не нужен.</li>
+    <li><b>Ключ Anthropic API</b> с положительным балансом. Приложение бесплатное, но за запросы к Claude
+      платишь ты — напрямую Anthropic, по их тарифам. Расходы видны в настройках.</li>
+  </ul>
+
+  <h2 id="build">2. Сборка и установка</h2>
   <p>Открой Терминал. Если Command Line Tools ещё не стоят, сначала установи их (появится системное окно, дождись окончания):</p>
   <pre>xcode-select --install</pre>
   <p>Затем скачай исходники и запусти установщик:</p>
@@ -217,6 +232,7 @@ tccutil reset All local.winnie.pet             <span class="c"># выданны�
     <tr><td>Вместо Винни — коричневый овал</td><td>Спрайты не разложены: выполни <code>swift scripts/import-sprites.swift</code> в папке проекта и выбери «Перезагрузить спрайты» в меню значка</td></tr>
   </table>
   <p>Не помогло — <a href="mailto:nelfeelingood@gmail.com?subject=Winnie">напиши автору</a>.</p>
+  </section>
 </main>
 
 <footer>

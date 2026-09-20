@@ -69,3 +69,30 @@ if (form) form.addEventListener('submit', event => {
   const body = `${data.get('message').trim()}${name ? `\n\n— ${name}` : ''}`;
   location.href = `mailto:${form.dataset.mail}?subject=${encodeURIComponent(`Winnie: ${data.get('topic')}`)}&body=${encodeURIComponent(body)}`;
 });
+
+// Tabs on the installation page. A link to a heading inside a hidden panel opens that panel first.
+const tabs = [...document.querySelectorAll('[role="tab"]')];
+if (tabs.length) {
+  const select = (tab, focus) => {
+    tabs.forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (focus) tab.focus();
+  };
+  const reveal = () => {
+    const target = location.hash && document.getElementById(location.hash.slice(1));
+    const panel = target && target.closest('.tab-panel');
+    if (panel && panel.hidden) { select(document.getElementById(panel.getAttribute('aria-labelledby'))); target.scrollIntoView(); }
+  };
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') select(tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length], true);
+    });
+  });
+  document.querySelectorAll('[data-tab]').forEach(link => link.addEventListener('click', () => select(document.getElementById(`tab-${link.dataset.tab}`))));
+  addEventListener('hashchange', reveal);
+  reveal();
+}
