@@ -415,10 +415,10 @@ private struct TabPills: View {
             ForEach(Self.tabs, id: \.0) { tab, title in
                 Button { withAnimation(.easeOut(duration: 0.18)) { selection = tab } } label: {
                     Text(title)
-                        .font(.system(size: 13, weight: selection == tab ? .semibold : .regular))
+                        .font(.system(size: 12, weight: selection == tab ? .semibold : .regular))
                         .foregroundStyle(selection == tab ? Color.primary : Color.secondary)
-                        .padding(.horizontal, 13)
-                        .frame(height: 26)
+                        .padding(.horizontal, 11)
+                        .frame(height: 22)
                         .background {
                             if selection == tab {
                                 Capsule().fill(Color.primary.opacity(0.14)).matchedGeometryEffect(id: "pill", in: pill)
@@ -430,7 +430,7 @@ private struct TabPills: View {
                 .linkCursor()
             }
         }
-        .padding(3)
+        .padding(2)
         .background(Color.primary.opacity(0.06), in: Capsule())
     }
 }
