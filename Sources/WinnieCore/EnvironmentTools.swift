@@ -137,7 +137,7 @@ public enum EnvironmentToolSchema {
         ],
         [
             "name": "play_smoke_break",
-            "description": "Play Winnie's smoke-break animation right now: a few seconds of him lighting up. It is an in-joke of the app that also runs by itself at 16:20. Call it when the user says «16:20», «перекур», «покури» or asks for the animation, then answer with a word or two at most.",
+            "description": "Play Winnie's smoke-break animation right now: a few seconds of him lighting up. It is an in-joke of the app that also runs by itself at 16:20. Call it when the user says «16:20», «16 20», «перекур», «покури», «повтори» right after one, or asks for the animation. The animation is the answer: afterwards write just one plain word such as «Перекур.» — no emoji, no description of what you are doing, no comment.",
             "input_schema": ["type": "object", "properties": [String: Any]()],
         ],
         [
