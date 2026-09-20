@@ -123,6 +123,8 @@ struct ChatView: View {
         .padding(.top, 4)
     }
 
+    private static let inputButtonSide: CGFloat = 24
+
     private var inputRow: some View {
         HStack(alignment: .bottom, spacing: 8) {
             TextField(controller.isListening ? "Слушаю…" : "Сообщение", text: $controller.draft, axis: .vertical)
@@ -131,11 +133,15 @@ struct ChatView: View {
                 .lineLimit(1...6)
                 .focused($inputFocused)
                 .onSubmit { controller.send() }
+                // As tall as the buttons, so one line of text centres on them; with more
+                // lines the row's bottom alignment keeps the buttons by the last line.
+                .frame(minHeight: Self.inputButtonSide)
 
             Button { controller.toggleListening() } label: {
-                Image(systemName: controller.isListening ? "waveform.circle.fill" : "mic.circle")
+                Image(systemName: controller.isListening ? "waveform.circle.fill" : "mic.circle.fill")
                     .font(.system(size: 20))
                     .symbolEffect(.pulse, isActive: controller.isListening)
+                    .frame(width: Self.inputButtonSide, height: Self.inputButtonSide)
             }
             .buttonStyle(.plain)
             .foregroundStyle(controller.isListening ? Color.red : Color.secondary)
@@ -147,6 +153,7 @@ struct ChatView: View {
             } label: {
                 Image(systemName: controller.isStreaming ? "stop.circle.fill" : "arrow.up.circle.fill")
                     .font(.system(size: 20))
+                    .frame(width: Self.inputButtonSide, height: Self.inputButtonSide)
             }
             .buttonStyle(.plain)
             .foregroundStyle(controller.canSend || controller.isStreaming ? Color.accentColor : Color.secondary.opacity(0.5))
