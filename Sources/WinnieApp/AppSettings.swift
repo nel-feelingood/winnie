@@ -125,6 +125,11 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(smokeBreakEnabled, forKey: "smokeBreakEnabled") }
     }
 
+    /// Emoji drift up from Winnie's head while he sleeps.
+    @Published var dreamsEnabled: Bool {
+        didSet { defaults.set(dreamsEnabled, forKey: "dreamsEnabled") }
+    }
+
     /// Say a due reminder out loud. Off by default: a voice out of nowhere is a bad surprise on a call.
     @Published var speaksReminders: Bool {
         didSet { defaults.set(speaksReminders, forKey: "speaksReminders") }
@@ -138,6 +143,7 @@ final class AppSettings: ObservableObject {
 
     init() {
         speaksReminders = defaults.bool(forKey: "speaksReminders")
+        dreamsEnabled = defaults.object(forKey: "dreamsEnabled") as? Bool ?? true
         smokeBreakEnabled = defaults.object(forKey: "smokeBreakEnabled") as? Bool ?? true
         customAPIs = defaults.data(forKey: "customAPIs")
             .flatMap { try? JSONDecoder().decode([CustomAPI].self, from: $0) } ?? []

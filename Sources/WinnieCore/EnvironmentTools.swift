@@ -11,9 +11,10 @@ public enum EnvironmentCommand: Equatable, Sendable {
         public var voicePitch: Double?
         public var voiceRate: Double?
         public var smokeBreakAt1620: Bool?
+        public var dreams: Bool?
 
         public var isEmpty: Bool {
-            smokeBreakAt1620 == nil && petScale == nil && model == nil && speaksReplies == nil && speaksReminders == nil && voicePitch == nil && voiceRate == nil
+            dreams == nil && smokeBreakAt1620 == nil && petScale == nil && model == nil && speaksReplies == nil && speaksReminders == nil && voicePitch == nil && voiceRate == nil
         }
     }
 
@@ -87,6 +88,7 @@ public enum EnvironmentCommand: Equatable, Sendable {
         patch.speaksReplies = arguments["speak_replies"] as? Bool
         patch.speaksReminders = arguments["speak_reminders"] as? Bool
         patch.smokeBreakAt1620 = arguments["smoke_break_at_1620"] as? Bool
+        patch.dreams = arguments["dream_emoji"] as? Bool
         return patch.isEmpty ? .problem("Nothing to change: pass at least one setting.") : .command(.update(patch))
     }
 }
@@ -113,6 +115,7 @@ public enum EnvironmentToolSchema {
                     "speak_reminders": ["type": "boolean", "description": "Say due reminders out loud."],
                     "voice_pitch": ["type": "number", "description": "0.6–1.6; 1.0 is the voice as recorded."],
                     "voice_rate": ["type": "number", "description": "0.35–0.65; 0.5 is normal speed."],
+                    "dream_emoji": ["type": "boolean", "description": "Whether emoji float up from Winnie's head while he sleeps."],
                     "smoke_break_at_1620": ["type": "boolean", "description": "Whether the smoke-break animation plays by itself every day at 16:20."],
                 ],
             ],

@@ -49,6 +49,26 @@ final class PetView: NSView {
     private var windowStart: NSPoint = .zero
     private var sleepTimer: Timer?
     private var smokeTimer: Timer?
+    private var dreamTimer: Timer?
+    private let dreamLayer = CALayer()
+    /// Asked each time, so the settings toggle takes effect without a restart.
+    var dreamsEnabled: () -> Bool = { true }
+
+    private static let dreamInterval: TimeInterval = 10
+    private static let dreamDuration: CFTimeInterval = 3
+    /// Every single-character emoji this Mac can draw: taken from the Unicode tables rather than a
+    /// hand-picked list, and checked against the emoji font so that none comes out as an empty box.
+    /// Flags, skin-tone modifiers and multi-person sequences are several characters each and are left out.
+    private static let dreams: [String] = {
+        let font = CTFontCreateWithName("Apple Color Emoji" as CFString, 24, nil)
+        return (0x231A...0x1FAFF).compactMap { Unicode.Scalar($0) }.filter { scalar in
+            guard scalar.properties.isEmojiPresentation, !scalar.properties.isEmojiModifier,
+                  !(0x1F1E6...0x1F1FF).contains(scalar.value) else { return false }
+            var characters = Array(String(scalar).utf16)
+            var glyphs = [CGGlyph](repeating: 0, count: characters.count)
+            return CTFontGetGlyphsForCharacters(font, &characters, &glyphs, characters.count) && glyphs[0] != 0
+        }.map { String($0) }
+    }()
     private var smokeFrames: [NSImage] = []
     private var smokeIndex = 0
 
@@ -68,6 +88,9 @@ final class PetView: NSView {
         spriteLayer.anchorPoint = CGPoint(x: 0.5, y: 0)
         spriteLayer.contentsGravity = .resizeAspect
         layer?.addSublayer(spriteLayer)
+        dreamLayer.opacity = 0
+        dreamLayer.contentsGravity = .resizeAspect
+        layer?.addSublayer(dreamLayer)
 
         newDialogButton.onClick = { [unowned self] in onNewDialog() }
         newDialogButton.isHidden = true
@@ -118,6 +141,61 @@ final class PetView: NSView {
     func refresh() {
         newDialogButton.isHidden = !mood.isHovering || isChatOpen()
         render()
+    }
+
+    // MARK: - Dreams
+
+    /// One timer tick every ten seconds, and only while asleep; the fade itself is a Core
+    /// Animation, so between ticks the app does nothing.
+    private func updateDreams() {
+        let shouldDream = mood.state == .sleep
+        guard shouldDream != (dreamTimer != nil) else { return }
+        dreamTimer?.invalidate()
+        dreamTimer = nil
+        guard shouldDream else {
+            dreamLayer.removeAllAnimations()
+            return
+        }
+        dreamTimer = Timer.scheduledTimer(withTimeInterval: Self.dreamInterval, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.showDream() }
+        }
+    }
+
+    private func showDream() {
+        guard dreamsEnabled(), mood.state == .sleep, let emoji = Self.dreams.randomElement() else { return }
+        let spriteSide = bounds.height - PetWindow.buttonStrip
+        let size = max(22, spriteSide * 0.2)
+        // Just above the sleeping head (he sits lower than he stands), a little off-centre each time.
+        let start = CGPoint(x: bounds.midX + CGFloat.random(in: -0.12...0.12) * spriteSide, y: spriteSide * 0.9 + size / 2)
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        dreamLayer.contents = Self.image(of: emoji, side: size * 2)
+        dreamLayer.bounds = CGRect(x: 0, y: 0, width: size, height: size)
+        dreamLayer.position = start
+        CATransaction.commit()
+
+        let fade = CAKeyframeAnimation(keyPath: "opacity")
+        fade.values = [0, 1, 1, 0]
+        fade.keyTimes = [0, 0.25, 0.7, 1]
+        let rise = CABasicAnimation(keyPath: "position.y")
+        rise.fromValue = start.y
+        rise.toValue = start.y + size * 0.6
+        let group = CAAnimationGroup()
+        group.animations = [fade, rise]
+        group.duration = Self.dreamDuration
+        group.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        dreamLayer.add(group, forKey: "dream")
+    }
+
+    /// Emoji are drawn into an image: colour glyphs render reliably that way on any layer.
+    private static func image(of emoji: String, side: CGFloat) -> NSImage {
+        NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
+            let text = NSAttributedString(string: emoji, attributes: [.font: NSFont.systemFont(ofSize: side * 0.78)])
+            let size = text.size()
+            text.draw(at: NSPoint(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2))
+            return true
+        }
     }
 
     // MARK: - Smoke break
@@ -186,6 +264,7 @@ final class PetView: NSView {
     /// A slow Core Animation scale: composited by the window server with no
     /// per-frame app code, so it costs next to nothing even running all day.
     private func updateBreathing() {
+        updateDreams()
         let wanted: Breathing = switch mood.state {
         case .drag: .none
         case .sleep: .asleep

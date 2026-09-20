@@ -40,6 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         petView.onDragEnded = { [unowned self] in settings.petOrigin = petWindow.frame.origin }
         petView.isChatOpen = { [unowned self] in chatPanel.isVisible }
+        petView.dreamsEnabled = { [unowned self] in settings.dreamsEnabled }
 
         petWindow = PetWindow(scale: settings.petScale)
         petWindow.contentView = petView

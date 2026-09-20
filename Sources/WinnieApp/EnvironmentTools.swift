@@ -32,6 +32,7 @@ struct EnvironmentTools {
             if let pitch = patch.voicePitch { settings.voicePitch = pitch }
             if let rate = patch.voiceRate { settings.voiceRate = rate }
             if let enabled = patch.smokeBreakAt1620 { settings.smokeBreakEnabled = enabled }
+            if let enabled = patch.dreams { settings.dreamsEnabled = enabled }
             return ToolOutcome("Changed. Now:\n\(summary)")
 
         case .addQuickAction(let label, let instruction, let sendsImmediately):
@@ -72,6 +73,7 @@ struct EnvironmentTools {
         voice_pitch: \(String(format: "%.2f", settings.voicePitch))
         voice_rate: \(String(format: "%.2f", settings.voiceRate))
         smoke_break_at_1620: \(settings.smokeBreakEnabled)
+        dream_emoji: \(settings.dreamsEnabled)
         quick action buttons: \(buttons.isEmpty ? "none" : buttons)
         reminders: \(reminders.reminders.count)
         """
