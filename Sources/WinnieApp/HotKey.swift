@@ -23,11 +23,13 @@ final class HotKey {
             GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
                               nil, MemoryLayout<EventHotKeyID>.size, nil, &pressed)
             let hotKey = Unmanaged<HotKey>.fromOpaque(context).takeUnretainedValue()
-            MainActor.assumeIsolated {
-                guard pressed.id == hotKey.id else { return }
+            // Handlers form a chain, newest first. Claiming someone else's key as handled
+            // would stop it from ever reaching the shortcut it belongs to.
+            return MainActor.assumeIsolated {
+                guard pressed.id == hotKey.id else { return OSStatus(eventNotHandledErr) }
                 hotKey.action()
+                return noErr
             }
-            return noErr
         }, 1, spec, context, &handlerRef)
     }
 
