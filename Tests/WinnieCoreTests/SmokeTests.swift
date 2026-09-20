@@ -139,6 +139,16 @@ import Testing
         #expect(ChatStore(directory: directory).sessions.isEmpty)
     }
 
+    @Test func unfinishedRepliesAreDroppedOnLoad() {
+        let directory = tempDirectory()
+        let store = ChatStore(directory: directory)
+        let session = store.startNew()
+        store.append(ChatMessage(role: .user, text: "hi"), to: session.id)
+        store.append(ChatMessage(role: .assistant, text: ""), to: session.id)
+
+        #expect(ChatStore(directory: directory).sessions.first?.messages.map(\.text) == ["hi"])
+    }
+
     @Test func emptyChatsAreNotSaved() {
         let directory = tempDirectory()
         ChatStore(directory: directory).startNew()

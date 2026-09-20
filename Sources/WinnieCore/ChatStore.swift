@@ -108,8 +108,15 @@ public final class ChatStore: ObservableObject {
         decoder.dateDecodingStrategy = .iso8601
         guard let data = try? Data(contentsOf: fileURL),
               let stored = try? decoder.decode([ChatSession].self, from: data) else { return }
-        sessions = stored.filter { now.timeIntervalSince($0.updatedAt) < Self.retention }
-        if sessions.count != stored.count { save() }
+        sessions = stored
+            .filter { now.timeIntervalSince($0.updatedAt) < Self.retention }
+            .map { session in
+                // A reply that was still empty when the app quit mid-answer is just a hole in the chat.
+                var session = session
+                session.messages.removeAll { $0.role == .assistant && $0.text.isEmpty }
+                return session
+            }
+        if sessions != stored { save() }
     }
 
     private func mutate(_ id: UUID, _ change: (inout ChatSession) -> Void) {
