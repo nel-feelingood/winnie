@@ -10,13 +10,14 @@ struct SettingsActions {
 }
 
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case winnie, quick, api, mcp, usage, voice, shortcuts
+    case winnie, behaviour, quick, api, mcp, usage, voice, shortcuts
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .winnie: "Винни"
+        case .behaviour: "Поведение"
         case .quick: "Быстрые действия"
         case .api: "API"
         case .mcp: "MCP"
@@ -29,6 +30,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .winnie: "pawprint"
+        case .behaviour: "theatermasks"
         case .quick: "bolt"
         case .api: "link"
         case .mcp: "point.3.connected.trianglepath.dotted"
@@ -88,6 +90,7 @@ struct SettingsView: View {
             Form {
                 switch pane {
                 case .winnie: winniePane
+                case .behaviour: behaviourPane
                 case .quick: quickPane
                 case .api: apiPane
                 case .mcp: appsSection
@@ -113,12 +116,6 @@ struct SettingsView: View {
                 Text("\(Int((settings.petScale * 100).rounded()))%").monospacedDigit().frame(width: 44, alignment: .trailing)
                 Button("Сброс") { settings.petScale = 1 }.disabled(settings.petScale == 1)
             }
-        }
-        Section {
-            Toggle("16:20", isOn: $settings.smokeBreakEnabled)
-            Toggle("Сны", isOn: $settings.dreamsEnabled)
-        } footer: {
-            Footnote("16:20 — каждый день в это время Винни устраивает перекур; по просьбе в чате («16:20», «перекур») анимация играет в любое время, даже если тумблер выключен. Сны — пока Винни спит, над ним раз в 10 секунд всплывает эмодзи: чаще то, что ему снится (мёд, женщины, трава, тачки, работа), иногда любой случайный.")
         }
         Section {
             TextEditor(text: $settings.masterPrompt)
@@ -153,6 +150,17 @@ struct SettingsView: View {
             Text("Память")
         } footer: {
             Footnote("Эти заметки Винни дописывает к промпту сам, когда ты просишь что-то запомнить. Мастер-промпт он не меняет.")
+        }
+    }
+
+    // MARK: - Поведение
+
+    @ViewBuilder private var behaviourPane: some View {
+        Section {
+            Toggle("16:20", isOn: $settings.smokeBreakEnabled)
+            Toggle("Сны", isOn: $settings.dreamsEnabled)
+        } footer: {
+            Footnote("16:20 — каждый день в это время Винни устраивает перекур; по просьбе в чате («16:20», «перекур») анимация играет в любое время, даже если тумблер выключен. Сны — пока Винни спит, над ним раз в 10 секунд всплывает эмодзи: чаще то, что ему снится (мёд, женщины, трава, тачки, работа), иногда любой случайный.")
         }
     }
 
