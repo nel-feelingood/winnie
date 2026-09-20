@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import WinnieCore
 
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
@@ -41,6 +42,24 @@ struct SettingsView: View {
                         .disabled(settings.petScale == 1)
                 }
             }
+            Section {
+                TextEditor(text: $settings.masterPrompt)
+                    .font(.system(size: 12))
+                    .frame(height: 190)
+                    .scrollContentBackground(.hidden)
+                HStack {
+                    Text("Правила окна чата, поиск и дата добавляются сами.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Вернуть стандартный") { settings.masterPrompt = MasterPrompt.standard }
+                        .disabled(settings.masterPrompt == MasterPrompt.standard)
+                }
+            } header: {
+                Text("Мастер-промпт")
+            } footer: {
+                Text("Характер Винни и то, как он отвечает. Применяется со следующего сообщения.")
+            }
             Section("Шорткат") {
                 HStack {
                     Text("Показать / спрятать Винни")
@@ -52,7 +71,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 440, height: 330)
+        .frame(width: 520, height: 640)
         .onChange(of: settings.petScale) { _, scale in onScaleChange(scale) }
         .onDisappear { stopRecording() }
     }
@@ -99,7 +118,7 @@ final class SettingsWindowController {
             window.title = "Настройки Винни"
             window.contentView = NSHostingView(rootView: view)
             window.isReleasedWhenClosed = false
-            window.setContentSize(NSSize(width: 440, height: 330))
+            window.setContentSize(NSSize(width: 520, height: 640))
             window.center()
             self.window = window
         }

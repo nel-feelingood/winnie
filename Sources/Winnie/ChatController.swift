@@ -90,7 +90,8 @@ final class ChatController: ObservableObject {
         }
 
         do {
-            for try await event in client.streamReply(apiKey: apiKey, model: settings.model, history: history) {
+            for try await event in client.streamReply(apiKey: apiKey, model: settings.model,
+                                                             masterPrompt: settings.masterPrompt, history: history) {
                 switch event {
                 case .textDelta(let piece):
                     if searchStatus != nil { searchStatus = nil }

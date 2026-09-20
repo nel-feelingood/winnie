@@ -65,6 +65,14 @@ import Testing
         #expect(tool?["type"] as? String == "web_search_20260209")
     }
 
+    @Test func systemPromptCarriesMasterTextAndAppConstraints() {
+        let custom = ClaudeClient.systemPrompt(master: "Будь краток.")
+        #expect(custom.hasPrefix("Будь краток."))
+        #expect(custom.contains("360 точек"))
+        // A blank prompt must not leave the model without any persona.
+        #expect(ClaudeClient.systemPrompt(master: "  \n").hasPrefix(MasterPrompt.standard))
+    }
+
     @Test func haikuBodyOmitsUnsupportedFields() {
         let body = ClaudeClient.requestBody(model: .haiku, messages: [])
         #expect(body["output_config"] == nil)

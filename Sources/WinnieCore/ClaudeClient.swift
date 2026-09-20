@@ -14,20 +14,19 @@ public struct ClaudeClient: Sendable {
 
     // MARK: - Request building
 
-    static func systemPrompt(now: Date = Date()) -> String {
+    /// The user's master prompt followed by the constraints that come from the app
+    /// itself (popover width, search, today's date) and are not the user's to maintain.
+    static func systemPrompt(master: String, now: Date = Date()) -> String {
         let date = now.formatted(.iso8601.year().month().day())
+        let persona = master.trimmingCharacters(in: .whitespacesAndNewlines)
         return """
-        You are the assistant inside Winnie, a small desktop pet on the user's Mac. The chat \
-        window is a narrow popover, and the user opens it for quick one-off questions: \
-        translations, definitions, fast facts, finding something on the web.
+        \(persona.isEmpty ? MasterPrompt.standard : persona)
 
-        Answer in the language the user writes in. Lead with the answer itself and keep it \
-        short; the user can ask for more. For a translation, give the translation and, only \
-        if it matters, a brief note on nuance. Use Markdown, but skip headings and avoid wide \
-        tables, since the popover is about 360 points wide. Search the web when the question \
-        depends on current or niche information, not for things you already know well.
-
-        Today's date is \(date).
+        ---
+        Технические условия окна чата. Оно узкое, около 360 точек в ширину: пиши в Markdown, но \
+        без заголовков и без широких таблиц; короткий список или пара строк кода — нормально. У \
+        тебя есть веб-поиск: пользуйся им, когда вопрос зависит от актуальных или редких \
+        сведений, и не трать его на то, что и так хорошо знаешь. Сегодня \(date).
         """
     }
 
@@ -39,12 +38,13 @@ public struct ClaudeClient: Sendable {
             .map { ["role": $0.role.rawValue, "content": $0.text] }
     }
 
-    static func requestBody(model: ModelOption, messages: [[String: Any]], now: Date = Date()) -> [String: Any] {
+    static func requestBody(model: ModelOption, master: String = MasterPrompt.standard,
+                            messages: [[String: Any]], now: Date = Date()) -> [String: Any] {
         var body: [String: Any] = [
             "model": model.rawValue,
             "max_tokens": 32000,
             "stream": true,
-            "system": systemPrompt(now: now),
+            "system": systemPrompt(master: master, now: now),
             "messages": messages,
             "tools": [["type": model.webSearchToolType, "name": "web_search", "max_uses": 5]],
         ]
@@ -74,7 +74,7 @@ public struct ClaudeClient: Sendable {
 
     // MARK: - Chat
 
-    public func streamReply(apiKey: String, model: ModelOption, history: [ChatMessage])
+    public func streamReply(apiKey: String, model: ModelOption, masterPrompt: String, history: [ChatMessage])
         -> AsyncThrowingStream<StreamEvent, Error>
     {
         AsyncThrowingStream { continuation in
@@ -83,7 +83,7 @@ public struct ClaudeClient: Sendable {
                     guard !apiKey.isEmpty else { throw ClaudeError.missingAPIKey }
                     var messages = Self.apiMessages(from: history)
                     for _ in 0...Self.maxResumes {
-                        let turn = try await runTurn(apiKey: apiKey, model: model, messages: messages) {
+                        let turn = try await runTurn(apiKey: apiKey, model: model, master: masterPrompt, messages: messages) {
                             continuation.yield($0)
                         }
                         switch turn.stopReason {
@@ -110,10 +110,10 @@ public struct ClaudeClient: Sendable {
         }
     }
 
-    private func runTurn(apiKey: String, model: ModelOption, messages: [[String: Any]],
+    private func runTurn(apiKey: String, model: ModelOption, master: String, messages: [[String: Any]],
                          emit: (StreamEvent) -> Void) async throws -> TurnAccumulator
     {
-        let body = Self.requestBody(model: model, messages: messages)
+        let body = Self.requestBody(model: model, master: master, messages: messages)
         let betas = model.usesDefaultFallback ? ["server-side-fallback-2026-07-01"] : []
         let request = try Self.urlRequest(apiKey: apiKey, body: body, betas: betas)
 

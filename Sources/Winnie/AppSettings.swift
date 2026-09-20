@@ -31,9 +31,19 @@ final class AppSettings: ObservableObject {
     }
     static let petScaleRange = 0.5...2.5
 
+    /// Only a customised prompt is stored. While the user keeps the standard text,
+    /// improvements to it in later builds reach them automatically.
+    @Published var masterPrompt: String {
+        didSet {
+            let isStandard = masterPrompt == MasterPrompt.standard
+            defaults.set(isStandard ? nil : masterPrompt, forKey: "masterPrompt")
+        }
+    }
+
     init() {
         let storedScale = defaults.double(forKey: "petScale")
         petScale = Self.petScaleRange.contains(storedScale) ? storedScale : 1
+        masterPrompt = defaults.string(forKey: "masterPrompt") ?? MasterPrompt.standard
         model = defaults.string(forKey: "model").flatMap(ModelOption.init) ?? .opus
         shortcut = defaults.data(forKey: "shortcut")
             .flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .default
