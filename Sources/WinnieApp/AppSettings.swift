@@ -17,9 +17,6 @@ struct Shortcut: Codable, Equatable {
     static let `default` = Shortcut(keyCode: UInt32(kVK_Space),
                                     modifiers: UInt32(controlKey | optionKey),
                                     display: "⌃⌥Space")
-    static let defaultVoice = Shortcut(keyCode: UInt32(kVK_ANSI_V),
-                                       modifiers: UInt32(controlKey | optionKey),
-                                       display: "⌃⌥V")
     static let defaultNewVoice = Shortcut(keyCode: UInt32(kVK_ANSI_E),
                                           modifiers: UInt32(cmdKey | shiftKey),
                                           display: "⇧⌘E")
@@ -51,10 +48,6 @@ final class AppSettings: ObservableObject {
         }
     }
 
-    /// Opens the chat with the microphone already on.
-    @Published var voiceShortcut: Shortcut {
-        didSet { defaults.set(try? JSONEncoder().encode(voiceShortcut), forKey: "voiceShortcut") }
-    }
     /// Starts a fresh dialog with the microphone already on.
     @Published var newVoiceShortcut: Shortcut {
         didSet { defaults.set(try? JSONEncoder().encode(newVoiceShortcut), forKey: "newVoiceShortcut") }
@@ -86,7 +79,7 @@ final class AppSettings: ObservableObject {
 
     /// Whether `candidate` is free to be assigned to the shortcut stored at `slot`.
     func isFree(_ candidate: Shortcut, for slot: KeyPath<AppSettings, Shortcut>) -> Bool {
-        let slots: [KeyPath<AppSettings, Shortcut>] = [\.shortcut, \.voiceShortcut, \.newVoiceShortcut]
+        let slots: [KeyPath<AppSettings, Shortcut>] = [\.shortcut, \.newVoiceShortcut]
         return !slots.contains { $0 != slot && self[keyPath: $0].collides(with: candidate) }
     }
 
@@ -98,8 +91,6 @@ final class AppSettings: ObservableObject {
         voicePitch = Self.voicePitchRange.contains(pitch) ? pitch : 1.0
 
         voiceRate = Self.voiceRateRange.contains(rate) ? rate : 0.52
-        voiceShortcut = defaults.data(forKey: "voiceShortcut")
-            .flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .defaultVoice
         newVoiceShortcut = defaults.data(forKey: "newVoiceShortcut")
             .flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .defaultNewVoice
         speaksReplies = defaults.object(forKey: "speaksReplies") as? Bool ?? true
@@ -114,11 +105,7 @@ final class AppSettings: ObservableObject {
 
     private func resolveShortcutCollisions() {
         // Two shortcuts on one key combination: macOS registers only the first, so the other
-        // would silently do nothing. The one the user asked for by name keeps the keys.
-        if voiceShortcut.collides(with: newVoiceShortcut) || voiceShortcut.collides(with: shortcut) {
-            voiceShortcut = [.defaultVoice, Shortcut(keyCode: UInt32(kVK_ANSI_M), modifiers: UInt32(controlKey | optionKey), display: "⌃⌥M")]
-                .first { !$0.collides(with: newVoiceShortcut) && !$0.collides(with: shortcut) } ?? .defaultVoice
-        }
+        // would silently do nothing.
         if newVoiceShortcut.collides(with: shortcut) { newVoiceShortcut = .defaultNewVoice }
     }
 

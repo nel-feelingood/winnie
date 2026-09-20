@@ -177,6 +177,15 @@ final class ChatController: ObservableObject {
         if store.current == nil { store.startNew() }
     }
 
+    func deleteAllChats() {
+        stop()
+        discardPendingImages()
+        store.deleteAll()
+        ImageStore.removeOrphans(keeping: [])
+        store.startNew()
+        focusInput()
+    }
+
     func stop() {
         streamTask?.cancel()
         streamTask = nil

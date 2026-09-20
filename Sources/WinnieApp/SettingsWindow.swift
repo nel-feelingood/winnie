@@ -7,7 +7,6 @@ struct SettingsView: View {
     @ObservedObject var gmail: GmailAuth
     @ObservedObject var memory: MemoryStore
     var onShortcutChange: (Shortcut) -> Void
-    var onVoiceShortcutChange: (Shortcut) -> Void
     var onNewVoiceShortcutChange: (Shortcut) -> Void
     var onVoicePreview: () -> Void
     var onScaleChange: (Double) -> Void
@@ -145,9 +144,6 @@ struct SettingsView: View {
             Section("Голос") {
                 Toggle("Отвечать вслух на голосовые вопросы", isOn: $settings.speaksReplies)
                 Toggle("Проговаривать напоминания вслух", isOn: $settings.speaksReminders)
-                ShortcutRecorder(title: "Спросить голосом", shortcut: $settings.voiceShortcut) {
-                    settings.isFree($0, for: \.voiceShortcut)
-                }
                 ShortcutRecorder(title: "Новый диалог голосом", shortcut: $settings.newVoiceShortcut) {
                     settings.isFree($0, for: \.newVoiceShortcut)
                 }
@@ -161,7 +157,6 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 520, height: 760)
         .onChange(of: settings.shortcut) { _, shortcut in onShortcutChange(shortcut) }
-        .onChange(of: settings.voiceShortcut) { _, shortcut in onVoiceShortcutChange(shortcut) }
         .onChange(of: settings.newVoiceShortcut) { _, shortcut in onNewVoiceShortcutChange(shortcut) }
         .onChange(of: settings.petScale) { _, scale in onScaleChange(scale) }
     }
@@ -217,13 +212,11 @@ final class SettingsWindowController {
     private let gmail: GmailAuth
     private let memory: MemoryStore
     private let onShortcutChange: (Shortcut) -> Void
-    private let onVoiceShortcutChange: (Shortcut) -> Void
     private let onNewVoiceShortcutChange: (Shortcut) -> Void
     private let onVoicePreview: () -> Void
     private let onScaleChange: (Double) -> Void
 
     init(settings: AppSettings, gmail: GmailAuth, memory: MemoryStore, onShortcutChange: @escaping (Shortcut) -> Void,
-         onVoiceShortcutChange: @escaping (Shortcut) -> Void,
          onNewVoiceShortcutChange: @escaping (Shortcut) -> Void,
          onVoicePreview: @escaping () -> Void,
          onScaleChange: @escaping (Double) -> Void) {
@@ -231,7 +224,6 @@ final class SettingsWindowController {
         self.gmail = gmail
         self.memory = memory
         self.onShortcutChange = onShortcutChange
-        self.onVoiceShortcutChange = onVoiceShortcutChange
         self.onNewVoiceShortcutChange = onNewVoiceShortcutChange
         self.onVoicePreview = onVoicePreview
         self.onScaleChange = onScaleChange
@@ -240,7 +232,6 @@ final class SettingsWindowController {
     func show() {
         if window == nil {
             let view = SettingsView(settings: settings, gmail: gmail, memory: memory, onShortcutChange: onShortcutChange,
-                                    onVoiceShortcutChange: onVoiceShortcutChange,
                                     onNewVoiceShortcutChange: onNewVoiceShortcutChange,
                                     onVoicePreview: onVoicePreview,
                                     onScaleChange: onScaleChange)

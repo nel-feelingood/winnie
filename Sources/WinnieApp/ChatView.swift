@@ -6,6 +6,13 @@ struct ChatView: View {
     @ObservedObject var controller: ChatController
     @ObservedObject var store: ChatStore
     @FocusState private var inputFocused: Bool
+    @State private var confirmsDeleteAll: Bool
+
+    init(controller: ChatController, store: ChatStore, confirmsDeleteAll: Bool = false) {
+        self.controller = controller
+        self.store = store
+        _confirmsDeleteAll = State(initialValue: confirmsDeleteAll)
+    }
 
     private let bottomID = "bottom"
 
@@ -15,7 +22,7 @@ struct ChatView: View {
             Hairline()
             switch controller.tab {
             case .chat:
-                sessionPicker
+                if confirmsDeleteAll { deleteAllConfirmation } else { sessionPicker }
                 Hairline()
                 messages
                 Hairline()
@@ -61,19 +68,52 @@ struct ChatView: View {
         .frame(height: 40)
     }
 
+    /// Replaces the picker row while asking. Inline rather than an alert: a modal would take
+    /// key status from the panel, which is this chat's cue to close.
+    private var deleteAllConfirmation: some View {
+        HStack(spacing: 8) {
+            Text("Удалить все чаты (\(store.sessions.filter { !$0.isEmpty }.count))?")
+                .font(.system(size: 13, weight: .semibold))
+                .lineLimit(1)
+            Spacer(minLength: 0)
+            Button("Отмена") { confirmsDeleteAll = false }
+                .buttonStyle(.plain)
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+            Button {
+                controller.deleteAllChats()
+                confirmsDeleteAll = false
+            } label: {
+                Text("Удалить")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .frame(height: 22)
+                    .background(Color.red, in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 34)
+        .background(Color.red.opacity(0.08))
+    }
+
     /// Second floor, Chat tab only: the whole width goes to the chat's name.
     private var sessionPicker: some View {
         Menu {
-            ForEach(store.sortedSessions) { session in
-                Button {
-                    controller.select(session.id)
-                } label: {
-                    let title = session.title ?? "Новый чат"
-                    session.id == store.currentID ? Label(title, systemImage: "checkmark") : Label(title, systemImage: "")
+            // An inline picker, not plain buttons: macOS then draws its own checkmark next to the current chat.
+            Picker("", selection: Binding(get: { store.currentID }, set: { id in id.map(controller.select) })) {
+                ForEach(store.sortedSessions) { session in
+                    Text(session.title ?? "Новый чат").tag(Optional(session.id))
                 }
             }
+            .pickerStyle(.inline)
+            .labelsHidden()
             Divider()
             Button("Удалить этот чат", role: .destructive) { controller.deleteCurrent() }
+            Button(role: .destructive) { confirmsDeleteAll = true } label: {
+                Label("Удалить все чаты…", systemImage: "trash")
+            }
         } label: {
             HStack(spacing: 8) {
                 Text(store.current?.title ?? "Новый чат")

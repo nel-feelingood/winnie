@@ -53,7 +53,7 @@ public enum ReminderToolSchema {
                     "id": ["type": "string", "description": "The reminder's id from list_reminders."],
                     "title": ["type": "string"],
                     "short_title": ["type": "string", "description": "Update it when the title changes."],
-                    "fire_at": ["type": "string", "description": timeRule],
+                    "fire_at": ["type": "string", "description": "Same format and rules as in create_reminder."],
                     "repeat": ["type": "string", "enum": Reminder.Repeat.allCases.map(\.rawValue)],
                 ],
                 "required": ["id"],

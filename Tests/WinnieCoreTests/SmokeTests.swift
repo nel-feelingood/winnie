@@ -68,9 +68,24 @@ import Testing
     @Test func systemPromptCarriesMasterTextAndAppConstraints() {
         let custom = ClaudeClient.systemPrompt(master: "Будь краток.")
         #expect(custom.hasPrefix("Будь краток."))
-        #expect(custom.contains("360 точек"))
+        #expect(custom.contains("360 pt"))
         // A blank prompt must not leave the model without any persona.
         #expect(ClaudeClient.systemPrompt(master: "  \n").hasPrefix(MasterPrompt.standard))
+    }
+
+    @Test func stablePromptIsCachedAndTheClockStaysOutOfIt() throws {
+        let early = Date(timeIntervalSince1970: 1_790_000_000), late = early.addingTimeInterval(3600)
+        func blocks(_ now: Date, spoken: Bool) -> [[String: Any]] {
+            ClaudeClient.requestBody(model: .opus, spoken: spoken, messages: [], now: now)["system"] as? [[String: Any]] ?? []
+        }
+        let first = blocks(early, spoken: false), second = blocks(late, spoken: true)
+        // The cached block must be byte-identical whatever the time or input mode...
+        #expect(first[0]["text"] as? String == second[0]["text"] as? String)
+        #expect(first[0]["cache_control"] != nil)
+        // ...and everything that varies sits after the breakpoint.
+        #expect(first[1]["text"] as? String != second[1]["text"] as? String)
+        #expect(first[1]["cache_control"] == nil)
+        #expect(!(first[0]["text"] as? String ?? "").contains("Now:"))
     }
 
     @Test func haikuBodyOmitsUnsupportedFields() {
@@ -180,6 +195,15 @@ import Testing
         #expect(ChatStore(directory: directory).sessions.isEmpty)
     }
 
+    @Test func deletingAllChatsEmptiesTheFileToo() {
+        let directory = tempDirectory()
+        let store = ChatStore(directory: directory)
+        store.append(ChatMessage(role: .user, text: "a"), to: store.startNew().id)
+        store.deleteAll()
+        #expect(store.sessions.isEmpty && store.currentID == nil)
+        #expect(ChatStore(directory: directory).sessions.isEmpty)
+    }
+
     @Test func deletingCurrentFallsBackToLatest() {
         let store = ChatStore(directory: tempDirectory())
         let a = store.startNew()
@@ -257,7 +281,8 @@ import Testing
     }
 
     @Test func spokenQuestionsAddTheReadAloudRule() {
-        #expect(ClaudeClient.systemPrompt(master: "x", spoken: true).contains("прочитан вслух"))
-        #expect(!ClaudeClient.systemPrompt(master: "x").contains("прочитан вслух"))
+        let now = Date()
+        #expect(ClaudeClient.volatilePrompt(spoken: true, now: now).contains("read aloud"))
+        #expect(!ClaudeClient.volatilePrompt(spoken: false, now: now).contains("read aloud"))
     }
 }

@@ -123,8 +123,9 @@ private func date(_ year: Int, _ month: Int, _ day: Int, _ hour: Int = 0, _ minu
 @Suite struct ReminderPromptTests {
     @Test func promptCarriesExactLocalTimeAndWeekday() {
         let clock = ClaudeClient.clock(date(2026, 9, 20, 17, 5))
-        #expect(clock.hasPrefix("2026-09-20 17:05, воскресенье"))
-        #expect(ClaudeClient.systemPrompt(master: "x", now: date(2026, 9, 20, 17, 5)).contains("create_reminder"))
+        #expect(clock.hasPrefix("2026-09-20 17:05, Sunday"))
+        #expect(ClaudeClient.volatilePrompt(spoken: false, now: date(2026, 9, 20, 17, 5)).contains("2026-09-20 17:05"))
+        #expect(ClaudeClient.systemPrompt(master: "x").contains("create_reminder"))
     }
 
     @Test func toolsAreOfferedOnlyWithAHandler() {

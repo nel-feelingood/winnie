@@ -69,6 +69,12 @@ public final class ChatStore: ObservableObject {
         save()
     }
 
+    public func deleteAll() {
+        sessions = []
+        currentID = nil
+        save()
+    }
+
     public func setTitle(_ title: String, for id: UUID) {
         guard !title.isEmpty else { return }
         mutate(id) { $0.title = title }

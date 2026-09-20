@@ -49,7 +49,7 @@ MainActor.assumeIsolated {
     let controller = ChatController(store: store, reminders: reminders, memory: MemoryStore(directory: sandbox), gmail: GmailAuth(),
                                     settings: AppSettings())
     if wantsEvents { controller.tab = .events }
-    let panel = ChatPanel(content: ChatView(controller: controller, store: store))
+    let panel = ChatPanel(content: ChatView(controller: controller, store: store, confirmsDeleteAll: mode == "confirm"))
     panel.setFrame(NSRect(origin: NSPoint(x: -2000, y: -2000), size: ChatPanel.chatSize), display: true)
     panel.orderFrontRegardless()
 

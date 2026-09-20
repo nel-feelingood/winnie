@@ -45,7 +45,7 @@ import Testing
         #expect(prompt.contains("- [\(note.shortID)] Отвечать без смайликов"))
         // The user's own text stays first and untouched.
         #expect(prompt.hasPrefix("Мой промпт."))
-        #expect(ClaudeClient.systemPrompt(master: "x").contains("Пока ничего."))
+        #expect(ClaudeClient.systemPrompt(master: "x").contains("(none yet)"))
     }
 
     @Test func memoryToolsAreOfferedAlongsideReminders() {

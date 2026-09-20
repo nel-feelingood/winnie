@@ -19,7 +19,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var chatPanel: ChatPanel!
     private var statusMenu: StatusMenu!
     private var hotKey: HotKey!
-    private var voiceHotKey: HotKey!
     private var newVoiceHotKey: HotKey!
     private var settingsWindow: SettingsWindowController!
 
@@ -55,7 +54,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             gmail: gmail,
             memory: memory,
             onShortcutChange: { [unowned self] in hotKey.register($0) },
-            onVoiceShortcutChange: { [unowned self] in voiceHotKey.register($0) },
             onNewVoiceShortcutChange: { [unowned self] in newVoiceHotKey.register($0) },
             onVoicePreview: { [unowned self] in controller.previewVoice() },
             onScaleChange: { [unowned self] in
@@ -87,12 +85,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         hotKey = HotKey(id: 1) { [unowned self] in toggleFromShortcut() }
         hotKey.register(settings.shortcut)
-        voiceHotKey = HotKey(id: 2) { [unowned self] in
-            // Pressed again while listening, it ends the question early and sends it.
-            if !chatPanel.isVisible { openChat(new: false) }
-            controller.toggleListening()
-        }
-        voiceHotKey.register(settings.voiceShortcut)
         newVoiceHotKey = HotKey(id: 3) { [unowned self] in
             // While already listening, the same key ends the question instead of discarding it.
             if controller.isListening { return controller.toggleListening() }
