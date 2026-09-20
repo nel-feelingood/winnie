@@ -49,6 +49,7 @@ struct SettingsView: View {
     @ObservedObject var gmail: GmailAuth
     @ObservedObject var memory: MemoryStore
     @ObservedObject var usage: UsageStore
+    @ObservedObject var mcp: MCPAuth
     let actions: SettingsActions
     @ObservedObject var navigation: SettingsNavigation
 
@@ -317,27 +318,54 @@ extension SettingsView {
     @ViewBuilder var appsSection: some View {
         Section {
             ForEach($settings.connectors) { $connector in
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(connector.name)
-                        Text(connector.url).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(connector.name)
+                            Text(connector.url).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                        }
+                        Spacer()
+                        connectorStatus(connector)
+                        Toggle("", isOn: $connector.isEnabled).labelsHidden()
+                        Button { settings.removeConnector(connector) } label: { Image(systemName: "trash") }
+                            .buttonStyle(.borderless)
+                            .help("Удалить подключение и его токен")
                     }
-                    Spacer()
-                    Toggle("", isOn: $connector.isEnabled).labelsHidden()
-                    Button { settings.removeConnector(connector) } label: { Image(systemName: "trash") }
-                        .buttonStyle(.borderless)
-                        .help("Удалить подключение и его токен")
+                    if let error = mcp.errors[connector.id] { Text(error).font(.caption).foregroundStyle(.red) }
                 }
             }
             NewConnectorForm { name, url, token in
                 let connector = AppConnector(name: name, url: url)
-                Keychain.save(token, named: connector.secretName)
                 settings.connectors.append(connector)
+                if token.isEmpty {
+                    // No token given: if the server speaks OAuth, go straight to the browser sign-in.
+                    Task { if let serverURL = URL(string: url), await mcp.usesOAuth(serverURL) { mcp.signIn(connector) } }
+                } else {
+                    Keychain.save(token, named: connector.secretName)
+                }
             }
         } header: {
-            Text("Приложения")
+            Text("MCP · приложения")
         } footer: {
-            Footnote("Любое приложение с удалённым MCP-сервером: адрес https://… и токен доступа. Claude сам получает список его инструментов. Перед действием, которое что-то меняет в приложении, Винни спросит подтверждение. Токен хранится в Связке ключей и уходит только в Anthropic API вместе с запросом.")
+            Footnote("Любое приложение с удалённым MCP-сервером (https://…). Если сервер входит через OAuth, как Bridge, оставь токен пустым — откроется вход в браузере, токены обновляются сами. Claude получает список инструментов приложения сам; перед действием, которое что-то меняет, Винни спросит подтверждение. Токены хранятся в Связке ключей и уходят только в Anthropic API вместе с запросом.")
+        }
+    }
+
+    @ViewBuilder private func connectorStatus(_ connector: AppConnector) -> some View {
+        // `revision` is read so the row refreshes once a sign-in finishes.
+        let _ = mcp.revision
+        if mcp.connecting == connector.id {
+            Text("жду входа в браузере…").font(.caption).foregroundStyle(.secondary)
+        } else {
+            switch mcp.state(of: connector) {
+            case .signedIn:
+                Label("вход выполнен", systemImage: "checkmark.circle.fill").font(.caption).foregroundStyle(.green)
+                Button("Войти заново") { mcp.signIn(connector) }.controlSize(.small)
+            case .token:
+                Text("токен").font(.caption).foregroundStyle(.secondary)
+            case .open:
+                Button("Войти") { mcp.signIn(connector) }.controlSize(.small)
+            }
         }
     }
 }
@@ -355,10 +383,10 @@ private struct NewConnectorForm: View {
 
     var body: some View {
         TextField("Название", text: $name, prompt: Text("Bridge"))
-        TextField("Адрес MCP-сервера", text: $url, prompt: Text("https://…/mcp"))
-        SecureField("Токен", text: $token, prompt: Text("если сервер его требует"))
+        TextField("Адрес MCP-сервера", text: $url, prompt: Text("https://mcp.bridgeapp.ai/mcp"))
+        SecureField("Токен", text: $token, prompt: Text("пусто — вход через браузер"))
         HStack {
-            Button("Добавить приложение") {
+            Button("Подключить") {
                 onAdd(name.trimmingCharacters(in: .whitespaces), url.trimmingCharacters(in: .whitespaces),
                       token.trimmingCharacters(in: .whitespacesAndNewlines))
                 name = ""; url = ""; token = ""
@@ -449,9 +477,10 @@ final class SettingsWindowController {
     private let navigation = SettingsNavigation()
     private let makeView: (SettingsNavigation) -> SettingsView
 
-    init(settings: AppSettings, gmail: GmailAuth, memory: MemoryStore, usage: UsageStore, actions: SettingsActions) {
+    init(settings: AppSettings, gmail: GmailAuth, memory: MemoryStore, usage: UsageStore, mcp: MCPAuth,
+         actions: SettingsActions) {
         makeView = { navigation in
-            SettingsView(settings: settings, gmail: gmail, memory: memory, usage: usage, actions: actions,
+            SettingsView(settings: settings, gmail: gmail, memory: memory, usage: usage, mcp: mcp, actions: actions,
                          navigation: navigation)
         }
     }

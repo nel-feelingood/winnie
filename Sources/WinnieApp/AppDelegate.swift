@@ -11,8 +11,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let gmail = GmailAuth()
     private lazy var memory = MemoryStore(directory: AppSettings.supportDirectory)
     private lazy var usage = UsageStore(directory: AppSettings.supportDirectory)
+    private let mcp = MCPAuth()
     private lazy var controller = ChatController(store: store, reminders: reminders, memory: memory, usage: usage,
-                                                 gmail: gmail, settings: settings)
+                                                 mcp: mcp, gmail: gmail, settings: settings)
     private var scheduler: ReminderScheduler!
 
     private var petWindow: PetWindow!
@@ -52,7 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ImageStore.removeOrphans(keeping: store.referencedImageFiles)
 
         settingsWindow = SettingsWindowController(
-            settings: settings, gmail: gmail, memory: memory, usage: usage,
+            settings: settings, gmail: gmail, memory: memory, usage: usage, mcp: mcp,
             actions: SettingsActions(
                 onShortcutChange: { [unowned self] in hotKey.register($0) },
                 onNewVoiceShortcutChange: { [unowned self] in newVoiceHotKey.register($0) },

@@ -22,6 +22,7 @@ final class ChatController: ObservableObject {
     let reminders: ReminderStore
     let memory: MemoryStore
     let usage: UsageStore
+    let mcp: MCPAuth
     let gmail: GmailAuth
     let settings: AppSettings
     var onActivity: (ChatActivity) -> Void = { _ in }
@@ -39,12 +40,13 @@ final class ChatController: ObservableObject {
     /// flushed to the UI at most this often instead of per token.
     private static let flushInterval: Duration = .milliseconds(60)
 
-    init(store: ChatStore, reminders: ReminderStore, memory: MemoryStore, usage: UsageStore, gmail: GmailAuth,
-         settings: AppSettings) {
+    init(store: ChatStore, reminders: ReminderStore, memory: MemoryStore, usage: UsageStore, mcp: MCPAuth,
+         gmail: GmailAuth, settings: AppSettings) {
         self.store = store
         self.reminders = reminders
         self.memory = memory
         self.usage = usage
+        self.mcp = mcp
         self.speaker = Speaker(settings: settings)
         self.gmail = gmail
         self.settings = settings
@@ -259,6 +261,8 @@ final class ChatController: ObservableObject {
             lastFlush = .now
         }
 
+        // Resolved per answer: an expired OAuth token is refreshed here, before the request needs it.
+        let apps = await mcp.servers(for: settings.connectors)
         do {
             for try await event in client.streamReply(apiKey: apiKey, model: settings.model,
                                                              masterPrompt: settings.masterPrompt, history: history,
@@ -279,7 +283,7 @@ final class ChatController: ObservableObject {
                                                              },
                                                              offersMail: gmail.isConnected,
                                                              memory: memory.notes,
-                                                             apps: settings.activeServers) {
+                                                             apps: apps) {
                 switch event {
                 case .textDelta(let piece):
                     if searchStatus != nil { searchStatus = nil }

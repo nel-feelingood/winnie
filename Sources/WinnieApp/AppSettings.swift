@@ -77,13 +77,6 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(try? JSONEncoder().encode(connectors), forKey: "connectors") }
     }
 
-    /// Enabled connectors with their tokens, ready to go into a request.
-    var activeServers: [MCPServer] {
-        connectors.filter(\.isUsable).map {
-            MCPServer(name: $0.serverName, url: $0.url, token: Keychain.load(named: $0.secretName))
-        }
-    }
-
     func removeConnector(_ connector: AppConnector) {
         Keychain.save("", named: connector.secretName)
         connectors.removeAll { $0.id == connector.id }
