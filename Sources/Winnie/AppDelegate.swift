@@ -63,7 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotKey = HotKey { [unowned self] in toggleFromShortcut() }
         hotKey.register(settings.shortcut)
 
-        if Keychain.loadAPIKey().isEmpty { settingsWindow.show() }
+        if !Keychain.hasAPIKey { settingsWindow.show() }
     }
 
     // MARK: - Show / hide

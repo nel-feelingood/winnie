@@ -6,7 +6,10 @@ struct SettingsView: View {
     var onShortcutChange: (Shortcut) -> Void
     var onScaleChange: (Double) -> Void
 
-    @State private var apiKey = Keychain.loadAPIKey()
+    /// Left empty on purpose: showing the stored key would mean reading the secret
+    /// (and a macOS permission prompt) every time Settings opens.
+    @State private var apiKey = ""
+    private let hasStoredKey = Keychain.hasAPIKey
     @State private var saved = false
     @State private var isRecording = false
     @State private var monitor: Any?
@@ -14,12 +17,14 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Claude API") {
-                SecureField("API-ключ", text: $apiKey, prompt: Text("sk-ant-…"))
+                SecureField("API-ключ", text: $apiKey,
+                            prompt: Text(hasStoredKey ? "Ключ сохранён — вставь новый, чтобы заменить" : "sk-ant-…"))
                 HStack {
                     Button("Сохранить") {
                         Keychain.saveAPIKey(apiKey.trimmingCharacters(in: .whitespacesAndNewlines))
                         saved = true
                     }
+                    .disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     if saved { Text("Сохранено в Связке ключей").foregroundStyle(.secondary) }
                     Spacer()
                     Link("Получить ключ", destination: URL(string: "https://console.anthropic.com/settings/keys")!)
