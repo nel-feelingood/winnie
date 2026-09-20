@@ -220,7 +220,10 @@ public struct ClaudeClient: Sendable {
             "max_tokens": 40,
             "system": """
             Name the chat that starts with the user's message. Reply with the title only: \
-            one to three words, in the language of the message, no quotes, no trailing punctuation.
+            one to three words, in the language of the message, no quotes, no trailing punctuation. \
+            Name the subject, never the kind of request: «Напомни через минуту выходить» is \
+            «Выходить», not «Напоминание»; «переведи serendipity» is «Serendipity», not «Перевод»; \
+            «как дела?» is «Болтовня».
             """,
             "messages": [["role": "user", "content": String(firstUserMessage.prefix(2000))]],
         ]
