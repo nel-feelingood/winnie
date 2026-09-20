@@ -10,9 +10,10 @@ public enum EnvironmentCommand: Equatable, Sendable {
         public var speaksReminders: Bool?
         public var voicePitch: Double?
         public var voiceRate: Double?
+        public var smokeBreakAt1620: Bool?
 
         public var isEmpty: Bool {
-            petScale == nil && model == nil && speaksReplies == nil && speaksReminders == nil && voicePitch == nil && voiceRate == nil
+            smokeBreakAt1620 == nil && petScale == nil && model == nil && speaksReplies == nil && speaksReminders == nil && voicePitch == nil && voiceRate == nil
         }
     }
 
@@ -21,6 +22,7 @@ public enum EnvironmentCommand: Equatable, Sendable {
     case addQuickAction(label: String, instruction: String, sendsImmediately: Bool)
     case removeQuickAction(text: String)
     case deleteAllReminders
+    case playSmokeBreak
 
     public static let petScaleRange = 0.5...2.5
     public static let voicePitchRange = 0.6...1.6
@@ -38,6 +40,8 @@ public enum EnvironmentCommand: Equatable, Sendable {
             return .command(.readSettings)
         case "delete_all_reminders":
             return .command(.deleteAllReminders)
+        case "play_smoke_break":
+            return .command(.playSmokeBreak)
         case "add_quick_action":
             func field(_ key: String) -> String { (arguments[key] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "" }
             let label = field("label"), instruction = field("instruction")
@@ -82,13 +86,14 @@ public enum EnvironmentCommand: Equatable, Sendable {
         }
         patch.speaksReplies = arguments["speak_replies"] as? Bool
         patch.speaksReminders = arguments["speak_reminders"] as? Bool
+        patch.smokeBreakAt1620 = arguments["smoke_break_at_1620"] as? Bool
         return patch.isEmpty ? .problem("Nothing to change: pass at least one setting.") : .command(.update(patch))
     }
 }
 
 public enum EnvironmentToolSchema {
     public static let names: Set<String> = ["get_settings", "update_settings", "add_quick_action", "remove_quick_action",
-                                            "delete_all_reminders"]
+                                            "delete_all_reminders", "play_smoke_break"]
 
     public static let definitions: [[String: Any]] = [
         [
@@ -108,6 +113,7 @@ public enum EnvironmentToolSchema {
                     "speak_reminders": ["type": "boolean", "description": "Say due reminders out loud."],
                     "voice_pitch": ["type": "number", "description": "0.6–1.6; 1.0 is the voice as recorded."],
                     "voice_rate": ["type": "number", "description": "0.35–0.65; 0.5 is normal speed."],
+                    "smoke_break_at_1620": ["type": "boolean", "description": "Whether the smoke-break animation plays by itself every day at 16:20."],
                 ],
             ],
         ],
@@ -130,15 +136,23 @@ public enum EnvironmentToolSchema {
             "input_schema": ["type": "object", "properties": ["text": ["type": "string", "description": "The button's label."]], "required": ["text"]],
         ],
         [
+            "name": "play_smoke_break",
+            "description": "Play Winnie's smoke-break animation right now: a few seconds of him lighting up. It is an in-joke of the app that also runs by itself at 16:20. Call it when the user says «16:20», «перекур», «покури» or asks for the animation, then answer with a word or two at most.",
+            "input_schema": ["type": "object", "properties": [String: Any]()],
+        ],
+        [
             "name": "delete_all_reminders",
             "description": "Delete every reminder (the user calls them events, «события»). Only when the user clearly asks to remove all of them; for one reminder use delete_reminder.",
             "input_schema": ["type": "object", "properties": [String: Any]()],
         ],
     ]
 
+    /// A harmless few seconds of animation, so unlike the rest it is never refused.
+    static let harmlessNames: Set<String> = ["get_settings", "play_smoke_break"]
+
     /// Tools that change lasting state. Like memory, they are refused once mail, web or app
     /// content has entered the same answer.
-    public static let guardedNames = names.subtracting(["get_settings"])
+    public static let guardedNames = names.subtracting(harmlessNames)
 
     public static let blockedOutcome = ToolOutcome("""
         Not changed. This answer has already read mail, web or app content, and Winnie's settings cannot be changed in \

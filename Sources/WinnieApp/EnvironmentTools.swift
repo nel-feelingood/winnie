@@ -6,6 +6,7 @@ import WinnieCore
 struct EnvironmentTools {
     let settings: AppSettings
     let reminders: ReminderStore
+    var onSmokeBreak: () -> Void = {}
 
     func execute(name: String, input: Data) -> ToolOutcome {
         switch EnvironmentCommand.parse(name: name, input: input) {
@@ -30,6 +31,7 @@ struct EnvironmentTools {
             if let speaks = patch.speaksReminders { settings.speaksReminders = speaks }
             if let pitch = patch.voicePitch { settings.voicePitch = pitch }
             if let rate = patch.voiceRate { settings.voiceRate = rate }
+            if let enabled = patch.smokeBreakAt1620 { settings.smokeBreakEnabled = enabled }
             return ToolOutcome("Changed. Now:\n\(summary)")
 
         case .addQuickAction(let label, let instruction, let sendsImmediately):
@@ -46,6 +48,10 @@ struct EnvironmentTools {
             }
             settings.quickActions.removeAll { Self.same($0.text, text) }
             return ToolOutcome("Removed the button «\(text)».")
+
+        case .playSmokeBreak:
+            onSmokeBreak()
+            return ToolOutcome("The smoke-break animation is playing.")
 
         case .deleteAllReminders:
             let count = reminders.reminders.count
@@ -65,6 +71,7 @@ struct EnvironmentTools {
         speak_reminders: \(settings.speaksReminders)
         voice_pitch: \(String(format: "%.2f", settings.voicePitch))
         voice_rate: \(String(format: "%.2f", settings.voiceRate))
+        smoke_break_at_1620: \(settings.smokeBreakEnabled)
         quick action buttons: \(buttons.isEmpty ? "none" : buttons)
         reminders: \(reminders.reminders.count)
         """

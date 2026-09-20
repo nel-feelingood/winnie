@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                                  mcp: mcp, gmail: gmail, settings: settings)
     private var scheduler: ReminderScheduler!
     private var scaleSubscription: AnyCancellable?
+    private let smokeClock = SmokeBreakClock()
 
     private var petWindow: PetWindow!
     private var petView: PetView!
@@ -58,6 +59,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller.onActivity = { [unowned self] in petView.setActivity($0) }
         controller.onCaptureRequest = { [unowned self] in captureScreenshot() }
         controller.onMinimize = { [unowned self] in closeChat() }
+        controller.onSmokeBreak = { [unowned self] in playSmokeBreak() }
+        smokeClock.onTime = { [unowned self] in if settings.smokeBreakEnabled { playSmokeBreak() } }
         controller.onOpenQuickActionSettings = { [unowned self] in settingsWindow.show(.quick) }
         ImageStore.removeOrphans(keeping: store.referencedImageFiles)
 
@@ -157,6 +160,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         chatPanel.position(relativeTo: petWindow.frame)
         chatPanel.orderFrontRegardless()
         petView.refresh()
+    }
+
+    /// Brings Winnie out if he was hidden: the joke is no good unseen.
+    private func playSmokeBreak() {
+        showPet()
+        petView.playSmokeBreak()
     }
 
     private func closeChat() {

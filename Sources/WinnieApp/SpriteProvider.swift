@@ -18,6 +18,15 @@ final class SpriteProvider {
 
     func reload() { cache.removeAll() }
 
+    /// Frames of a sequence, `<name>-0.png`, `<name>-1.png`, … up to the first gap.
+    func frames(named name: String) -> [NSImage] {
+        var frames: [NSImage] = []
+        while let frame = NSImage(contentsOf: AppSettings.spritesDirectory.appendingPathComponent("\(name)-\(frames.count).png")) {
+            frames.append(frame)
+        }
+        return frames
+    }
+
     var hasCustomSprites: Bool { load(.idle) != nil }
 
     private func load(_ state: PetState) -> NSImage? {
@@ -47,7 +56,7 @@ final class SpriteProvider {
             let face: String
             switch state {
             case .idle: face = "• •"
-            case .hover, .listening: face = "◉ ◉"
+            case .hover, .listening, .smoke: face = "◉ ◉"
             case .thinking: face = "• ˙"
             case .talking: face = "• •"
             case .drag: face = "° °"

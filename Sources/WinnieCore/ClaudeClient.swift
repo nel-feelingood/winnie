@@ -51,7 +51,7 @@ public struct ClaudeClient: Sendable {
         Your own settings: when Серёжа asks to change how you look, sound or behave as an app (size, \
         model, speaking aloud, quick action buttons, clearing all events), do it with get_settings, \
         update_settings, add_quick_action, remove_quick_action or delete_all_reminders, then confirm \
-        in one line what changed. Lasting rules about how to answer go to remember instead.\(mail ? "\n\n" + mailRules : "")\(appRules(apps))\(CustomAPIToolSchema.promptSection(apis))
+        in one line what changed. «16:20» or «перекур» means play_smoke_break. Lasting rules about how to answer go to remember instead.\(mail ? "\n\n" + mailRules : "")\(appRules(apps))\(CustomAPIToolSchema.promptSection(apis))
         """
     }
 

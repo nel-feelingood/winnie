@@ -120,6 +120,11 @@ final class AppSettings: ObservableObject {
     static let defaultQuickActions = [QuickAction(text: "Проверь почту"), QuickAction(text: "Какие у меня напоминания?"),
                                       QuickAction(text: "Переведи", sendsImmediately: false)]
 
+    /// The 16:20 smoke-break animation plays by itself every day.
+    @Published var smokeBreakEnabled: Bool {
+        didSet { defaults.set(smokeBreakEnabled, forKey: "smokeBreakEnabled") }
+    }
+
     /// Say a due reminder out loud. Off by default: a voice out of nowhere is a bad surprise on a call.
     @Published var speaksReminders: Bool {
         didSet { defaults.set(speaksReminders, forKey: "speaksReminders") }
@@ -133,6 +138,7 @@ final class AppSettings: ObservableObject {
 
     init() {
         speaksReminders = defaults.bool(forKey: "speaksReminders")
+        smokeBreakEnabled = defaults.object(forKey: "smokeBreakEnabled") as? Bool ?? true
         customAPIs = defaults.data(forKey: "customAPIs")
             .flatMap { try? JSONDecoder().decode([CustomAPI].self, from: $0) } ?? []
         connectors = defaults.data(forKey: "connectors")

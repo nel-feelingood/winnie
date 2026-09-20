@@ -115,6 +115,11 @@ struct SettingsView: View {
             }
         }
         Section {
+            Toggle("16:20", isOn: $settings.smokeBreakEnabled)
+        } footer: {
+            Footnote("Каждый день в 16:20 Винни устраивает перекур. По просьбе в чате («16:20», «перекур») анимация играет в любое время, даже если тумблер выключен.")
+        }
+        Section {
             TextEditor(text: $settings.masterPrompt)
                 .font(.system(size: 12))
                 .frame(height: 190)

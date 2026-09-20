@@ -1,6 +1,10 @@
 // Normalises a new pose so it matches the existing sprite set:
 //   swift scripts/add-sprite.swift <image> <state> [--colour-only]
 //
+// With --bounds-from <image> the size and position are computed from that other picture
+// instead: every frame of one animation must share one transform, or the character
+// jitters by a pixel from frame to frame.
+//
 // With --colour-only the picture keeps its size and position and only step 3 runs:
 // for poses that already fit the set but were drawn in a slightly different tone.
 //
@@ -17,6 +21,11 @@ import AppKit
 var arguments = CommandLine.arguments
 let colourOnly = arguments.contains("--colour-only")
 arguments.removeAll { $0 == "--colour-only" }
+var boundsSource: String?
+if let flag = arguments.firstIndex(of: "--bounds-from"), flag + 1 < arguments.count {
+    boundsSource = arguments[flag + 1]
+    arguments.removeSubrange(flag...(flag + 1))
+}
 guard arguments.count == 3 else { print("usage: add-sprite.swift <image> <state> [--colour-only]"); exit(1) }
 let state = arguments[2]
 
@@ -81,7 +90,8 @@ if corners.allSatisfy({ isWhite($0, 245) }) {
 // --- 2. match the reference pose
 guard let reference = rgba(URL(fileURLWithPath: "Assets/sprites/idle.png")) else { print("Assets/sprites/idle.png missing"); exit(1) }
 let ref = bounds(reference.pixels, reference.width, reference.height)
-let own = bounds(pixels, width, height)
+var own = bounds(pixels, width, height)
+if let boundsSource, let other = rgba(URL(fileURLWithPath: boundsSource)) { own = bounds(other.pixels, other.width, other.height) }
 let scale = colourOnly ? 1 : Double(ref.maxY - ref.minY) / Double(own.maxY - own.minY)
 let canvas = colourOnly ? width : 1024
 let source = CGContext(data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,

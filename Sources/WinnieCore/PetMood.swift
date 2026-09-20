@@ -3,6 +3,8 @@ import Foundation
 /// Sprite names double as the file names the artist delivers (`idle.png`, ...).
 public enum PetState: String, CaseIterable, Sendable {
     case idle, hover, thinking, talking, drag, error, sleep, listening
+    /// The 16:20 smoke break. Not one picture but a frame sequence (`smoke-0.png`…).
+    case smoke
 }
 
 public enum ChatActivity: Equatable, Sendable {
@@ -16,10 +18,13 @@ public struct PetMood: Equatable, Sendable {
     public var isHovering = false
     public var isAsleep = false
     public var activity: ChatActivity = .none
+    /// The smoke-break animation is running. It outranks everything, dragging included.
+    public var isOnSmokeBreak = false
 
     public init() {}
 
     public var state: PetState {
+        if isOnSmokeBreak { return .smoke }
         if isDragging { return .drag }
         switch activity {
         case .error: return .error

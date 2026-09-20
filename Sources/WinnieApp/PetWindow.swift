@@ -48,6 +48,12 @@ final class PetView: NSView {
     private var dragStart: NSPoint?
     private var windowStart: NSPoint = .zero
     private var sleepTimer: Timer?
+    private var smokeTimer: Timer?
+    private var smokeFrames: [NSImage] = []
+    private var smokeIndex = 0
+
+    /// Seconds each frame of the smoke break stays on screen.
+    private static let smokeFrameDuration: TimeInterval = 0.7
 
     private static let dragThreshold: CGFloat = 4
     private static let sleepDelay: TimeInterval = 60
@@ -114,7 +120,46 @@ final class PetView: NSView {
         render()
     }
 
+    // MARK: - Smoke break
+
+    /// Plays `smoke-0…N` once. While it runs it owns the sprite: hovering, dragging and chat
+    /// activity still update the mood underneath, and whatever state is current takes over
+    /// when the last frame is done.
+    func playSmokeBreak() {
+        let frames = sprites.frames(named: "smoke")
+        guard !frames.isEmpty, !mood.isOnSmokeBreak else { return }
+        smokeFrames = frames
+        smokeIndex = 0
+        mood.isOnSmokeBreak = true
+        wake()
+        show(frames[0])
+        smokeTimer = Timer.scheduledTimer(withTimeInterval: Self.smokeFrameDuration, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.advanceSmokeBreak() }
+        }
+    }
+
+    private func advanceSmokeBreak() {
+        smokeIndex += 1
+        guard smokeIndex < smokeFrames.count else {
+            smokeTimer?.invalidate()
+            smokeTimer = nil
+            smokeFrames = []
+            mood.isOnSmokeBreak = false
+            return render()
+        }
+        show(smokeFrames[smokeIndex])
+    }
+
+    private func show(_ image: NSImage) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        spriteLayer.contents = image
+        CATransaction.commit()
+    }
+
     private func render() {
+        // The running animation sets frames itself; a state change must not paint over them.
+        guard mood.state != .smoke else { return updateBreathing() }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         spriteLayer.contents = sprites.image(for: mood.state)

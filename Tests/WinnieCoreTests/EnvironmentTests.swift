@@ -43,6 +43,25 @@ import Testing
         #expect(EnvironmentToolSchema.blockedOutcome.isError)
     }
 
+    @Test func smokeBreakCanBePlayedAnytimeAndToggled() {
+        #expect(parse("play_smoke_break") == .command(.playSmokeBreak))
+        // A few seconds of animation is harmless, so it is not among the guarded tools.
+        #expect(!EnvironmentToolSchema.guardedNames.contains("play_smoke_break"))
+        guard case .command(.update(let patch)) = parse("update_settings", ["smoke_break_at_1620": false])
+        else { Issue.record("expected a patch"); return }
+        #expect(patch.smokeBreakAt1620 == false)
+    }
+
+    @Test func smokeBreakOutranksEveryOtherPose() {
+        var mood = PetMood()
+        mood.isDragging = true
+        mood.activity = .error
+        mood.isOnSmokeBreak = true
+        #expect(mood.state == .smoke)
+        mood.isOnSmokeBreak = false
+        #expect(mood.state == .drag)
+    }
+
     @Test func toolsAndTheirRuleAreInEveryToolRequest() {
         let definitions = Set(EnvironmentToolSchema.definitions.compactMap { $0["name"] as? String })
         #expect(definitions == EnvironmentToolSchema.names)

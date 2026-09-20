@@ -29,6 +29,7 @@ final class ChatController: ObservableObject {
     /// The window layer owns hiding the chat during a capture and bringing it back.
     var onCaptureRequest: () -> Void = {}
     var onMinimize: () -> Void = {}
+    var onSmokeBreak: () -> Void = {}
     var onOpenQuickActionSettings: () -> Void = {}
 
     private let client = ClaudeClient()
@@ -279,7 +280,7 @@ final class ChatController: ObservableObject {
                                                              masterPrompt: settings.masterPrompt, history: history,
                                                              spoken: speaks,
                                                              imageLoader: { ImageStore.data(for: $0) },
-                                                             toolHandler: { [reminders, memory, settings, mail = MailTools(client: gmail.client),
+                                                             toolHandler: { [reminders, memory, settings, smokeBreak = onSmokeBreak, mail = MailTools(client: gmail.client),
                                                                              custom = CustomAPITools(apis: apis)] name, input in
                                                                  if name == CustomAPIToolSchema.name { return await custom.execute(input: input) }
                                                                  if MailToolSchema.names.contains(name) {
@@ -287,7 +288,7 @@ final class ChatController: ObservableObject {
                                                                  }
                                                                  if EnvironmentToolSchema.names.contains(name) {
                                                                      return await MainActor.run {
-                                                                         EnvironmentTools(settings: settings, reminders: reminders).execute(name: name, input: input)
+                                                                         EnvironmentTools(settings: settings, reminders: reminders, onSmokeBreak: smokeBreak).execute(name: name, input: input)
                                                                      }
                                                                  }
                                                                  if MemoryToolSchema.names.contains(name) {
@@ -362,6 +363,7 @@ final class ChatController: ObservableObject {
         case "get_settings": return "Смотрю настройки…"
         case "update_settings", "add_quick_action", "remove_quick_action": return "Меняю настройки…"
         case "delete_all_reminders": return "Удаляю события…"
+        case "play_smoke_break": return "16:20…"
         case "list_emails": return "Смотрю почту…"
         case "read_email": return "Читаю письмо…"
         case "list_reminders": return "Смотрю напоминания…"
