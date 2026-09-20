@@ -1,4 +1,3 @@
-import MarkdownUI
 import SwiftUI
 import WinnieCore
 
@@ -28,8 +27,9 @@ struct NotesView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 2) {
-                        ForEach(notes.sorted) { note in
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(notes.sorted.enumerated()), id: \.element.id) { index, note in
+                            if index > 0 { Hairline().padding(.horizontal, 8) }
                             NoteRow(note: note,
                                     onOpen: { controller.openNoteID = note.id },
                                     onPin: { notes.update(note.id, isPinned: !note.isPinned) })
@@ -77,6 +77,7 @@ private struct NoteRow: View {
         .contentShape(Rectangle())
         .onTapGesture(perform: onOpen)
         .onHover { isHovering = $0 }
+        .linkCursor()
     }
 }
 
@@ -87,7 +88,8 @@ private struct NotePage: View {
 
     @State private var title: String
     @State private var text: String
-    @State private var isEditing: Bool
+    /// The user has typed since the note was opened; until then the bear's edits may replace the text.
+    @State private var isDirty = false
     @State private var confirmsDelete = false
     @State private var justCopied = false
     @State private var saveTask: Task<Void, Never>?
@@ -98,8 +100,6 @@ private struct NotePage: View {
         self.notes = notes
         _title = State(initialValue: note.title)
         _text = State(initialValue: note.body)
-        // A brand-new note is for writing; an existing one opens rendered, for reading.
-        _isEditing = State(initialValue: note.title.isEmpty && note.body.isEmpty)
     }
 
     var body: some View {
@@ -122,52 +122,20 @@ private struct NotePage: View {
         }
         .onChange(of: title) { scheduleSave() }
         .onChange(of: text) { scheduleSave() }
-        // The bear may edit the open note from the chat; take his text unless the user is mid-edit.
-        .onChange(of: note.body) { _, body in if !isEditing { text = body } }
-        .onChange(of: note.title) { _, newTitle in if !isEditing { title = newTitle } }
+        // The bear may edit the open note from the chat. His version is taken when it differs from what
+        // this page last saved, i.e. when the change did not come from here.
+        .onChange(of: note.body) { _, body in if body != text, !isDirty { text = body } }
+        .onChange(of: note.title) { _, newTitle in if newTitle != title, !isDirty { title = newTitle } }
         .onDisappear { save() }
     }
 
-    @ViewBuilder private var content: some View {
-        if isEditing {
-            MarkdownEditor(text: $text) { image in
-                guard let data = NoteImages.jpeg(from: image), let path = notes.addImage(data, fileExtension: "jpg") else { return nil }
-                return "![](\(path))\n"
-            }
-            .padding(.horizontal, 4)
-        } else {
-            ScrollView {
-                Group {
-                    if text.isEmpty {
-                        Text("Пусто. Дважды кликни, чтобы писать.").font(.system(size: 13)).foregroundStyle(.tertiary)
-                    } else {
-                        // Task lines are drawn as real controls, each tied to its line of the text;
-                        // everything between them is ordinary rendered Markdown.
-                        VStack(alignment: .leading, spacing: 6) {
-                            ForEach(TaskList.segments(of: text)) { segment in
-                                switch segment {
-                                case .markdown(_, let chunk):
-                                    Markdown(chunk, imageBaseURL: notes.directory)
-                                        .markdownTheme(.winnie)
-                                        .markdownImageProvider(LocalImageProvider())
-                                        .textSelection(.enabled)
-                                case .task(let line, let indent, let isDone, let label):
-                                    TaskRow(isDone: isDone, label: label, indent: indent) {
-                                        text = TaskList.toggling(line: line, in: text)
-                                        save()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-            }
-            .contentShape(Rectangle())
-            .onTapGesture(count: 2) { isEditing = true }
-        }
+    /// Always the editor: the text is styled in place, so there is nothing to switch to.
+    private var content: some View {
+        MarkdownEditor(text: $text, onPasteImage: { image in
+            guard let data = NoteImages.jpeg(from: image), let path = notes.addImage(data, fileExtension: "jpg") else { return nil }
+            return "![](\(path))\n"
+        }, imageURL: { notes.directory.appendingPathComponent($0) })
+        .padding(.horizontal, 4)
     }
 
     private var toolbar: some View {
@@ -183,10 +151,6 @@ private struct NotePage: View {
 
             Spacer()
 
-            NoteBarButton(symbol: isEditing ? "eye" : "pencil", help: isEditing ? "Просмотр" : "Править (или двойной клик по тексту)") {
-                save()
-                isEditing.toggle()
-            }
             NoteBarButton(symbol: note.isPinned ? "pin.fill" : "pin", help: note.isPinned ? "Открепить" : "Закрепить", isActive: note.isPinned) {
                 notes.update(note.id, isPinned: !note.isPinned)
             }
@@ -228,6 +192,7 @@ private struct NotePage: View {
 
     /// A file write per keystroke would be wasteful; wait for a pause in typing.
     private func scheduleSave() {
+        isDirty = title != note.title || text != note.body
         saveTask?.cancel()
         saveTask = Task {
             try? await Task.sleep(for: .milliseconds(600))
@@ -241,33 +206,7 @@ private struct NotePage: View {
         // An untouched blank note is not worth keeping.
         if title.isEmpty, text.isEmpty, note.title.isEmpty, note.body.isEmpty { return }
         notes.update(note.id, title: title, body: text)
-    }
-}
-
-/// One «- [ ]» line in the rendered note. The box toggles; the label is still Markdown.
-private struct TaskRow: View {
-    let isDone: Bool
-    let label: String
-    let indent: Int
-    let onToggle: () -> Void
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Button(action: onToggle) {
-                Image(systemName: isDone ? "checkmark.square.fill" : "square")
-                    .font(.system(size: 14))
-                    .foregroundStyle(isDone ? Color.accentColor : Color.secondary)
-                    .frame(width: 18, height: 18)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .help(isDone ? "Снять отметку" : "Отметить")
-            Markdown(label)
-                .markdownTheme(.winnie)
-                .opacity(isDone ? 0.55 : 1)
-                .strikethrough(isDone)
-        }
-        .padding(.leading, CGFloat(indent) * 18 + 4)
+        isDirty = false
     }
 }
 
@@ -284,19 +223,6 @@ private struct NoteBarButton: View {
         .buttonStyle(.plain)
         .foregroundStyle(isActive ? Color.accentColor : Color.primary)
         .help(help)
-    }
-}
-
-/// Shows pictures stored beside the notes; MarkdownUI's default provider only fetches over the network.
-private struct LocalImageProvider: ImageProvider {
-    func makeImage(url: URL?) -> some View {
-        if let url, url.isFileURL, let image = NSImage(contentsOf: url) {
-            Image(nsImage: image).resizable().aspectRatio(contentMode: .fit)
-                .frame(maxWidth: min(image.size.width, 520))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-        } else {
-            Label("картинка недоступна", systemImage: "photo").font(.caption).foregroundStyle(.secondary)
-        }
     }
 }
 

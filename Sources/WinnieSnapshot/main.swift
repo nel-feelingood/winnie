@@ -55,7 +55,9 @@ MainActor.assumeIsolated {
     reminders.add(Reminder(title: "Зарядка", fireAt: Date().addingTimeInterval(86_400), repeats: .weekdays))
 
     let noteStore = NoteStore(directory: sandbox.appendingPathComponent("Notes"))
-    noteStore.create(title: "Идеи для Винни", body: "## Поведение\n- чесать затылок, когда долго думает\n- зевать перед сном\n\n**Важно:** не забыть про *мёд*.\n\n- [x] перекур в 16:20\n- [ ] прогулка по экрану")
+    let picture = NSImage(contentsOfFile: NSHomeDirectory() + "/Library/Application Support/Winnie/Sprites/hover.png")
+        .flatMap(NoteImages.jpeg(from:)).flatMap { noteStore.addImage($0, fileExtension: "jpg") } ?? "images/none.jpg"
+    noteStore.create(title: "Идеи для Винни", body: "## Поведение\n- чесать затылок, когда долго думает\n- зевать перед сном\n\n**Важно:** не забыть про *мёд* и `код`, см. [сайт](https://example.com).\n\n> цитата из мультика\n\n- [x] перекур в 16:20\n- [ ] прогулка по экрану\n\n![](\(picture))\nтекст после картинки")
     let trip = noteStore.create(title: "Поездка в Батуми", body: "Билеты на пятницу, отель у моря. Спросить Лёву про даты и про то, берём ли палатку. Забронировать машину. Проверить паспорт. Купить зарядку.")
     noteStore.update(trip.id, isPinned: true)
     noteStore.create(title: "", body: "просто мысль без заголовка")

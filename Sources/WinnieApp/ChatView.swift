@@ -58,15 +58,7 @@ struct ChatView: View {
     private var header: some View {
         ZStack {
             // Centred on the panel itself, not on the space the side buttons leave over.
-            Picker("", selection: $controller.tab) {
-                Text("Chat").tag(ChatTab.chat)
-                Text("Events").tag(ChatTab.events)
-                Text("Notes").tag(ChatTab.notes)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .controlSize(.small)
-            .fixedSize()
+            TabPills(selection: $controller.tab)
 
             HStack {
                 // The «+» makes whatever the current tab holds: a dialog, or a note.
@@ -411,6 +403,45 @@ private extension Array {
     subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
 }
 
+/// The Chat / Events / Notes switch: one capsule track, the current tab a filled pill inside it.
+private struct TabPills: View {
+    @Binding var selection: ChatTab
+    @Namespace private var pill
+
+    private static let tabs: [(ChatTab, String)] = [(.chat, "Chat"), (.events, "Events"), (.notes, "Notes")]
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(Self.tabs, id: \.0) { tab, title in
+                Button { withAnimation(.easeOut(duration: 0.18)) { selection = tab } } label: {
+                    Text(title)
+                        .font(.system(size: 13, weight: selection == tab ? .semibold : .regular))
+                        .foregroundStyle(selection == tab ? Color.primary : Color.secondary)
+                        .padding(.horizontal, 13)
+                        .frame(height: 26)
+                        .background {
+                            if selection == tab {
+                                Capsule().fill(Color.primary.opacity(0.14)).matchedGeometryEffect(id: "pill", in: pill)
+                            }
+                        }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .linkCursor()
+            }
+        }
+        .padding(3)
+        .background(Color.primary.opacity(0.06), in: Capsule())
+    }
+}
+
+extension View {
+    /// The pointing hand over things that act like links. SwiftUI gained this in macOS 15.
+    @ViewBuilder func linkCursor() -> some View {
+        if #available(macOS 15.0, *) { pointerStyle(.link) } else { self }
+    }
+}
+
 /// Icon and title, or just the icon when space is short.
 private struct CompactLabelStyle: LabelStyle {
     let showsTitle: Bool
@@ -557,6 +588,7 @@ private struct SourceRow: View {
                         .truncationMode(.middle)
                 }
                 .help(source.url)
+                .linkCursor()
             }
             Spacer(minLength: 0)
             if isHovering || justCopied {
