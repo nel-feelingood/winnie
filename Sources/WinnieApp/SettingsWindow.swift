@@ -102,7 +102,7 @@ struct SettingsView: View {
             .formStyle(.grouped)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(width: 720, height: 560)
+        .frame(minWidth: 640, idealWidth: 720, maxWidth: .infinity, minHeight: 440, idealHeight: 560, maxHeight: .infinity)
         .onChange(of: settings.shortcut) { _, shortcut in actions.onShortcutChange(shortcut) }
         .onChange(of: settings.newVoiceShortcut) { _, shortcut in actions.onNewVoiceShortcutChange(shortcut) }
     }
@@ -624,12 +624,15 @@ final class SettingsWindowController {
     func show(_ pane: SettingsPane? = nil) {
         if let pane { navigation.pane = pane }
         if window == nil {
-            let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
             window.title = "Настройки Винни"
             window.contentView = NSHostingView(rootView: makeView(navigation))
             window.isReleasedWhenClosed = false
             window.setContentSize(NSSize(width: 720, height: 560))
+            window.contentMinSize = NSSize(width: 640, height: 440)
             window.center()
+            // Remembers the size and place the user gave it.
+            window.setFrameAutosaveName("WinnieSettings")
             self.window = window
         }
         // An accessory app has to be brought forward by hand for a regular window.

@@ -87,7 +87,10 @@ MainActor.assumeIsolated {
     let panel = InertWindow(contentRect: NSRect(origin: NSPoint(x: -3000, y: -3000), size: ChatPanel.chatSize),
                             styleMask: [.borderless], backing: .buffered, defer: false)
     panel.backgroundColor = .textBackgroundColor
-    panel.contentView = NSHostingView(rootView: ChatView(controller: controller, store: store, pendingDeletion: mode == "confirm" ? .all : nil))
+    // In the app the panel paints the background; here the view has to, or a dark-mode
+    // snapshot comes out as light text on nothing.
+    panel.contentView = NSHostingView(rootView: ChatView(controller: controller, store: store, pendingDeletion: mode == "confirm" ? .all : nil)
+        .background(Color(nsColor: .textBackgroundColor)))
     panel.orderFrontRegardless()
 
     DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {

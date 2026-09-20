@@ -177,6 +177,15 @@ final class AppSettings: ObservableObject {
         if newVoiceShortcut.collides(with: shortcut) { newVoiceShortcut = .defaultNewVoice }
     }
 
+    /// The chat panel's size, as the user last dragged it.
+    var chatSize: NSSize? {
+        get {
+            guard let values = defaults.array(forKey: "chatSize") as? [Double], values.count == 2 else { return nil }
+            return NSSize(width: values[0], height: values[1])
+        }
+        set { defaults.set(newValue.map { [Double($0.width), Double($0.height)] }, forKey: "chatSize") }
+    }
+
     var petOrigin: NSPoint? {
         get {
             guard let values = defaults.array(forKey: "petOrigin") as? [Double], values.count == 2

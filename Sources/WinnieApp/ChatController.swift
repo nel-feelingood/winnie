@@ -31,6 +31,7 @@ final class ChatController: ObservableObject {
     var onMinimize: () -> Void = {}
     var onSmokeBreak: () -> Void = {}
     var onOpenQuickActionSettings: () -> Void = {}
+    var onOpenSettings: () -> Void = {}
 
     private let client = ClaudeClient()
     private var streamTask: Task<Void, Never>?
@@ -200,6 +201,8 @@ final class ChatController: ObservableObject {
     }
 
     func openQuickActionSettings() { onOpenQuickActionSettings() }
+
+    func openSettings() { onOpenSettings() }
 
     /// Either sends the text as a message, or puts it in the field for the user to finish.
     func run(_ action: QuickAction) {

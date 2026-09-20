@@ -66,6 +66,7 @@ struct ChatView: View {
                 if controller.tab == .chat, !(store.current?.isEmpty ?? true) {
                     HeaderButton(symbol: "trash", help: "Удалить этот чат") { pendingDeletion = .current }
                 }
+                HeaderButton(symbol: "gearshape", help: "Настройки") { controller.openSettings() }
                 HeaderButton(symbol: "xmark", help: "Закрыть чат (Esc)") { controller.minimize() }
             }
         }

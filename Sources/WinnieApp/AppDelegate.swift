@@ -47,7 +47,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         petWindow.setFrameOrigin(initialPetOrigin())
         petWindow.orderFrontRegardless()
 
-        chatPanel = ChatPanel(content: ChatView(controller: controller, store: store))
+        chatPanel = ChatPanel(content: ChatView(controller: controller, store: store), size: settings.chatSize)
+        chatPanel.onResize = { [unowned self] in settings.chatSize = $0 }
         chatPanel.onClose = { [unowned self] in closeChat() }
 
         // The size can change from the settings window or from the chat ("стань побольше").
@@ -63,6 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller.onSmokeBreak = { [unowned self] in playSmokeBreak() }
         smokeClock.onTime = { [unowned self] in if settings.smokeBreakEnabled { playSmokeBreak() } }
         controller.onOpenQuickActionSettings = { [unowned self] in settingsWindow.show(.quick) }
+        controller.onOpenSettings = { [unowned self] in settingsWindow.show() }
         ImageStore.removeOrphans(keeping: store.referencedImageFiles)
 
         settingsWindow = SettingsWindowController(

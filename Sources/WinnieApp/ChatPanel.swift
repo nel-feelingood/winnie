@@ -30,8 +30,13 @@ private final class ChatBackgroundView: NSView {
 
 /// The mini chat. Non-activating like Spotlight: it takes keyboard input
 /// without pulling Winnie's app in front of what the user was doing.
-final class ChatPanel: NSPanel {
+final class ChatPanel: NSPanel, NSWindowDelegate {
     static let chatSize = NSSize(width: 380, height: 520)
+    static let minimumSize = NSSize(width: 320, height: 360)
+    static let maximumSize = NSSize(width: 760, height: 1000)
+
+    /// Called when the user finishes dragging an edge, with the new size.
+    var onResize: (NSSize) -> Void = { _ in }
     private static let gap: CGFloat = 8
 
     var onClose: () -> Void = {}
@@ -39,9 +44,10 @@ final class ChatPanel: NSPanel {
     /// key status is not mistaken for the user clicking away.
     var isAutoCloseSuspended = false
 
-    init(content: some View) {
-        super.init(contentRect: NSRect(origin: .zero, size: Self.chatSize),
-                   styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
+    init(content: some View, size: NSSize? = nil) {
+        // `.resizable` on a borderless panel gives it the usual edge and corner drag areas.
+        super.init(contentRect: NSRect(origin: .zero, size: size ?? Self.chatSize),
+                   styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView, .resizable],
                    backing: .buffered, defer: false)
         isOpaque = false
         backgroundColor = .clear
@@ -51,6 +57,9 @@ final class ChatPanel: NSPanel {
         hidesOnDeactivate = false
         isReleasedWhenClosed = false
         animationBehavior = .utilityWindow
+        minSize = Self.minimumSize
+        maxSize = Self.maximumSize
+        delegate = self
 
         let background = ChatBackgroundView()
         let host = NSHostingView(rootView: content)
@@ -75,6 +84,11 @@ final class ChatPanel: NSPanel {
 
     override var canBecomeKey: Bool { true }
 
+    func windowDidEndLiveResize(_ notification: Notification) {
+        invalidateShadow()
+        onResize(frame.size)
+    }
+
     /// Esc.
     override func cancelOperation(_ sender: Any?) { onClose() }
 
@@ -88,7 +102,8 @@ final class ChatPanel: NSPanel {
     func position(relativeTo pet: NSRect) {
         let screen = NSScreen.screens.first { $0.frame.intersects(pet) } ?? NSScreen.main
         guard let visible = screen?.visibleFrame else { return }
-        let size = Self.chatSize
+        // The current size, not the default: the user may have resized the panel.
+        let size = frame.size
 
         var y = pet.maxY + Self.gap
         if y + size.height > visible.maxY { y = pet.minY - Self.gap - size.height }
