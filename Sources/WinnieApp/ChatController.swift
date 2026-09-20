@@ -20,6 +20,7 @@ final class ChatController: ObservableObject {
 
     let store: ChatStore
     let reminders: ReminderStore
+    let memory: MemoryStore
     let gmail: GmailAuth
     let settings: AppSettings
     var onActivity: (ChatActivity) -> Void = { _ in }
@@ -36,9 +37,10 @@ final class ChatController: ObservableObject {
     /// flushed to the UI at most this often instead of per token.
     private static let flushInterval: Duration = .milliseconds(60)
 
-    init(store: ChatStore, reminders: ReminderStore, gmail: GmailAuth, settings: AppSettings) {
+    init(store: ChatStore, reminders: ReminderStore, memory: MemoryStore, gmail: GmailAuth, settings: AppSettings) {
         self.store = store
         self.reminders = reminders
+        self.memory = memory
         self.gmail = gmail
         self.settings = settings
 
@@ -227,15 +229,21 @@ final class ChatController: ObservableObject {
                                                              masterPrompt: settings.masterPrompt, history: history,
                                                              spoken: speaks,
                                                              imageLoader: { ImageStore.data(for: $0) },
-                                                             toolHandler: { [reminders, mail = MailTools(client: gmail.client)] name, input in
+                                                             toolHandler: { [reminders, memory, mail = MailTools(client: gmail.client)] name, input in
                                                                  if MailToolSchema.names.contains(name) {
                                                                      return await mail.execute(name: name, input: input)
+                                                                 }
+                                                                 if MemoryToolSchema.names.contains(name) {
+                                                                     return await MainActor.run {
+                                                                         MemoryTools(store: memory).execute(name: name, input: input)
+                                                                     }
                                                                  }
                                                                  return await MainActor.run {
                                                                      ReminderTools(store: reminders).execute(name: name, input: input)
                                                                  }
                                                              },
-                                                             offersMail: gmail.isConnected) {
+                                                             offersMail: gmail.isConnected,
+                                                             memory: memory.notes) {
                 switch event {
                 case .textDelta(let piece):
                     if searchStatus != nil { searchStatus = nil }
@@ -255,6 +263,8 @@ final class ChatController: ObservableObject {
                     case "list_emails": "Смотрю почту…"
                     case "read_email": "Читаю письмо…"
                     case "list_reminders": "Смотрю напоминания…"
+                    case "remember": "Запоминаю…"
+                    case "forget": "Забываю…"
                     default: "Записываю напоминание…"
                     }
                     onActivity(.thinking)

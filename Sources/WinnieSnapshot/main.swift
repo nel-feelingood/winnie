@@ -46,7 +46,8 @@ MainActor.assumeIsolated {
     reminders.add(Reminder(title: "Ответить Лёве по поводу поездки", label: "Ответ Лёве", fireAt: Date().addingTimeInterval(3 * 3600)))
     reminders.add(Reminder(title: "Зарядка", fireAt: Date().addingTimeInterval(86_400), repeats: .weekdays))
 
-    let controller = ChatController(store: store, reminders: reminders, gmail: GmailAuth(), settings: AppSettings())
+    let controller = ChatController(store: store, reminders: reminders, memory: MemoryStore(directory: sandbox), gmail: GmailAuth(),
+                                    settings: AppSettings())
     if wantsEvents { controller.tab = .events }
     let panel = ChatPanel(content: ChatView(controller: controller, store: store))
     panel.setFrame(NSRect(origin: NSPoint(x: -2000, y: -2000), size: ChatPanel.chatSize), display: true)

@@ -9,7 +9,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var store = ChatStore(directory: AppSettings.supportDirectory)
     private lazy var reminders = ReminderStore(directory: AppSettings.supportDirectory)
     private let gmail = GmailAuth()
-    private lazy var controller = ChatController(store: store, reminders: reminders, gmail: gmail, settings: settings)
+    private lazy var memory = MemoryStore(directory: AppSettings.supportDirectory)
+    private lazy var controller = ChatController(store: store, reminders: reminders, memory: memory, gmail: gmail,
+                                                 settings: settings)
     private var scheduler: ReminderScheduler!
 
     private var petWindow: PetWindow!
@@ -18,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusMenu: StatusMenu!
     private var hotKey: HotKey!
     private var voiceHotKey: HotKey!
+    private var newVoiceHotKey: HotKey!
     private var settingsWindow: SettingsWindowController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -50,8 +53,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow = SettingsWindowController(
             settings: settings,
             gmail: gmail,
+            memory: memory,
             onShortcutChange: { [unowned self] in hotKey.register($0) },
             onVoiceShortcutChange: { [unowned self] in voiceHotKey.register($0) },
+            onNewVoiceShortcutChange: { [unowned self] in newVoiceHotKey.register($0) },
             onScaleChange: { [unowned self] in
                 petView.apply(scale: $0)
                 settings.petOrigin = petWindow.frame.origin
@@ -87,6 +92,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             controller.toggleListening()
         }
         voiceHotKey.register(settings.voiceShortcut)
+        newVoiceHotKey = HotKey(id: 3) { [unowned self] in
+            // While already listening, the same key ends the question instead of discarding it.
+            if controller.isListening { return controller.toggleListening() }
+            openChat(new: true)
+            controller.toggleListening()
+        }
+        newVoiceHotKey.register(settings.newVoiceShortcut)
 
         if !Keychain.hasAPIKey { settingsWindow.show() }
     }

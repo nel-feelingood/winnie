@@ -5,8 +5,10 @@ import WinnieCore
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var gmail: GmailAuth
+    @ObservedObject var memory: MemoryStore
     var onShortcutChange: (Shortcut) -> Void
     var onVoiceShortcutChange: (Shortcut) -> Void
+    var onNewVoiceShortcutChange: (Shortcut) -> Void
     var onScaleChange: (Double) -> Void
 
     /// Left empty on purpose: showing the stored key would mean reading the secret
@@ -89,19 +91,40 @@ struct SettingsView: View {
             } footer: {
                 Text("Характер Винни и то, как он отвечает. Применяется со следующего сообщения.")
             }
+            Section {
+                if memory.notes.isEmpty {
+                    Text("Пусто. Скажи Винни «запомни, что…» — и заметка появится здесь.")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+                ForEach(memory.notes) { note in
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(note.text).font(.callout).textSelection(.enabled)
+                        Spacer()
+                        Button { memory.delete(note.id) } label: { Image(systemName: "trash") }
+                            .buttonStyle(.borderless)
+                            .help("Забыть")
+                    }
+                }
+            } header: {
+                Text("Память Винни")
+            } footer: {
+                Text("Эти заметки Винни дописывает к промпту сам, когда ты просишь что-то запомнить. Твой мастер-промпт он не меняет.")
+            }
             Section("Голос") {
                 Toggle("Отвечать вслух на голосовые вопросы", isOn: $settings.speaksReplies)
                 Toggle("Проговаривать напоминания вслух", isOn: $settings.speaksReminders)
                 ShortcutRecorder(title: "Спросить голосом", shortcut: $settings.voiceShortcut)
+                ShortcutRecorder(title: "Новый диалог голосом", shortcut: $settings.newVoiceShortcut)
             }
             Section("Шорткат") {
                 ShortcutRecorder(title: "Показать / спрятать Винни", shortcut: $settings.shortcut)
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 860)
+        .frame(width: 520, height: 930)
         .onChange(of: settings.shortcut) { _, shortcut in onShortcutChange(shortcut) }
         .onChange(of: settings.voiceShortcut) { _, shortcut in onVoiceShortcutChange(shortcut) }
+        .onChange(of: settings.newVoiceShortcut) { _, shortcut in onNewVoiceShortcutChange(shortcut) }
         .onChange(of: settings.petScale) { _, scale in onScaleChange(scale) }
     }
 }
@@ -146,31 +169,37 @@ final class SettingsWindowController {
     private var window: NSWindow?
     private let settings: AppSettings
     private let gmail: GmailAuth
+    private let memory: MemoryStore
     private let onShortcutChange: (Shortcut) -> Void
     private let onVoiceShortcutChange: (Shortcut) -> Void
+    private let onNewVoiceShortcutChange: (Shortcut) -> Void
     private let onScaleChange: (Double) -> Void
 
-    init(settings: AppSettings, gmail: GmailAuth, onShortcutChange: @escaping (Shortcut) -> Void,
+    init(settings: AppSettings, gmail: GmailAuth, memory: MemoryStore, onShortcutChange: @escaping (Shortcut) -> Void,
          onVoiceShortcutChange: @escaping (Shortcut) -> Void,
+         onNewVoiceShortcutChange: @escaping (Shortcut) -> Void,
          onScaleChange: @escaping (Double) -> Void) {
         self.settings = settings
         self.gmail = gmail
+        self.memory = memory
         self.onShortcutChange = onShortcutChange
         self.onVoiceShortcutChange = onVoiceShortcutChange
+        self.onNewVoiceShortcutChange = onNewVoiceShortcutChange
         self.onScaleChange = onScaleChange
     }
 
     func show() {
         if window == nil {
-            let view = SettingsView(settings: settings, gmail: gmail, onShortcutChange: onShortcutChange,
+            let view = SettingsView(settings: settings, gmail: gmail, memory: memory, onShortcutChange: onShortcutChange,
                                     onVoiceShortcutChange: onVoiceShortcutChange,
+                                    onNewVoiceShortcutChange: onNewVoiceShortcutChange,
                                     onScaleChange: onScaleChange)
             let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable],
                                   backing: .buffered, defer: false)
             window.title = "Настройки Винни"
             window.contentView = NSHostingView(rootView: view)
             window.isReleasedWhenClosed = false
-            window.setContentSize(NSSize(width: 520, height: 860))
+            window.setContentSize(NSSize(width: 520, height: 930))
             window.center()
             self.window = window
         }

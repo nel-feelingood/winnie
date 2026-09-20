@@ -15,6 +15,9 @@ struct Shortcut: Codable, Equatable {
     static let defaultVoice = Shortcut(keyCode: UInt32(kVK_ANSI_V),
                                        modifiers: UInt32(controlKey | optionKey),
                                        display: "⌃⌥V")
+    static let defaultNewVoice = Shortcut(keyCode: UInt32(kVK_ANSI_E),
+                                          modifiers: UInt32(cmdKey | shiftKey),
+                                          display: "⇧⌘E")
 }
 
 @MainActor
@@ -47,6 +50,10 @@ final class AppSettings: ObservableObject {
     @Published var voiceShortcut: Shortcut {
         didSet { defaults.set(try? JSONEncoder().encode(voiceShortcut), forKey: "voiceShortcut") }
     }
+    /// Starts a fresh dialog with the microphone already on.
+    @Published var newVoiceShortcut: Shortcut {
+        didSet { defaults.set(try? JSONEncoder().encode(newVoiceShortcut), forKey: "newVoiceShortcut") }
+    }
     /// Read answers aloud when the question was asked by voice.
     @Published var speaksReplies: Bool {
         didSet { defaults.set(speaksReplies, forKey: "speaksReplies") }
@@ -61,6 +68,8 @@ final class AppSettings: ObservableObject {
         speaksReminders = defaults.bool(forKey: "speaksReminders")
         voiceShortcut = defaults.data(forKey: "voiceShortcut")
             .flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .defaultVoice
+        newVoiceShortcut = defaults.data(forKey: "newVoiceShortcut")
+            .flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .defaultNewVoice
         speaksReplies = defaults.object(forKey: "speaksReplies") as? Bool ?? true
         let storedScale = defaults.double(forKey: "petScale")
         petScale = Self.petScaleRange.contains(storedScale) ? storedScale : 1
