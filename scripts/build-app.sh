@@ -35,7 +35,8 @@ PLIST
 # A stable identity keeps the Keychain's "Always Allow" valid across rebuilds; ad-hoc
 # signing (the fallback) makes macOS treat every build as a new app and ask again.
 IDENTITY="Winnie Dev"
-if security find-identity -v -p codesigning | grep -q "\"$IDENTITY\""; then
+# No -v: a self-signed certificate is not "valid" in the trust sense, yet signs just fine.
+if security find-identity -p codesigning | grep -q "\"$IDENTITY\""; then
     codesign --force --sign "$IDENTITY" "$APP" >/dev/null
 else
     codesign --force --sign - "$APP" >/dev/null
