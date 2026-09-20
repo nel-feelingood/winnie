@@ -212,7 +212,8 @@ private struct MessageRow: View {
                         .markdownTheme(.winnie)
                         .textSelection(.enabled)
                 }
-                if !message.sources.isEmpty { SourceList(sources: message.sources) }
+                let links = message.isError ? [] : LinkExtractor.allLinks(for: message)
+                if !links.isEmpty { SourceList(sources: links) }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -239,18 +240,64 @@ private struct SourceList: View {
     let sources: [Source]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(Array(sources.prefix(5).enumerated()), id: \.offset) { index, source in
-                if let url = URL(string: source.url) {
-                    Link(destination: url) {
-                        Text("\(index + 1). \(source.title)")
-                            .font(.system(size: 11))
-                            .lineLimit(1)
-                    }
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(sources.prefix(8).enumerated()), id: \.offset) { index, source in
+                SourceRow(index: index + 1, source: source)
             }
         }
         .padding(.top, 2)
+    }
+}
+
+/// A link under an answer. Hovering reveals a Copy action, so the address can be
+/// taken without opening the page.
+private struct SourceRow: View {
+    let index: Int
+    let source: Source
+
+    @State private var isHovering = false
+    @State private var justCopied = false
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if let url = URL(string: source.url) {
+                Link(destination: url) {
+                    Text("\(index). \(source.title)")
+                        .font(.system(size: 11))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .help(source.url)
+            }
+            Spacer(minLength: 0)
+            if isHovering || justCopied {
+                Button(action: copy) {
+                    Label(justCopied ? "Copied" : "Copy", systemImage: justCopied ? "checkmark" : "doc.on.doc")
+                        .font(.system(size: 10, weight: .medium))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(.quaternary, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .help("Скопировать ссылку")
+            }
+        }
+        .padding(.horizontal, 6)
+        .frame(height: 20)
+        .background(isHovering ? Color.primary.opacity(0.06) : .clear, in: RoundedRectangle(cornerRadius: 5))
+        .padding(.horizontal, -6)
+        .contentShape(Rectangle())
+        .onHover { isHovering = $0 }
+    }
+
+    private func copy() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(source.url, forType: .string)
+        justCopied = true
+        Task {
+            try? await Task.sleep(for: .seconds(1.2))
+            justCopied = false
+        }
     }
 }
 

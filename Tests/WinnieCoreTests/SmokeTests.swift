@@ -207,3 +207,27 @@ import Testing
         #expect(mood.state == .drag)
     }
 }
+
+@Suite struct LinkExtractorTests {
+    @Test func findsMarkdownAndBareLinksInOrderWithoutDuplicates() {
+        let text = """
+        Смотри [документацию](https://swift.org/docs) и https://www.example.com/a/b.
+        Ещё раз: https://swift.org/docs, а также (https://apple.com).
+        """
+        #expect(LinkExtractor.links(in: text) == [
+            Source(title: "документацию", url: "https://swift.org/docs"),
+            Source(title: "example.com/a/b", url: "https://www.example.com/a/b"),
+            Source(title: "apple.com", url: "https://apple.com"),
+        ])
+    }
+
+    @Test func ignoresTextWithoutLinksAndHalfStreamedOnes() {
+        #expect(LinkExtractor.links(in: "Просто текст, http без схемы и [скобки](").isEmpty)
+    }
+
+    @Test func citedSourcesComeFirstAndAreNotRepeated() {
+        let message = ChatMessage(role: .assistant, text: "См. https://a.com и https://b.com",
+                                  sources: [Source(title: "B", url: "https://b.com")])
+        #expect(LinkExtractor.allLinks(for: message).map(\.url) == ["https://b.com", "https://a.com"])
+    }
+}
