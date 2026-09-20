@@ -63,6 +63,12 @@ MainActor.assumeIsolated {
                                     mcp: MCPAuth(), gmail: GmailAuth(),
                                     settings: AppSettings())
     if wantsEvents { controller.tab = .events }
+    if mode == "mention" {
+        let note = noteStore.sorted[0]
+        store.append(ChatMessage(role: .user, text: "сделай саммари [note:\(note.shortID)] и напомни"), to: session.id)
+        store.append(ChatMessage(role: .assistant, text: "Готово, записал: [note:\(note.shortID)]. А этой уже нет: [note:deadbeef]."), to: session.id)
+        controller.draft = "добавь в @"
+    }
     if mode == "notes" { controller.tab = .notes }
     if mode == "note" { controller.tab = .notes; controller.openNoteID = noteStore.sorted.last { !$0.title.isEmpty }?.id }
     if mode.hasPrefix("settings-"), let pane = SettingsPane(rawValue: String(mode.dropFirst(9))) {

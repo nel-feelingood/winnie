@@ -43,6 +43,12 @@ struct ChatView: View {
             Color.clear.onChange(of: proxy.size.width, initial: true) { _, width in isNarrow = width < 470 }
         })
         .overlay(alignment: .top) { toast }
+        // References to notes and events are links with the app's own scheme; everything else goes to the browser.
+        .environment(\.openURL, OpenURLAction { url in
+            guard let target = Mentions.target(of: url) else { return .systemAction }
+            controller.open(target)
+            return .handled
+        })
         .onChange(of: controller.focusToken, initial: true) { inputFocused = true }
     }
 
@@ -171,7 +177,7 @@ struct ChatView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
                     ForEach(store.current?.messages ?? []) { message in
-                        MessageRow(message: message, isStreaming: controller.isStreaming)
+                        MessageRow(message: message, isStreaming: controller.isStreaming) { controller.title(of: $0) }
                     }
                     if let status = controller.searchStatus {
                         Label(status, systemImage: "magnifyingglass")
@@ -200,12 +206,41 @@ struct ChatView: View {
 
     private var input: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if !controller.mentionCandidates.isEmpty { mentionPopup }
             if !controller.visibleQuickActions.isEmpty { quickActions }
             if !controller.pendingImages.isEmpty { pendingStrip }
             inputRow
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
+    }
+
+    /// Shown while an «@…» is being typed: notes and upcoming events to refer to.
+    private var mentionPopup: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(controller.mentionCandidates.enumerated()), id: \.element.id) { index, candidate in
+                Button { controller.complete(candidate) } label: {
+                    HStack(spacing: 8) {
+                        Text(candidate.target.kind.glyph).font(.system(size: 12))
+                        Text(candidate.title).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                        Spacer(minLength: 8)
+                        Text(candidate.detail).font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                    .padding(.horizontal, 8)
+                    .frame(height: 26)
+                    .background(index == highlightedMention ? Color.accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 6))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.primary.opacity(0.1)))
+    }
+
+    private var highlightedMention: Int {
+        min(controller.mentionSelection, max(controller.mentionCandidates.count - 1, 0))
     }
 
     /// Outline pills above the field; a tap sends the text as if it had been typed.
@@ -227,6 +262,13 @@ struct ChatView: View {
             .help("Настроить быстрые действия")
         }
         .padding(.top, 2)
+    }
+
+    private func moveMention(_ step: Int) -> KeyPress.Result {
+        let count = controller.mentionCandidates.count
+        guard count > 0 else { return .ignored }
+        controller.mentionSelection = (highlightedMention + step + count) % count
+        return .handled
     }
 
     private var pendingStrip: some View {
@@ -258,7 +300,13 @@ struct ChatView: View {
                 .font(.system(size: 13))
                 .lineLimit(1...6)
                 .focused($inputFocused)
-                .onSubmit { controller.send() }
+                .onSubmit {
+                    // With the «@» popup open, Return picks the highlighted object instead of sending.
+                    if let candidate = controller.mentionCandidates[safe: highlightedMention] { controller.complete(candidate) } else { controller.send() }
+                }
+                .onKeyPress(.downArrow) { moveMention(1) }
+                .onKeyPress(.upArrow) { moveMention(-1) }
+                .onChange(of: controller.draft) { controller.mentionSelection = 0 }
                 // As tall as the buttons, so one line of text centres on them; with more
                 // lines the row's bottom alignment keeps the buttons by the last line.
                 .frame(minHeight: Self.inputButtonSide)
@@ -359,6 +407,10 @@ private struct FlowLayout: Layout {
 }
 
 /// A one-pixel rule: lighter than `Divider`, which reads as a border on a white panel.
+private extension Array {
+    subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
+}
+
 /// Icon and title, or just the icon when space is short.
 private struct CompactLabelStyle: LabelStyle {
     let showsTitle: Bool
@@ -401,6 +453,23 @@ private struct HeaderButton: View {
 private struct MessageRow: View {
     let message: ChatMessage
     let isStreaming: Bool
+    /// Title of a referenced note or event; nil when it no longer exists.
+    let titleOf: (Mentions.Target) -> String?
+
+    /// The user's own text stays literal (it is not Markdown), except that references become links.
+    private var userText: AttributedString {
+        var result = AttributedString()
+        var cursor = message.text.startIndex
+        for reference in Mentions.references(in: message.text) {
+            result += AttributedString(String(message.text[cursor..<reference.range.lowerBound]))
+            var chip = AttributedString("\(reference.target.kind.glyph) \(titleOf(reference.target) ?? "удалено")")
+            chip.link = reference.target.url
+            chip.font = .system(size: 13, weight: .medium)
+            result += chip
+            cursor = reference.range.upperBound
+        }
+        return result + AttributedString(String(message.text[cursor...]))
+    }
 
     var body: some View {
         switch message.role {
@@ -408,7 +477,7 @@ private struct MessageRow: View {
             VStack(alignment: .trailing, spacing: 4) {
                 ForEach(message.images, id: \.self) { Thumbnail(file: $0, height: 120) }
                 if !message.text.isEmpty {
-                    Text(message.text)
+                    Text(userText)
                         .font(.system(size: 13))
                         .textSelection(.enabled)
                         .padding(.horizontal, 10)
@@ -428,7 +497,7 @@ private struct MessageRow: View {
                         .foregroundStyle(.red)
                         .textSelection(.enabled)
                 } else {
-                    Markdown(message.text)
+                    Markdown(Mentions.linkified(message.text, title: titleOf))
                         .markdownTheme(.winnie)
                         .textSelection(.enabled)
                 }

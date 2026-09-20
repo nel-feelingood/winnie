@@ -105,7 +105,11 @@ public final class ReminderStore: ObservableObject {
     }
 
     public func reminder(matching handle: String) -> Reminder? {
-        let handle = handle.lowercased()
+        // A bare id or a whole «[event:ID]» reference.
+        var handle = handle.lowercased().trimmingCharacters(in: .whitespaces)
+        if handle.hasPrefix("[") { handle.removeFirst() }
+        if handle.hasSuffix("]") { handle.removeLast() }
+        if handle.hasPrefix("event:") { handle.removeFirst(6) }
         return reminders.first { $0.shortID == handle || $0.id.uuidString.lowercased() == handle }
     }
 

@@ -71,6 +71,57 @@ final class ChatController: ObservableObject {
         }
     }
 
+    // MARK: - Mentions
+
+    struct MentionCandidate: Identifiable {
+        let target: Mentions.Target
+        let title: String
+        let detail: String
+        var id: String { target.token }
+    }
+
+    /// Bumped when the highlighted row of the «@» popup should move; the view owns the index.
+    @Published var mentionSelection = 0
+
+    func title(of target: Mentions.Target) -> String? {
+        switch target.kind {
+        case .note: notes.note(matching: target.id)?.displayTitle
+        case .event: reminders.reminder(matching: target.id)?.title
+        }
+    }
+
+    /// What the «@» popup offers for the query being typed; empty when no «@» is in progress.
+    var mentionCandidates: [MentionCandidate] {
+        guard let query = Mentions.trailingQuery(in: draft)?.lowercased() else { return [] }
+        let noteItems = notes.sorted.map {
+            MentionCandidate(target: .init(kind: .note, id: $0.shortID), title: $0.displayTitle, detail: "заметка")
+        }
+        let now = Date()
+        let eventItems = reminders.sorted(now: now).filter { $0.nextFire(after: now) != nil }.map {
+            MentionCandidate(target: .init(kind: .event, id: $0.shortID), title: $0.title, detail: "событие · " + EventTime.describe($0, now: now))
+        }
+        let all = noteItems + eventItems
+        return Array((query.isEmpty ? all : all.filter { $0.title.lowercased().contains(query) }).prefix(6))
+    }
+
+    func complete(_ candidate: MentionCandidate) {
+        draft = Mentions.completing(draft, with: candidate.target)
+        mentionSelection = 0
+        focusInput()
+    }
+
+    /// A click on a reference anywhere in the chat.
+    func open(_ target: Mentions.Target) {
+        switch target.kind {
+        case .note:
+            guard let note = notes.note(matching: target.id) else { return show(toast: "Этой заметки уже нет") }
+            openNoteID = note.id
+            tab = .notes
+        case .event:
+            tab = .events
+        }
+    }
+
     // MARK: - Notes
 
     func newNote() {
@@ -82,7 +133,7 @@ final class ChatController: ObservableObject {
     /// see what was sent, and the bear fetches the note itself with read_note.
     func startChat(about note: Note) {
         newChat()
-        draft = "По заметке «\(note.displayTitle)» [note:\(note.shortID)]: "
+        draft = "[note:\(note.shortID)] "
         focusInput()
     }
 

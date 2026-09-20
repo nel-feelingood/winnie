@@ -53,6 +53,11 @@ public struct ClaudeClient: Sendable {
         list_notes, read_note, update_note, delete_note. «[note:ID]» in a message points at a note: \
         read it first. A note has no time; anything with a time is a reminder.
 
+        References: write a note as «[note:ID]» and a reminder as «[event:ID]», with the id from the \
+        tool result. The app turns that into a clickable link showing the title, so after creating \
+        or changing one, include its reference and do not repeat the title beside it. Серёжа can \
+        send you the same references; read the object they point at before answering.
+
         Your own settings: when Серёжа asks to change how you look, sound or behave as an app (size, \
         model, speaking aloud, quick action buttons, clearing all events), do it with get_settings, \
         update_settings, add_quick_action, remove_quick_action, move_quick_action or delete_all_reminders, then confirm \
