@@ -1,0 +1,233 @@
+import MarkdownUI
+import SwiftUI
+import WinnieCore
+
+struct ChatView: View {
+    @ObservedObject var controller: ChatController
+    @ObservedObject var store: ChatStore
+    @FocusState private var inputFocused: Bool
+
+    private let bottomID = "bottom"
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            Divider()
+            messages
+            Divider()
+            input
+        }
+        .overlay(alignment: .top) { toast }
+        .onChange(of: controller.focusToken, initial: true) { inputFocused = true }
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(spacing: 6) {
+            Menu {
+                ForEach(store.sortedSessions) { session in
+                    Button {
+                        controller.select(session.id)
+                    } label: {
+                        let title = session.title ?? "Новый чат"
+                        session.id == store.currentID ? Label(title, systemImage: "checkmark") : Label(title, systemImage: "")
+                    }
+                }
+                Divider()
+                Button("Удалить этот чат", role: .destructive) { controller.deleteCurrent() }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(store.current?.title ?? "Новый чат")
+                        .font(.system(size: 13, weight: .semibold))
+                        .lineLimit(1)
+                    Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold))
+                }
+                .contentShape(Rectangle())
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+
+            Spacer()
+
+            HeaderButton(symbol: "arrow.up.forward.app", help: "Открыть в Claude") {
+                controller.openInClaude()
+            }
+            .disabled(store.current?.isEmpty ?? true)
+            HeaderButton(symbol: "plus", help: "Новый чат (⌘N)") { controller.newChat() }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 40)
+    }
+
+    // MARK: - Messages
+
+    private var messages: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 10) {
+                    ForEach(store.current?.messages ?? []) { message in
+                        MessageRow(message: message, isStreaming: controller.isStreaming)
+                    }
+                    if let status = controller.searchStatus {
+                        Label(status, systemImage: "magnifyingglass")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                    Color.clear.frame(height: 1).id(bottomID)
+                }
+                .padding(12)
+            }
+            .onChange(of: store.current?.messages.last?.text) { proxy.scrollTo(bottomID, anchor: .bottom) }
+            .onChange(of: store.current?.messages.count) { proxy.scrollTo(bottomID, anchor: .bottom) }
+            .onChange(of: store.currentID, initial: true) { proxy.scrollTo(bottomID, anchor: .bottom) }
+            .overlay {
+                if store.current?.isEmpty ?? true {
+                    Text("Спроси что-нибудь")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        }
+    }
+
+    // MARK: - Input
+
+    private var input: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            TextField("Сообщение", text: $controller.draft, axis: .vertical)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13))
+                .lineLimit(1...6)
+                .focused($inputFocused)
+                .onSubmit { controller.send() }
+
+            Button {
+                controller.isStreaming ? controller.stop() : controller.send()
+            } label: {
+                Image(systemName: controller.isStreaming ? "stop.circle.fill" : "arrow.up.circle.fill")
+                    .font(.system(size: 20))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(canSend || controller.isStreaming ? Color.accentColor : Color.secondary.opacity(0.5))
+            .disabled(!canSend && !controller.isStreaming)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+    }
+
+    private var canSend: Bool {
+        !controller.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    @ViewBuilder private var toast: some View {
+        if let message = controller.toast {
+            Text(message)
+                .font(.system(size: 11, weight: .medium))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(.thickMaterial, in: Capsule())
+                .padding(.top, 46)
+                .transition(.opacity)
+        }
+    }
+}
+
+private struct HeaderButton: View {
+    let symbol: String
+    let help: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 13, weight: .medium))
+                .frame(width: 26, height: 26)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(help)
+    }
+}
+
+private struct MessageRow: View {
+    let message: ChatMessage
+    let isStreaming: Bool
+
+    var body: some View {
+        switch message.role {
+        case .user:
+            Text(message.text)
+                .font(.system(size: 13))
+                .textSelection(.enabled)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(Color.accentColor.opacity(0.18), in: RoundedRectangle(cornerRadius: 12))
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.leading, 40)
+        case .assistant:
+            VStack(alignment: .leading, spacing: 6) {
+                if message.text.isEmpty && isStreaming {
+                    ProgressView().controlSize(.small)
+                } else if message.isError {
+                    Label(message.text, systemImage: "exclamationmark.triangle")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
+                } else {
+                    Markdown(message.text)
+                        .markdownTheme(.winnie)
+                        .textSelection(.enabled)
+                }
+                if !message.sources.isEmpty { SourceList(sources: message.sources) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+private struct SourceList: View {
+    let sources: [Source]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(Array(sources.prefix(5).enumerated()), id: \.offset) { index, source in
+                if let url = URL(string: source.url) {
+                    Link(destination: url) {
+                        Text("\(index + 1). \(source.title)")
+                            .font(.system(size: 11))
+                            .lineLimit(1)
+                    }
+                }
+            }
+        }
+        .padding(.top, 2)
+    }
+}
+
+extension Theme {
+    /// GitHub-style rendering scaled down for a narrow popover.
+    @MainActor static let winnie = Theme.gitHub
+        .text {
+            FontSize(13)
+            BackgroundColor(nil)
+        }
+        .code {
+            FontFamilyVariant(.monospaced)
+            FontSize(.em(0.9))
+        }
+        .heading1 { configuration in
+            configuration.label.markdownTextStyle { FontSize(16); FontWeight(.semibold) }
+                .markdownMargin(top: 8, bottom: 4)
+        }
+        .heading2 { configuration in
+            configuration.label.markdownTextStyle { FontSize(15); FontWeight(.semibold) }
+                .markdownMargin(top: 8, bottom: 4)
+        }
+        .heading3 { configuration in
+            configuration.label.markdownTextStyle { FontSize(14); FontWeight(.semibold) }
+                .markdownMargin(top: 6, bottom: 4)
+        }
+}
