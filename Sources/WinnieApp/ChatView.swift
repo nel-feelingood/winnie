@@ -18,6 +18,16 @@ struct ChatView: View {
 
     private let bottomID = "bottom"
 
+    /// "20 Sept 2026 at 18:24". The month names are spelled out here because which abbreviation
+    /// the system gives ("Sep" or "Sept") varies by macOS version.
+    private static let createdStamp: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_GB")
+        formatter.shortMonthSymbols = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"]
+        formatter.dateFormat = "d MMM yyyy 'at' HH:mm"
+        return formatter
+    }()
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -149,6 +159,12 @@ struct ChatView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
+                    if let session = store.current, !session.isEmpty {
+                        Text(Self.createdStamp.string(from: session.createdAt))
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
                     ForEach(store.current?.messages ?? []) { message in
                         MessageRow(message: message, isStreaming: controller.isStreaming)
                     }
