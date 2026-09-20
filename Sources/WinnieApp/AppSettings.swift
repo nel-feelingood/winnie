@@ -22,6 +22,14 @@ struct Shortcut: Codable, Equatable {
                                           display: "⇧⌘E")
 }
 
+/// A one-tap prompt offered in an empty chat.
+struct QuickAction: Codable, Identifiable, Equatable {
+    var id = UUID()
+    var text: String
+    /// Off for prompts that need finishing, like «Переведи»: the text lands in the field instead.
+    var sendsImmediately = true
+}
+
 @MainActor
 final class AppSettings: ObservableObject {
     private let defaults = UserDefaults.standard
@@ -97,11 +105,11 @@ final class AppSettings: ObservableObject {
         connectors.removeAll { $0.id == connector.id }
     }
 
-    /// One-tap prompts offered in an empty chat.
-    @Published var quickActions: [String] {
-        didSet { defaults.set(quickActions, forKey: "quickActions") }
+    @Published var quickActions: [QuickAction] {
+        didSet { defaults.set(try? JSONEncoder().encode(quickActions), forKey: "quickActionList") }
     }
-    static let defaultQuickActions = ["Проверь почту", "Какие у меня напоминания?", "Что нового в мире?"]
+    static let defaultQuickActions = [QuickAction(text: "Проверь почту"), QuickAction(text: "Какие у меня напоминания?"),
+                                      QuickAction(text: "Переведи", sendsImmediately: false)]
 
     /// Say a due reminder out loud. Off by default: a voice out of nowhere is a bad surprise on a call.
     @Published var speaksReminders: Bool {
@@ -120,7 +128,10 @@ final class AppSettings: ObservableObject {
             .flatMap { try? JSONDecoder().decode([CustomAPI].self, from: $0) } ?? []
         connectors = defaults.data(forKey: "connectors")
             .flatMap { try? JSONDecoder().decode([AppConnector].self, from: $0) } ?? []
-        quickActions = defaults.stringArray(forKey: "quickActions") ?? Self.defaultQuickActions
+        // Falls back to the earlier plain-text list, so buttons the user already set up survive the change.
+        quickActions = defaults.data(forKey: "quickActionList").flatMap { try? JSONDecoder().decode([QuickAction].self, from: $0) }
+            ?? defaults.stringArray(forKey: "quickActions")?.map { QuickAction(text: $0) }
+            ?? Self.defaultQuickActions
         voiceIdentifier = defaults.string(forKey: "voiceIdentifier") ?? ""
         let pitch = defaults.double(forKey: "voicePitch"), rate = defaults.double(forKey: "voiceRate")
         // Neutral by default: an altered pitch only suits a good voice, and that is for the ear to judge.

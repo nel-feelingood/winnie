@@ -191,10 +191,11 @@ struct ChatView: View {
     /// The last one is a gear that opens the settings pane where these are edited.
     private var quickActions: some View {
         FlowLayout(spacing: 6) {
-            ForEach(controller.visibleQuickActions, id: \.self) { action in
-                Button { controller.run(quickAction: action) } label: {
-                    OutlinePill { Text(action).font(.system(size: 12)).lineLimit(1).padding(.horizontal, 11) }
+            ForEach(controller.visibleQuickActions) { action in
+                Button { controller.run(action) } label: {
+                    OutlinePill { Text(action.text).font(.system(size: 12)).lineLimit(1).padding(.horizontal, 11) }
                 }
+                .help(action.sendsImmediately ? "Отправить сразу" : "Подставить в поле ввода")
                 .buttonStyle(.plain)
             }
             Button { controller.openQuickActionSettings() } label: {

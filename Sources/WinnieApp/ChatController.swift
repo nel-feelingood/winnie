@@ -200,17 +200,23 @@ final class ChatController: ObservableObject {
 
     func openQuickActionSettings() { onOpenQuickActionSettings() }
 
-    /// A quick action is just a message the user did not have to type.
-    func run(quickAction text: String) {
+    /// Either sends the text as a message, or puts it in the field for the user to finish.
+    func run(_ action: QuickAction) {
         guard !isStreaming, !isListening else { return }
-        draft = text
-        send()
+        let text = action.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if action.sendsImmediately {
+            draft = text
+            send()
+        } else {
+            draft = text + " "
+            focusInput()
+        }
     }
 
     /// Non-empty quick actions, shown only while the current chat has no messages.
-    var visibleQuickActions: [String] {
+    var visibleQuickActions: [QuickAction] {
         guard store.current?.isEmpty ?? true, !isStreaming else { return [] }
-        return settings.quickActions.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        return settings.quickActions.filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     }
 
     func send(spoken: Bool = false) {
