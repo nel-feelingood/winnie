@@ -168,7 +168,7 @@ public struct ReminderTools {
         return .failure(ToolOutcome("fire_at must look like 2026-09-20T19:00 (local time).", isError: true))
     }
 
-    static func localStamp(_ date: Date) -> String {
+    public static func localStamp(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm"

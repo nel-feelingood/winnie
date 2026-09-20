@@ -54,10 +54,17 @@ MainActor.assumeIsolated {
     reminders.add(Reminder(title: "Ответить Лёве по поводу поездки", label: "Ответ Лёве", fireAt: Date().addingTimeInterval(3 * 3600)))
     reminders.add(Reminder(title: "Зарядка", fireAt: Date().addingTimeInterval(86_400), repeats: .weekdays))
 
-    let controller = ChatController(store: store, reminders: reminders, memory: MemoryStore(directory: sandbox), usage: UsageStore(directory: sandbox),
+    let noteStore = NoteStore(directory: sandbox.appendingPathComponent("Notes"))
+    noteStore.create(title: "Идеи для Винни", body: "## Поведение\n- чесать затылок, когда долго думает\n- зевать перед сном\n\n**Важно:** не забыть про *мёд*.\n\n- [x] перекур в 16:20\n- [ ] прогулка по экрану")
+    let trip = noteStore.create(title: "Поездка в Батуми", body: "Билеты на пятницу, отель у моря. Спросить Лёву про даты и про то, берём ли палатку. Забронировать машину. Проверить паспорт. Купить зарядку.")
+    noteStore.update(trip.id, isPinned: true)
+    noteStore.create(title: "", body: "просто мысль без заголовка")
+    let controller = ChatController(store: store, reminders: reminders, memory: MemoryStore(directory: sandbox), notes: noteStore, usage: UsageStore(directory: sandbox),
                                     mcp: MCPAuth(), gmail: GmailAuth(),
                                     settings: AppSettings())
     if wantsEvents { controller.tab = .events }
+    if mode == "notes" { controller.tab = .notes }
+    if mode == "note" { controller.tab = .notes; controller.openNoteID = noteStore.sorted.last { !$0.title.isEmpty }?.id }
     if mode.hasPrefix("settings-"), let pane = SettingsPane(rawValue: String(mode.dropFirst(9))) {
         let usage = UsageStore(directory: sandbox)
         usage.record(UsageSample(model: "claude-haiku-4-5", input: 48_200, output: 6_100, searches: 4))

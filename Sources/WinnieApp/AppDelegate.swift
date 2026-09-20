@@ -14,8 +14,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var usage = UsageStore(directory: AppSettings.supportDirectory)
     private let mcp = MCPAuth()
     private let telegram = TelegramBridge()
-    private lazy var controller = ChatController(store: store, reminders: reminders, memory: memory, usage: usage,
-                                                 mcp: mcp, gmail: gmail, settings: settings)
+    private lazy var notes = NoteStore(directory: AppSettings.supportDirectory.appendingPathComponent("Notes"))
+    private lazy var controller = ChatController(store: store, reminders: reminders, memory: memory, notes: notes,
+                                                 usage: usage, mcp: mcp, gmail: gmail, settings: settings)
     private var scheduler: ReminderScheduler!
     private var scaleSubscription: AnyCancellable?
     private let smokeClock = SmokeBreakClock()
@@ -235,7 +236,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func pasteFromMenu(_ sender: Any?) {
-        if chatPanel.isKeyWindow {
+        // A note being edited takes its own pictures; only elsewhere in the chat do they become attachments.
+        if chatPanel.isKeyWindow, !(chatPanel.firstResponder is SlashTextView) {
             let files = ImageStore.importFromPasteboard()
             if !files.isEmpty { return files.forEach(controller.attach) }
         }

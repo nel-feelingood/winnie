@@ -3,11 +3,13 @@ import WinnieCore
 
 /// Drives one chat turn: sends the history, streams the reply into the store,
 /// and reports what the pet should be doing meanwhile.
-enum ChatTab: Hashable { case chat, events }
+enum ChatTab: Hashable { case chat, events, notes }
 
 @MainActor
 final class ChatController: ObservableObject {
     @Published var tab = ChatTab.chat
+    /// The note whose page is open in the Notes tab; nil shows the list.
+    @Published var openNoteID: UUID?
     @Published var draft = ""
     @Published private(set) var isStreaming = false
     @Published private(set) var searchStatus: String?
@@ -21,6 +23,7 @@ final class ChatController: ObservableObject {
     let store: ChatStore
     let reminders: ReminderStore
     let memory: MemoryStore
+    let notes: NoteStore
     let usage: UsageStore
     let mcp: MCPAuth
     let gmail: GmailAuth
@@ -42,11 +45,12 @@ final class ChatController: ObservableObject {
     /// flushed to the UI at most this often instead of per token.
     private static let flushInterval: Duration = .milliseconds(60)
 
-    init(store: ChatStore, reminders: ReminderStore, memory: MemoryStore, usage: UsageStore, mcp: MCPAuth,
+    init(store: ChatStore, reminders: ReminderStore, memory: MemoryStore, notes: NoteStore, usage: UsageStore, mcp: MCPAuth,
          gmail: GmailAuth, settings: AppSettings) {
         self.store = store
         self.reminders = reminders
         self.memory = memory
+        self.notes = notes
         self.usage = usage
         self.mcp = mcp
         self.speaker = Speaker(settings: settings)
@@ -65,6 +69,21 @@ final class ChatController: ObservableObject {
             // The spoken answer outlasts the text stream; the pet talks until the voice stops.
             if self?.isStreaming == false { self?.onActivity(.none) }
         }
+    }
+
+    // MARK: - Notes
+
+    func newNote() {
+        tab = .notes
+        openNoteID = notes.create().id
+    }
+
+    /// A fresh chat that points at the note. The reference travels as text, so it is plain to
+    /// see what was sent, and the bear fetches the note itself with read_note.
+    func startChat(about note: Note) {
+        newChat()
+        draft = "По заметке «\(note.displayTitle)» [note:\(note.shortID)]: "
+        focusInput()
     }
 
     // MARK: - Reminders
@@ -340,7 +359,7 @@ final class ChatController: ObservableObject {
         return client.streamReply(
             apiKey: apiKey, model: settings.model, masterPrompt: settings.masterPrompt, history: history, spoken: spoken,
             imageLoader: { ImageStore.data(for: $0) },
-            toolHandler: { [reminders, memory, settings, smokeBreak = onSmokeBreak, mail = MailTools(client: gmail.client),
+            toolHandler: { [reminders, memory, notes, settings, smokeBreak = onSmokeBreak, mail = MailTools(client: gmail.client),
                             custom = CustomAPITools(apis: apis)] name, input in
                 if name == CustomAPIToolSchema.name { return await custom.execute(input: input) }
                 if MailToolSchema.names.contains(name) { return await mail.execute(name: name, input: input) }
@@ -351,6 +370,9 @@ final class ChatController: ObservableObject {
                 }
                 if MemoryToolSchema.names.contains(name) {
                     return await MainActor.run { MemoryTools(store: memory).execute(name: name, input: input) }
+                }
+                if NoteToolSchema.names.contains(name) {
+                    return await MainActor.run { NoteTools(store: notes).execute(name: name, input: input) }
                 }
                 return await MainActor.run { ReminderTools(store: reminders).execute(name: name, input: input) }
             },
@@ -407,6 +429,8 @@ final class ChatController: ObservableObject {
         if name.hasPrefix("app:") { return "Спрашиваю \(name.dropFirst(4))…" }
         switch name {
         case "call_api": return "Обращаюсь к API…"
+        case "list_notes", "read_note": return "Смотрю заметки…"
+        case "create_note", "update_note", "delete_note": return "Правлю заметки…"
         case "get_settings": return "Смотрю настройки…"
         case "update_settings", "add_quick_action", "remove_quick_action", "move_quick_action": return "Меняю настройки…"
         case "delete_all_reminders": return "Удаляю события…"

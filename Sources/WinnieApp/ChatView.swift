@@ -18,6 +18,10 @@ struct ChatView: View {
 
     private let bottomID = "bottom"
 
+    /// Three tabs, a labelled button and three icons do not all fit the default width; below
+    /// this the «+» button drops its label instead of colliding with the tabs.
+    @State private var isNarrow = true
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -31,8 +35,13 @@ struct ChatView: View {
                 input
             case .events:
                 EventsView(store: controller.reminders)
+            case .notes:
+                NotesView(controller: controller, notes: controller.notes)
             }
         }
+        .background(GeometryReader { proxy in
+            Color.clear.onChange(of: proxy.size.width, initial: true) { _, width in isNarrow = width < 470 }
+        })
         .overlay(alignment: .top) { toast }
         .onChange(of: controller.focusToken, initial: true) { inputFocused = true }
     }
@@ -46,20 +55,24 @@ struct ChatView: View {
             Picker("", selection: $controller.tab) {
                 Text("Chat").tag(ChatTab.chat)
                 Text("Events").tag(ChatTab.events)
+                Text("Notes").tag(ChatTab.notes)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .controlSize(.small)
             .fixedSize()
 
             HStack {
-                Button { controller.newChat() } label: {
-                    Label("New dialog", systemImage: "plus")
+                // The «+» makes whatever the current tab holds: a dialog, or a note.
+                Button { controller.tab == .notes ? controller.newNote() : controller.newChat() } label: {
+                    Label(controller.tab == .notes ? "New note" : "New dialog", systemImage: "plus")
                         .font(.system(size: 12, weight: .medium))
+                        .labelStyle(CompactLabelStyle(showsTitle: !isNarrow))
                         .frame(height: 26)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help("Новый чат (⌘N)")
+                .help(controller.tab == .notes ? "Новая заметка" : "Новый чат (⌘N)")
 
                 Spacer()
 
@@ -346,7 +359,19 @@ private struct FlowLayout: Layout {
 }
 
 /// A one-pixel rule: lighter than `Divider`, which reads as a border on a white panel.
-private struct Hairline: View {
+/// Icon and title, or just the icon when space is short.
+private struct CompactLabelStyle: LabelStyle {
+    let showsTitle: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 6) {
+            configuration.icon
+            if showsTitle { configuration.title }
+        }
+    }
+}
+
+struct Hairline: View {
     @Environment(\.displayScale) private var scale
 
     var body: some View {
