@@ -58,12 +58,12 @@ final class AppSettings: ObservableObject {
         set { defaults.set(newValue.map { [Double($0.x), Double($0.y)] }, forKey: "petOrigin") }
     }
 
-    static var supportDirectory: URL {
+    nonisolated static var supportDirectory: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Winnie")
     }
 
-    static var spritesDirectory: URL {
+    nonisolated static var spritesDirectory: URL {
         supportDirectory.appendingPathComponent("Sprites")
     }
 }

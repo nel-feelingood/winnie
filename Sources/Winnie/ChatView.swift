@@ -51,6 +51,9 @@ struct ChatView: View {
 
             Spacer()
 
+            HeaderButton(symbol: "camera.viewfinder", help: "Скриншот области экрана") {
+                controller.requestCapture()
+            }
             HeaderButton(symbol: "arrow.up.forward.app", help: "Открыть в Claude") {
                 controller.openInClaude()
             }
@@ -96,6 +99,35 @@ struct ChatView: View {
     // MARK: - Input
 
     private var input: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if !controller.pendingImages.isEmpty { pendingStrip }
+            inputRow
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+    }
+
+    private var pendingStrip: some View {
+        HStack(spacing: 8) {
+            ForEach(controller.pendingImages, id: \.self) { file in
+                Thumbnail(file: file, height: 56)
+                    .overlay(alignment: .topTrailing) {
+                        Button { controller.removePending(file) } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 15))
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(.white, .black.opacity(0.65))
+                        }
+                        .buttonStyle(.plain)
+                        .offset(x: 6, y: -6)
+                        .help("Убрать скриншот")
+                    }
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    private var inputRow: some View {
         HStack(alignment: .bottom, spacing: 8) {
             TextField("Сообщение", text: $controller.draft, axis: .vertical)
                 .textFieldStyle(.plain)
@@ -111,15 +143,9 @@ struct ChatView: View {
                     .font(.system(size: 20))
             }
             .buttonStyle(.plain)
-            .foregroundStyle(canSend || controller.isStreaming ? Color.accentColor : Color.secondary.opacity(0.5))
-            .disabled(!canSend && !controller.isStreaming)
+            .foregroundStyle(controller.canSend || controller.isStreaming ? Color.accentColor : Color.secondary.opacity(0.5))
+            .disabled(!controller.canSend && !controller.isStreaming)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-    }
-
-    private var canSend: Bool {
-        !controller.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     @ViewBuilder private var toast: some View {
@@ -159,14 +185,19 @@ private struct MessageRow: View {
     var body: some View {
         switch message.role {
         case .user:
-            Text(message.text)
-                .font(.system(size: 13))
-                .textSelection(.enabled)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
-                .background(Color.accentColor.opacity(0.18), in: RoundedRectangle(cornerRadius: 12))
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.leading, 40)
+            VStack(alignment: .trailing, spacing: 4) {
+                ForEach(message.images, id: \.self) { Thumbnail(file: $0, height: 120) }
+                if !message.text.isEmpty {
+                    Text(message.text)
+                        .font(.system(size: 13))
+                        .textSelection(.enabled)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(Color.accentColor.opacity(0.18), in: RoundedRectangle(cornerRadius: 12))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.leading, 40)
         case .assistant:
             VStack(alignment: .leading, spacing: 6) {
                 if message.text.isEmpty && isStreaming {
@@ -184,6 +215,22 @@ private struct MessageRow: View {
                 if !message.sources.isEmpty { SourceList(sources: message.sources) }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+private struct Thumbnail: View {
+    let file: String
+    let height: CGFloat
+
+    var body: some View {
+        if let image = ImageStore.image(for: file) {
+            Image(nsImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(maxWidth: 240, maxHeight: height)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.separator))
         }
     }
 }

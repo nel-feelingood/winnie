@@ -22,6 +22,11 @@ public final class ChatStore: ObservableObject {
         sessions.first { $0.id == currentID }
     }
 
+    /// Every screenshot still attached to some chat; anything else on disk is an orphan.
+    public var referencedImageFiles: Set<String> {
+        Set(sessions.flatMap { $0.messages.flatMap(\.images) })
+    }
+
     /// Most recently used first.
     public var sortedSessions: [ChatSession] {
         sessions.sorted { $0.updatedAt > $1.updatedAt }

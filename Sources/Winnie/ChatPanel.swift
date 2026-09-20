@@ -8,6 +8,9 @@ final class ChatPanel: NSPanel {
     private static let gap: CGFloat = 8
 
     var onClose: () -> Void = {}
+    /// Set while the panel is hidden on purpose (a screenshot in progress), so losing
+    /// key status is not mistaken for the user clicking away.
+    var isAutoCloseSuspended = false
 
     init(content: some View) {
         super.init(contentRect: NSRect(origin: .zero, size: Self.chatSize),
@@ -49,7 +52,7 @@ final class ChatPanel: NSPanel {
     /// Clicking anywhere else dismisses the chat.
     override func resignKey() {
         super.resignKey()
-        if isVisible { onClose() }
+        if isVisible && !isAutoCloseSuspended { onClose() }
     }
 
     /// Sits above the pet when there is room, otherwise below, and never leaves the screen.

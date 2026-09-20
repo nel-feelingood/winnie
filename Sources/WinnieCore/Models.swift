@@ -20,15 +20,21 @@ public struct ChatMessage: Codable, Identifiable, Equatable, Sendable {
     /// Error bubbles are shown in the chat but never sent back to the model.
     public var isError: Bool
     public var date: Date
+    /// File names of attached screenshots. Optional so chats saved before
+    /// attachments existed still decode.
+    public var imageFiles: [String]?
+
+    public var images: [String] { imageFiles ?? [] }
 
     public init(id: UUID = UUID(), role: Role, text: String, sources: [Source] = [],
-                isError: Bool = false, date: Date = Date()) {
+                isError: Bool = false, date: Date = Date(), imageFiles: [String]? = nil) {
         self.id = id
         self.role = role
         self.text = text
         self.sources = sources
         self.isError = isError
         self.date = date
+        self.imageFiles = imageFiles
     }
 }
 

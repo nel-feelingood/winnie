@@ -30,12 +30,25 @@ public struct ClaudeClient: Sendable {
         """
     }
 
+    /// Loads the JPEG bytes of an attached screenshot by file name.
+    public typealias ImageLoader = @Sendable (String) -> Data?
+
     /// Completed turns are replayed as plain text. Search results are large and
     /// would be re-billed as input on every later turn of a throwaway chat.
-    static func apiMessages(from history: [ChatMessage]) -> [[String: Any]] {
+    /// Screenshots are replayed, since follow-up questions are usually about them.
+    static func apiMessages(from history: [ChatMessage], imageLoader: ImageLoader = { _ in nil }) -> [[String: Any]] {
         history
-            .filter { !$0.isError && !$0.text.isEmpty }
-            .map { ["role": $0.role.rawValue, "content": $0.text] }
+            .filter { !$0.isError && !($0.text.isEmpty && $0.images.isEmpty) }
+            .map { message in
+                let images: [[String: Any]] = message.images.compactMap(imageLoader).map {
+                    ["type": "image",
+                     "source": ["type": "base64", "media_type": "image/jpeg", "data": $0.base64EncodedString()]]
+                }
+                guard !images.isEmpty else { return ["role": message.role.rawValue, "content": message.text] }
+                // Images go before the question, which is the order the model handles best.
+                let text: [[String: Any]] = message.text.isEmpty ? [] : [["type": "text", "text": message.text]]
+                return ["role": message.role.rawValue, "content": images + text]
+            }
     }
 
     static func requestBody(model: ModelOption, master: String = MasterPrompt.standard,
@@ -74,14 +87,15 @@ public struct ClaudeClient: Sendable {
 
     // MARK: - Chat
 
-    public func streamReply(apiKey: String, model: ModelOption, masterPrompt: String, history: [ChatMessage])
+    public func streamReply(apiKey: String, model: ModelOption, masterPrompt: String, history: [ChatMessage],
+                            imageLoader: @escaping ImageLoader = { _ in nil })
         -> AsyncThrowingStream<StreamEvent, Error>
     {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
                     guard !apiKey.isEmpty else { throw ClaudeError.missingAPIKey }
-                    var messages = Self.apiMessages(from: history)
+                    var messages = Self.apiMessages(from: history, imageLoader: imageLoader)
                     for _ in 0...Self.maxResumes {
                         let turn = try await runTurn(apiKey: apiKey, model: model, master: masterPrompt, messages: messages) {
                             continuation.yield($0)

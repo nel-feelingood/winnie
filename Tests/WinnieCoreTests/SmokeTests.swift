@@ -92,6 +92,31 @@ import Testing
         #expect(messages.map { $0["content"] as? String } == ["hi", "hello"])
     }
 
+    @Test func screenshotsBecomeImageBlocksBeforeTheText() {
+        let history = [
+            ChatMessage(role: .user, text: "что это?", imageFiles: ["a.jpg"]),
+            ChatMessage(role: .user, text: "", imageFiles: ["b.jpg"]),
+            ChatMessage(role: .user, text: "файл пропал", imageFiles: ["missing.jpg"]),
+        ]
+        let messages = ClaudeClient.apiMessages(from: history) { $0 == "missing.jpg" ? nil : Data([1, 2, 3]) }
+
+        let first = messages[0]["content"] as? [[String: Any]]
+        #expect(first?.map { $0["type"] as? String } == ["image", "text"])
+        #expect((first?[0]["source"] as? [String: String])?["data"] == "AQID")
+        // An image with no caption is still a valid message.
+        #expect((messages[1]["content"] as? [[String: Any]])?.count == 1)
+        // A lost file degrades to plain text instead of breaking the request.
+        #expect(messages[2]["content"] as? String == "файл пропал")
+    }
+
+    @Test func oldChatsWithoutAttachmentsStillDecode() throws {
+        let json = #"[{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","role":"user","text":"hi","sources":[],"isError":false,"date":"2026-09-20T10:00:00Z"}]"#
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let messages = try decoder.decode([ChatMessage].self, from: Data(json.utf8))
+        #expect(messages.first?.images.isEmpty == true)
+    }
+
     @Test func titlesAreTrimmedToThreeWords() {
         #expect(ClaudeClient.cleanTitle("«Перевод слова на английский».\n") == "Перевод слова на")
         #expect(ClaudeClient.cleanTitle("Weather") == "Weather")

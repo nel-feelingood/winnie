@@ -39,6 +39,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         chatPanel.onClose = { [unowned self] in closeChat() }
 
         controller.onActivity = { [unowned self] in petView.setActivity($0) }
+        controller.onCaptureRequest = { [unowned self] in captureScreenshot() }
+        ImageStore.removeOrphans(keeping: store.referencedImageFiles)
 
         settingsWindow = SettingsWindowController(
             settings: settings,
@@ -90,6 +92,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         chatPanel.makeKeyAndOrderFront(nil)
         controller.focusInput()
         petView.refresh()
+    }
+
+    /// The chat steps aside so it is not in the shot, then returns with the capture attached.
+    private func captureScreenshot() {
+        chatPanel.isAutoCloseSuspended = true
+        chatPanel.orderOut(nil)
+        ScreenCapture.captureRegion { [unowned self] outcome in
+            chatPanel.isAutoCloseSuspended = false
+            chatPanel.position(relativeTo: petWindow.frame)
+            chatPanel.makeKeyAndOrderFront(nil)
+            switch outcome {
+            case .captured(let file): controller.attach(file)
+            case .cancelled: controller.focusInput()
+            case .needsPermission:
+                controller.notify("Разреши Winnie запись экрана в Системных настройках и перезапусти его")
+            }
+            petView.refresh()
+        }
     }
 
     private func closeChat() {
