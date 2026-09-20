@@ -28,10 +28,16 @@ import Testing
         #expect(Mentions.trailingQuery(in: "@раз\nдва") == nil)
     }
 
-    @Test func choosingAnObjectReplacesTheQuery() {
-        let target = Mentions.Target(kind: .note, id: "1a2b3c4d")
-        #expect(Mentions.completing("сделай саммари @Бат", with: target) == "сделай саммари [note:1a2b3c4d] ")
-        #expect(Mentions.completing("без собачки", with: target) == "без собачки")
+    @Test func theFieldShowsNamesAndTheMessageCarriesReferences() {
+        let trip = Mentions.Target(kind: .note, id: "1a2b3c4d"), plan = Mentions.Target(kind: .note, id: "99999999")
+        let shown = Mentions.completing("сделай саммари @Бат", display: Mentions.display(for: "Поездка в Батуми"))
+        #expect(shown == "сделай саммари @Поездка в Батуми ")
+        #expect(Mentions.completing("без собачки", display: "@X") == "без собачки")
+
+        let mentions = [(display: "@План", target: plan), (display: "@План поездки", target: trip)]
+        #expect(Mentions.expanding("сравни @План поездки и @План", mentions: mentions) == "сравни [note:1a2b3c4d] и [note:99999999]")
+        // An edited name is just text again.
+        #expect(Mentions.expanding("сравни @Плам", mentions: mentions) == "сравни @Плам")
     }
 
     @MainActor @Test func remindersAcceptAWrappedReference() {

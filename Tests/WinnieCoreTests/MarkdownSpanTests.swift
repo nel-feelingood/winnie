@@ -15,7 +15,8 @@ import Testing
         expect("## План поездки", contains: "## ", as: .marker)
         expect("## План поездки", contains: "План поездки", as: .heading(level: 2))
         expect("> цитата", contains: "цитата", as: .quote)
-        expect("---", contains: "---", as: .marker)
+        expect("> цитата", contains: "> ", as: .quoteMarker)
+        expect("---", contains: "---", as: .rule)
         #expect(styled("#хештег без пробела").isEmpty)
     }
 
@@ -43,7 +44,7 @@ import Testing
 
     @Test func codeBlocksAreLeftAlone() {
         let text = "```\n- [ ] **не разметка**\n```"
-        #expect(styled(text).map(\.1) == [.marker, .codeBlock, .marker])
+        #expect(styled(text).map(\.1) == [.fence, .codeBlock, .fence])
     }
 
     @Test func picturesAreFoundWithTheirPath() {

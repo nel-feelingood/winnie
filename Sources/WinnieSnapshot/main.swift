@@ -57,7 +57,7 @@ MainActor.assumeIsolated {
     let noteStore = NoteStore(directory: sandbox.appendingPathComponent("Notes"))
     let picture = NSImage(contentsOfFile: NSHomeDirectory() + "/Library/Application Support/Winnie/Sprites/hover.png")
         .flatMap(NoteImages.jpeg(from:)).flatMap { noteStore.addImage($0, fileExtension: "jpg") } ?? "images/none.jpg"
-    noteStore.create(title: "Идеи для Винни", body: "## Поведение\n- чесать затылок, когда долго думает\n- зевать перед сном\n\n**Важно:** не забыть про *мёд* и `код`, см. [сайт](https://example.com).\n\n> цитата из мультика\n\n- [x] перекур в 16:20\n- [ ] прогулка по экрану\n\n![](\(picture))\nтекст после картинки")
+    noteStore.create(title: "Идеи для Винни", body: "# Заголовок первого уровня\n\n## Второго уровня\n\n**Жирный текст** и *курсивный текст*, ~~зачёркнутый~~ и `код`, см. [сайт](https://example.com).\n\n```python\ndef hello():\n    return True\n```\n\n> Цитата или выделение текста\n> может быть многострочной\n\n- Маркированный список\n- Второй пункт\n  - Вложенный пункт\n\n1. Нумерованный список\n2. Второй пункт\n\n- [x] перекур в 16:20\n- [ ] прогулка по экрану\n\n---\n\n![](\(picture))\nтекст после картинки")
     let trip = noteStore.create(title: "Поездка в Батуми", body: "Билеты на пятницу, отель у моря. Спросить Лёву про даты и про то, берём ли палатку. Забронировать машину. Проверить паспорт. Купить зарядку.")
     noteStore.update(trip.id, isPinned: true)
     noteStore.create(title: "", body: "просто мысль без заголовка")
@@ -99,7 +99,9 @@ MainActor.assumeIsolated {
         }
         app.run()
     }
-    let panel = InertWindow(contentRect: NSRect(origin: NSPoint(x: -3000, y: -3000), size: ChatPanel.chatSize),
+    // A note is long: a tall window shows all of it in one picture.
+    let snapshotSize = mode == "note" ? NSSize(width: 380, height: 1000) : ChatPanel.chatSize
+    let panel = InertWindow(contentRect: NSRect(origin: NSPoint(x: -3000, y: -3000), size: snapshotSize),
                             styleMask: [.borderless], backing: .buffered, defer: false)
     panel.backgroundColor = .textBackgroundColor
     // In the app the panel paints the background; here the view has to, or a dark-mode

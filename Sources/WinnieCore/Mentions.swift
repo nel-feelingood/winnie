@@ -68,9 +68,24 @@ public enum Mentions {
         return query.contains(where: \.isNewline) || query.count > 40 ? nil : String(query)
     }
 
-    /// Replaces the «@query» being typed with the chosen object's reference.
-    public static func completing(_ draft: String, with target: Target) -> String {
+    /// How a chosen object reads in the message field: «@Поездка в Батуми». A plain text field cannot draw
+    /// chips, so the field shows the name and the reference is swapped in when the message is sent.
+    public static func display(for title: String) -> String {
+        "@" + title.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces)
+    }
+
+    /// Replaces the «@query» being typed with the chosen object's display name.
+    public static func completing(_ draft: String, display: String) -> String {
         guard trailingQuery(in: draft) != nil, let at = draft.lastIndex(of: "@") else { return draft }
-        return String(draft[..<at]) + target.token + " "
+        return String(draft[..<at]) + display + " "
+    }
+
+    /// The message as it is sent: each display name still present in the text becomes its reference.
+    /// A name the user has since edited no longer matches and simply stays as the text they wrote.
+    public static func expanding(_ draft: String, mentions: [(display: String, target: Target)]) -> String {
+        // Longest first, so «@План» cannot clip the front of «@План поездки».
+        mentions.sorted { $0.display.count > $1.display.count }.reduce(draft) { text, mention in
+            text.replacingOccurrences(of: mention.display, with: mention.target.token)
+        }
     }
 }

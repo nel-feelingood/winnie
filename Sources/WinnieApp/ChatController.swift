@@ -80,6 +80,10 @@ final class ChatController: ObservableObject {
         var id: String { target.token }
     }
 
+    /// Objects picked from the «@» popup for the message being written: shown by name in the field,
+    /// turned into references when it is sent.
+    private var draftMentions: [(display: String, target: Mentions.Target)] = []
+
     /// Bumped when the highlighted row of the «@» popup should move; the view owns the index.
     @Published var mentionSelection = 0
 
@@ -93,6 +97,8 @@ final class ChatController: ObservableObject {
     /// What the «@» popup offers for the query being typed; empty when no «@» is in progress.
     var mentionCandidates: [MentionCandidate] {
         guard let query = Mentions.trailingQuery(in: draft)?.lowercased() else { return [] }
+        // «@Поездка в Батуми» already chosen is not a new query.
+        if draftMentions.contains(where: { ("@" + query).hasPrefix($0.display.lowercased()) }) { return [] }
         let noteItems = notes.sorted.map {
             MentionCandidate(target: .init(kind: .note, id: $0.shortID), title: $0.displayTitle, detail: "заметка")
         }
@@ -105,7 +111,9 @@ final class ChatController: ObservableObject {
     }
 
     func complete(_ candidate: MentionCandidate) {
-        draft = Mentions.completing(draft, with: candidate.target)
+        let display = Mentions.display(for: candidate.title)
+        draftMentions.append((display, candidate.target))
+        draft = Mentions.completing(draft, display: display)
         mentionSelection = 0
         focusInput()
     }
@@ -133,7 +141,9 @@ final class ChatController: ObservableObject {
     /// see what was sent, and the bear fetches the note itself with read_note.
     func startChat(about note: Note) {
         newChat()
-        draft = "[note:\(note.shortID)] "
+        let display = Mentions.display(for: note.displayTitle)
+        draftMentions = [(display, Mentions.Target(kind: .note, id: note.shortID))]
+        draft = display + " "
         focusInput()
     }
 
@@ -237,6 +247,7 @@ final class ChatController: ObservableObject {
         discardPendingImages()
         store.startNew()
         draft = ""
+        draftMentions = []
         focusInput()
     }
 
@@ -296,7 +307,8 @@ final class ChatController: ObservableObject {
     func send(spoken: Bool = false) {
         guard canSend else { return }
         speaker.stop()
-        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = Mentions.expanding(draft, mentions: draftMentions).trimmingCharacters(in: .whitespacesAndNewlines)
+        draftMentions = []
         let images = pendingImages
         let session = store.current ?? store.startNew()
         draft = ""

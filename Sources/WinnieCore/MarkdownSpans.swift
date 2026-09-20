@@ -4,8 +4,14 @@ import Foundation
 /// it stays plain Markdown underneath. Ranges are NSRange: they go straight to NSTextStorage.
 public enum MarkdownSpans {
     public enum Style: Equatable, Sendable {
-        /// Syntax characters (`#`, `**`, `>`, a link's URL part): shown, but dimmed.
+        /// Syntax characters (`#`, `**`, a link's URL part): hidden unless the caret is on their line.
         case marker
+        /// A ``` line opening or closing a code block.
+        case fence
+        /// A `---` line: drawn as a horizontal rule.
+        case rule
+        /// The `>` in front of a quoted line.
+        case quoteMarker
         case heading(level: Int)
         case bold, italic, strike, code, codeBlock, quote, link
         case listMarker
@@ -50,7 +56,7 @@ public enum MarkdownSpans {
 
             if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
                 insideCode.toggle()
-                spans.append(Span(range: lineRange, style: .marker))
+                spans.append(Span(range: lineRange, style: .fence))
                 continue
             }
             if insideCode {
@@ -68,10 +74,10 @@ public enum MarkdownSpans {
                 spans.append(Span(range: shifted(match.range(at: 2)), style: .heading(level: match.range(at: 1).length)))
                 inlineRange = shifted(match.range(at: 2))
             } else if rule.firstMatch(in: line, range: whole) != nil {
-                spans.append(Span(range: lineRange, style: .marker))
+                spans.append(Span(range: lineRange, style: .rule))
                 continue
             } else if let match = quote.firstMatch(in: line, range: whole) {
-                spans.append(Span(range: shifted(match.range(at: 1)), style: .marker))
+                spans.append(Span(range: shifted(match.range(at: 1)), style: .quoteMarker))
                 spans.append(Span(range: shifted(match.range(at: 2)), style: .quote))
                 inlineRange = shifted(match.range(at: 2))
             } else if let match = listItem.firstMatch(in: line, range: whole) {
