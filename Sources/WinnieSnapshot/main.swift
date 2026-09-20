@@ -37,6 +37,49 @@ MainActor.assumeIsolated {
     let app = NSApplication.shared
     app.setActivationPolicy(.accessory)
 
+    // `editor-test`: drives the real note editor the way the keyboard does, and prints what happened.
+    if mode == "editor-test" {
+        func editor(_ text: String) -> SlashTextView {
+            let view = SlashTextView(usingTextLayoutManager: false)
+            view.frame = NSRect(x: 0, y: 0, width: 340, height: 400)
+            view.layoutManager?.delegate = view
+            view.isRichText = false
+            view.string = text
+            view.restyle()
+            return view
+        }
+        func check(_ name: String, _ got: String, _ expected: String) {
+            print(got == expected ? "PASS" : "FAIL", name, got == expected ? "" : "— got «\(got)», expected «\(expected)»")
+        }
+        var view = editor("a **b** c")
+        view.setSelectedRange(NSRange(location: 4, length: 0))          // just after the opening «**»
+        view.deleteBackward(nil)
+        check("backspace after opening ** removes both marks", view.string, "a b c")
+
+        view = editor("a **b** c")
+        view.setSelectedRange(NSRange(location: 7, length: 0))          // just after the closing «**»
+        view.deleteBackward(nil)
+        check("backspace after closing ** removes both marks", view.string, "a b c")
+
+        view = editor("## Заголовок")
+        view.setSelectedRange(NSRange(location: 3, length: 0))
+        view.deleteBackward(nil)
+        check("backspace at the start of a heading makes it plain", view.string, "Заголовок")
+
+        view = editor("обычный текст")
+        view.setSelectedRange(NSRange(location: 7, length: 0))
+        view.deleteBackward(nil)
+        check("plain text still deletes one character", view.string, "обычны текст")
+
+        view = editor("a **b** c")
+        view.setSelectedRange(NSRange(location: 2, length: 0)); view.caretMoved()
+        view.setSelectedRange(NSRange(location: 3, length: 0)); view.caretMoved()      // → lands inside «**»
+        check("moving right skips the hidden mark", String(view.selectedRange().location), "4")
+        view.setSelectedRange(NSRange(location: 3, length: 0)); view.caretMoved()      // ← lands inside again
+        check("moving left skips it the other way", String(view.selectedRange().location), "2")
+        exit(0)
+    }
+
     let sandbox = FileManager.default.temporaryDirectory.appendingPathComponent("winnie-snapshot-\(UUID().uuidString)")
     let store = ChatStore(directory: sandbox)
     let reminders = ReminderStore(directory: sandbox)

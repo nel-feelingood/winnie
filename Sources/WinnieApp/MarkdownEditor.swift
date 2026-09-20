@@ -92,7 +92,6 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
     private var quotes: [NSRange] = []
     private var rules: [NSRange] = []
     private var imageCache: [String: NSImage] = [:]
-    private var revealedParagraph = NSRange(location: NSNotFound, length: 0)
 
     private static let bodySize: CGFloat = 13
     private static let pictureGap: CGFloat = 6
@@ -100,15 +99,54 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
 
     // MARK: - Styling
 
-    /// The paragraph whose syntax is shown: the caret's, and only while this view has the keyboard.
-    private var caretParagraph: NSRange {
-        guard window?.firstResponder === self else { return NSRange(location: NSNotFound, length: 0) }
-        return (string as NSString).paragraphRange(for: selectedRange())
+    private var lastCaret = 0
+
+    /// Syntax characters are never shown, so the caret must not rest between them either: an arrow key
+    /// that landed inside «**» would seem to do nothing. It is carried on to the far side instead.
+    func caretMoved() {
+        defer { lastCaret = selectedRange().location }
+        updateFormatBar()
+        let selection = selectedRange()
+        guard selection.length == 0, let storage = textStorage, selection.location > 0, selection.location < storage.length else { return }
+        var run = NSRange()
+        guard storage.attribute(.hiddenMarkup, at: selection.location, longestEffectiveRange: &run,
+                                in: NSRange(location: 0, length: storage.length)) != nil,
+              run.location < selection.location else { return }      // strictly inside a hidden run
+        setSelectedRange(NSRange(location: selection.location > lastCaret ? NSMaxRange(run) : run.location, length: 0))
     }
 
-    func caretMoved() {
-        if !NSEqualRanges(caretParagraph, revealedParagraph) { restyle() }
-        updateFormatBar()
+    /// Backspace just after hidden syntax removes the formatting, not one invisible character of it:
+    /// both «**» of a bold run go, or the «## » of a heading, and the text stays.
+    override func deleteBackward(_ sender: Any?) {
+        let selection = selectedRange()
+        guard selection.length == 0, selection.location > 0, let storage = textStorage,
+              storage.attribute(.hiddenMarkup, at: selection.location - 1, effectiveRange: nil) != nil
+        else { return super.deleteBackward(sender) }
+
+        let spans = MarkdownSpans.spans(in: string)
+        guard let index = spans.firstIndex(where: { NSLocationInRange(selection.location - 1, $0.range) && Self.isSyntax($0.style) })
+        else { return super.deleteBackward(sender) }
+        var doomed = [spans[index].range]
+        // Inline marks come as «mark, styled text, mark»; find the other half of the pair.
+        if index + 2 < spans.count, !Self.isSyntax(spans[index + 1].style), Self.isSyntax(spans[index + 2].style),
+           spans[index + 1].range.location == NSMaxRange(spans[index].range) {
+            doomed.append(spans[index + 2].range)
+        } else if index >= 2, !Self.isSyntax(spans[index - 1].style), Self.isSyntax(spans[index - 2].style),
+                  NSMaxRange(spans[index - 1].range) == spans[index].range.location {
+            doomed.append(spans[index - 2].range)
+        }
+        // Back to front, so removing one range does not shift the other.
+        for range in doomed.sorted(by: { $0.location > $1.location }) where shouldChangeText(in: range, replacementString: "") {
+            replaceCharacters(in: range, with: "")
+        }
+        didChangeText()
+    }
+
+    private static func isSyntax(_ style: MarkdownSpans.Style) -> Bool {
+        switch style {
+        case .marker, .fence, .rule, .quoteMarker: true
+        default: false
+        }
     }
 
     // MARK: - Formatting bar
@@ -205,21 +243,11 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
         setSelectedRange(select)
     }
 
-    override func becomeFirstResponder() -> Bool {
-        defer { DispatchQueue.main.async { [weak self] in self?.restyle() } }
-        return super.becomeFirstResponder()
-    }
-
-    override func resignFirstResponder() -> Bool {
-        defer { DispatchQueue.main.async { [weak self] in self?.restyle() } }
-        return super.resignFirstResponder()
-    }
-
     /// Re-styles the whole text. Notes are short, so this is cheaper and far simpler than tracking edits;
     /// only attributes change, never characters, so the undo stack and the caret are untouched.
     ///
-    /// The look is that of rendered Markdown: syntax characters are not drawn at all. The exception is
-    /// the line the caret is on, where they reappear (dimmed) so they can be edited.
+    /// The look is that of rendered Markdown: syntax characters are never drawn. Formatting is changed with the
+    /// selection bar and the «/» menu, and removed with Backspace at its start.
     func restyle() {
         guard let storage = textStorage else { return }
         let text = string
@@ -229,18 +257,8 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
         paragraph.paragraphSpacing = 4
-        let revealed = caretParagraph
-        revealedParagraph = revealed
-        func isRevealed(_ range: NSRange) -> Bool {
-            revealed.location != NSNotFound && NSIntersectionRange(source.paragraphRange(for: range), revealed).length > 0
-        }
-        /// Syntax: gone, or dimmed when its line is being edited.
         func markup(_ range: NSRange) {
-            if isRevealed(range) {
-                storage.addAttribute(.foregroundColor, value: NSColor.tertiaryLabelColor, range: range)
-            } else {
-                storage.addAttribute(.hiddenMarkup, value: true, range: range)
-            }
+            storage.addAttribute(.hiddenMarkup, value: true, range: range)
         }
 
         let spans = MarkdownSpans.spans(in: text).filter { NSMaxRange($0.range) <= whole.length }
@@ -260,13 +278,11 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
             case .fence:
                 markup(span.range)
                 storage.addAttribute(.font, value: NSFont.monospacedSystemFont(ofSize: 10, weight: .regular), range: span.range)
-                if !isRevealed(span.range) {
-                    // Hidden, the line would still stand as a blank one; squeeze it to a sliver of padding.
-                    let thin = NSMutableParagraphStyle()
-                    thin.maximumLineHeight = 5
-                    thin.paragraphSpacing = 0
-                    storage.addAttribute(.paragraphStyle, value: thin, range: source.paragraphRange(for: span.range))
-                }
+                // Hidden, the line would still stand as a blank one; squeeze it to a sliver of padding.
+                let thin = NSMutableParagraphStyle()
+                thin.maximumLineHeight = 5
+                thin.paragraphSpacing = 0
+                storage.addAttribute(.paragraphStyle, value: thin, range: source.paragraphRange(for: span.range))
                 fences.append(span.range)
             case .rule:
                 markup(span.range)
@@ -303,8 +319,7 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
                 storage.addAttributes([.foregroundColor: NSColor.linkColor, .cursor: NSCursor.pointingHand,
                                        .toolTip: "⌘-клик — открыть"], range: span.range)
             case .listMarker:
-                styleListMarker(span.range, isTask: taskLines.contains(source.paragraphRange(for: span.range).location),
-                                isRevealed: isRevealed(span.range), in: storage)
+                styleListMarker(span.range, isTask: taskLines.contains(source.paragraphRange(for: span.range).location), in: storage)
             case .checkbox(let isDone):
                 // The three characters keep their room but are invisible; a drawn box goes on top.
                 storage.addAttributes([.font: NSFont.monospacedSystemFont(ofSize: Self.bodySize, weight: .regular),
@@ -327,14 +342,12 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
     }
 
     /// «- » becomes a bullet; in a task item it disappears, since the checkbox stands in for it. Numbers stay as typed.
-    private func styleListMarker(_ range: NSRange, isTask: Bool, isRevealed: Bool, in storage: NSTextStorage) {
+    private func styleListMarker(_ range: NSRange, isTask: Bool, in storage: NSTextStorage) {
         let marker = (storage.string as NSString).substring(with: range)
         guard let offset = marker.firstIndex(where: { !$0.isWhitespace }).map({ marker.distance(from: marker.startIndex, to: $0) }) else { return }
         let sign = NSRange(location: range.location + offset, length: 1)
         let isDash = "-*+".contains(marker[marker.index(marker.startIndex, offsetBy: offset)])
-        if isRevealed {
-            storage.addAttribute(.foregroundColor, value: NSColor.tertiaryLabelColor, range: NSRange(location: sign.location, length: range.length - offset))
-        } else if isTask {
+        if isTask {
             storage.addAttribute(.hiddenMarkup, value: true, range: NSRange(location: sign.location, length: range.length - offset))
         } else if isDash {
             storage.addAttribute(.bullet, value: true, range: sign)
@@ -446,7 +459,7 @@ final class SlashTextView: NSTextView, NSLayoutManagerDelegate {
             NSBezierPath(roundedRect: NSRect(x: line.minX, y: line.minY, width: 3, height: line.height), xRadius: 1.5, yRadius: 1.5).fill()
         }
         NSColor.separatorColor.setFill()
-        for range in rules where NSIntersectionRange((string as NSString).paragraphRange(for: range), revealedParagraph).length == 0 {
+        for range in rules {
             guard let line = lineRect(at: range.location) else { continue }
             NSRect(x: line.minX, y: line.midY, width: line.width, height: 1).fill()
         }
