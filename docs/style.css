@@ -101,11 +101,12 @@ h2 span { color: var(--soft); }
 /* 01 — what he does: the list on the left, the chat plays on the right */
 .cases { display: grid; grid-template-columns: minmax(270px, .8fr) 1.2fr; }
 .list { display: flex; flex-direction: column; border-right: 1px solid var(--line); }
-.list button { flex: 1; display: grid; grid-template-columns: 14px 1fr; gap: 2px 12px; align-items: baseline; padding: 17px 22px; text-align: left;
+.list button { flex: 1; display: grid; grid-template-columns: 26px 1fr; gap: 2px 12px; align-items: baseline; padding: 17px 22px; text-align: left;
                background: none; border: 0; border-bottom: 1px solid var(--line); }
 .list button:last-child { border-bottom: 0; }
-.list button::before { content: ""; width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--c); transform: translateY(-1px); }
-.list [aria-selected="true"]::before { background: var(--c); }
+.list .ico { font-size: 19px; line-height: 1; filter: grayscale(1); opacity: .55; transition: filter .2s, opacity .2s; }
+.list [aria-selected="true"] .ico, .list button:hover .ico { filter: none; opacity: 1; }
+.list button:focus-visible { outline-offset: -3px; }
 .list b { font-size: 21px; font-weight: 600; letter-spacing: -.02em; color: var(--soft); transition: color .2s; }
 .list [aria-selected="true"] b, .list button:hover b { color: var(--ink); }
 .list small { grid-column: 2; font-size: 14.5px; line-height: 1.4; color: var(--soft); display: none; }
