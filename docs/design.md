@@ -44,5 +44,7 @@
 ## Структура
 
 - `Sources/WinnieCore` — модели, `ClaudeClient`, `TurnAccumulator` (сборка ответа из SSE), `ChatStore`, `PetMood`. Без AppKit, покрыто тестами (`swift test`).
-- `Sources/Winnie` — окна, меню, шорткат, чат-интерфейс.
+- `Sources/WinnieApp` — окна, меню, шорткаты, чат-интерфейс, голос, напоминания, почта (библиотека).
+- `Sources/Winnie` — исполняемая оболочка в одну строку.
+- `Sources/WinnieSnapshot` — утилита разработчика: рисует настоящий чат в PNG (`swift run WinnieSnapshot out.png [events]`), чтобы проверять вёрстку без доступа к экрану.
 - `scripts/build-app.sh` — собирает `build/Winnie.app`.

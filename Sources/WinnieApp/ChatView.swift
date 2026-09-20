@@ -12,11 +12,13 @@ struct ChatView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            Divider()
+            Hairline()
             switch controller.tab {
             case .chat:
+                sessionPicker
+                Hairline()
                 messages
-                Divider()
+                Hairline()
                 input
             case .events:
                 EventsView(store: controller.reminders)
@@ -28,8 +30,10 @@ struct ChatView: View {
 
     // MARK: - Header
 
+    /// Top floor: new dialog on the left, tabs dead centre, minimise on the right.
     private var header: some View {
-        HStack(spacing: 8) {
+        ZStack {
+            // Centred on the panel itself, not on the space the side buttons leave over.
             Picker("", selection: $controller.tab) {
                 Text("Chat").tag(ChatTab.chat)
                 Text("Events").tag(ChatTab.events)
@@ -38,43 +42,57 @@ struct ChatView: View {
             .labelsHidden()
             .fixedSize()
 
-            if controller.tab == .chat { chatHeaderControls } else { Spacer() }
+            HStack {
+                Button { controller.newChat() } label: {
+                    Label("New dialog", systemImage: "plus")
+                        .font(.system(size: 12, weight: .medium))
+                        .frame(height: 26)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("Новый чат (⌘N)")
+
+                Spacer()
+
+                HeaderButton(symbol: "minus", help: "Свернуть чат (Esc)") { controller.minimize() }
+            }
         }
         .padding(.horizontal, 12)
         .frame(height: 40)
     }
 
-    @ViewBuilder private var chatHeaderControls: some View {
-            Menu {
-                ForEach(store.sortedSessions) { session in
-                    Button {
-                        controller.select(session.id)
-                    } label: {
-                        let title = session.title ?? "Новый чат"
-                        session.id == store.currentID ? Label(title, systemImage: "checkmark") : Label(title, systemImage: "")
-                    }
+    /// Second floor, Chat tab only: the whole width goes to the chat's name.
+    private var sessionPicker: some View {
+        Menu {
+            ForEach(store.sortedSessions) { session in
+                Button {
+                    controller.select(session.id)
+                } label: {
+                    let title = session.title ?? "Новый чат"
+                    session.id == store.currentID ? Label(title, systemImage: "checkmark") : Label(title, systemImage: "")
                 }
-                Divider()
-                Button("Удалить этот чат", role: .destructive) { controller.deleteCurrent() }
-            } label: {
-                HStack(spacing: 4) {
-                    Text(store.current?.title ?? "Новый чат")
-                        .font(.system(size: 13, weight: .semibold))
-                        .lineLimit(1)
-                    Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold))
-                }
-                .contentShape(Rectangle())
             }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
-            .frame(maxWidth: 130, alignment: .leading)
-
-            Spacer()
-
-            HeaderButton(symbol: "camera.viewfinder", help: "Скриншот области экрана") {
-                controller.requestCapture()
+            Divider()
+            Button("Удалить этот чат", role: .destructive) { controller.deleteCurrent() }
+        } label: {
+            HStack(spacing: 8) {
+                Text(store.current?.title ?? "Новый чат")
+                    .font(.system(size: 13, weight: .semibold))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
             }
-            HeaderButton(symbol: "plus", help: "Новый чат (⌘N)") { controller.newChat() }
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity)
+            .frame(height: 34)
+            .contentShape(Rectangle())
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
     }
 
     // MARK: - Messages
@@ -165,6 +183,16 @@ struct ChatView: View {
             .disabled(controller.isStreaming)
             .help(controller.isListening ? "Закончить и отправить" : "Спросить голосом")
 
+            Button { controller.requestCapture() } label: {
+                Image(systemName: "camera.circle.fill")
+                    .font(.system(size: 20))
+                    .frame(width: Self.inputButtonSide, height: Self.inputButtonSide)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .disabled(controller.isStreaming || controller.isListening)
+            .help("Скриншот области экрана")
+
             Button {
                 controller.isStreaming ? controller.stop() : controller.send()
             } label: {
@@ -188,6 +216,17 @@ struct ChatView: View {
                 .padding(.top, 46)
                 .transition(.opacity)
         }
+    }
+}
+
+/// A one-pixel rule: lighter than `Divider`, which reads as a border on a white panel.
+private struct Hairline: View {
+    @Environment(\.displayScale) private var scale
+
+    var body: some View {
+        Rectangle()
+            .fill(Color.primary.opacity(0.1))
+            .frame(height: 1 / scale)
     }
 }
 

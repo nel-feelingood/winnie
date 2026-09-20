@@ -44,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         controller.onActivity = { [unowned self] in petView.setActivity($0) }
         controller.onCaptureRequest = { [unowned self] in captureScreenshot() }
+        controller.onMinimize = { [unowned self] in closeChat() }
         ImageStore.removeOrphans(keeping: store.referencedImageFiles)
 
         settingsWindow = SettingsWindowController(

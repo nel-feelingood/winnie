@@ -25,6 +25,7 @@ final class ChatController: ObservableObject {
     var onActivity: (ChatActivity) -> Void = { _ in }
     /// The window layer owns hiding the chat during a capture and bringing it back.
     var onCaptureRequest: () -> Void = {}
+    var onMinimize: () -> Void = {}
 
     private let client = ClaudeClient()
     private var streamTask: Task<Void, Never>?
@@ -112,6 +113,9 @@ final class ChatController: ObservableObject {
     }
 
     func focusInput() { focusToken += 1 }
+
+    /// Hides the chat; Winnie stays on screen.
+    func minimize() { onMinimize() }
 
     var canSend: Bool {
         !isStreaming && !(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && pendingImages.isEmpty)
