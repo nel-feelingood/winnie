@@ -3,7 +3,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-swift build -c release
+# Only the app itself: the snapshot tool is a debug-only developer utility.
+swift build -c release --product Winnie
 BIN=".build/release"
 APP="build/Winnie.app"
 
