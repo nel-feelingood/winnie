@@ -15,10 +15,29 @@ enum ImageStore {
 
     static func image(for file: String) -> NSImage? { NSImage(contentsOf: url(for: file)) }
 
-    /// Re-encodes a capture as a size-capped JPEG and returns its file name.
     static func importCapture(at source: URL) -> String? {
-        guard let data = try? Data(contentsOf: source),
-              let original = NSBitmapImageRep(data: data), let cgImage = original.cgImage else { return nil }
+        (try? Data(contentsOf: source)).flatMap(importImage)
+    }
+
+    /// Images on the pasteboard: copied image files first (Finder also puts the file
+    /// name there as text), then raw image data such as a ⌘⇧⌃4 capture. Text-only
+    /// pasteboards return nothing, so a normal paste proceeds.
+    static func importFromPasteboard(_ pasteboard: NSPasteboard = .general) -> [String] {
+        let imageFiles = (pasteboard.readObjects(forClasses: [NSURL.self],
+                                                 options: [.urlReadingFileURLsOnly: true,
+                                                           .urlReadingContentsConformToTypes: ["public.image"]]) as? [URL]) ?? []
+        if !imageFiles.isEmpty { return imageFiles.prefix(4).compactMap(importCapture) }
+        // Rich text copied from a page may carry an image rendition too; text wins there.
+        guard pasteboard.string(forType: .string) == nil else { return [] }
+        for type in [NSPasteboard.PasteboardType.png, .tiff] {
+            if let data = pasteboard.data(forType: type), let file = importImage(data) { return [file] }
+        }
+        return []
+    }
+
+    /// Re-encodes an image as a size-capped JPEG and returns its file name.
+    static func importImage(_ data: Data) -> String? {
+        guard let original = NSBitmapImageRep(data: data), let cgImage = original.cgImage else { return nil }
         let width = CGFloat(cgImage.width), height = CGFloat(cgImage.height)
         let ratio = min(1, maxEdge / max(width, height))
         let size = NSSize(width: (width * ratio).rounded(), height: (height * ratio).rounded())

@@ -157,12 +157,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         edit.addItem(.separator())
         edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
         edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        // Routed through the delegate so an image on the pasteboard becomes an attachment.
+        let paste = NSMenuItem(title: "Paste", action: #selector(pasteFromMenu(_:)), keyEquivalent: "v")
+        paste.target = self
+        edit.addItem(paste)
         edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editItem.submenu = edit
         main.addItem(editItem)
 
         NSApp.mainMenu = main
+    }
+
+    @objc private func pasteFromMenu(_ sender: Any?) {
+        if chatPanel.isKeyWindow {
+            let files = ImageStore.importFromPasteboard()
+            if !files.isEmpty { return files.forEach(controller.attach) }
+        }
+        // Anything else is an ordinary paste for whichever text field has focus.
+        NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: sender)
     }
 
     @objc private func newChatFromMenu() {
