@@ -5,6 +5,11 @@ public struct ClaudeClient: Sendable {
     /// A search-heavy turn can hit the server's iteration cap and come back as
     /// `pause_turn`; resume it a bounded number of times.
     static let maxResumes = 3
+    /// Upper bound on model → tool → model round trips within one answer.
+    static let maxToolSteps = 8
+
+    /// Runs one of the app's tools: name and JSON input in, result text out.
+    public typealias ToolHandler = @Sendable (String, Data) async -> ToolOutcome
 
     private let session: URLSession
 
@@ -17,7 +22,6 @@ public struct ClaudeClient: Sendable {
     /// The user's master prompt followed by the constraints that come from the app
     /// itself (popover width, search, today's date) and are not the user's to maintain.
     static func systemPrompt(master: String, spoken: Bool = false, now: Date = Date()) -> String {
-        let date = now.formatted(.iso8601.year().month().day())
         let persona = master.trimmingCharacters(in: .whitespacesAndNewlines)
         return """
         \(persona.isEmpty ? MasterPrompt.standard : persona)
@@ -26,8 +30,29 @@ public struct ClaudeClient: Sendable {
         Технические условия окна чата. Оно узкое, около 360 точек в ширину: пиши в Markdown, но \
         без заголовков и без широких таблиц; короткий список или пара строк кода — нормально. У \
         тебя есть веб-поиск: пользуйся им, когда вопрос зависит от актуальных или редких \
-        сведений, и не трать его на то, что и так хорошо знаешь. Сегодня \(date).\(spoken ? spokenNote : "")
+        сведений, и не трать его на то, что и так хорошо знаешь.
+
+        Напоминания. Когда Серёжа просит о чём-то напомнить, создай напоминание инструментом \
+        create_reminder, а не обещай на словах: без вызова инструмента ничего не сработает. Чтобы \
+        изменить или удалить напоминание, сначала найди его id через list_reminders. После \
+        действия коротко подтверди и назови точные дату и время. Список напоминаний Серёжа видит \
+        сам на вкладке Events.
+
+        Сейчас \(clock(now)).\(spoken ? spokenNote : "")
         """
+    }
+
+    /// Date, time, weekday and zone: the model turns "вечером" or "в пятницу" into an exact time from this.
+    static func clock(_ now: Date, timeZone: TimeZone = .current) -> String {
+        let stamp = DateFormatter()
+        stamp.locale = Locale(identifier: "en_US_POSIX")
+        stamp.timeZone = timeZone
+        stamp.dateFormat = "yyyy-MM-dd HH:mm"
+        let weekday = DateFormatter()
+        weekday.locale = Locale(identifier: "ru_RU")
+        weekday.timeZone = timeZone
+        weekday.dateFormat = "EEEE"
+        return "\(stamp.string(from: now)), \(weekday.string(from: now)), часовой пояс \(timeZone.identifier)"
     }
 
     /// Added when the question came by voice: the reply goes to a speech synthesizer.
@@ -62,6 +87,7 @@ public struct ClaudeClient: Sendable {
     }
 
     static func requestBody(model: ModelOption, master: String = MasterPrompt.standard, spoken: Bool = false,
+                            clientTools: [[String: Any]] = [],
                             messages: [[String: Any]], now: Date = Date()) -> [String: Any] {
         var body: [String: Any] = [
             "model": model.rawValue,
@@ -69,7 +95,7 @@ public struct ClaudeClient: Sendable {
             "stream": true,
             "system": systemPrompt(master: master, spoken: spoken, now: now),
             "messages": messages,
-            "tools": [["type": model.webSearchToolType, "name": "web_search", "max_uses": 5]],
+            "tools": [["type": model.webSearchToolType, "name": "web_search", "max_uses": 5]] + clientTools,
         ]
         if model.supportsEffort {
             // Quick lookups: keep thinking shallow so the first token arrives fast.
@@ -98,7 +124,8 @@ public struct ClaudeClient: Sendable {
     // MARK: - Chat
 
     public func streamReply(apiKey: String, model: ModelOption, masterPrompt: String, history: [ChatMessage],
-                            spoken: Bool = false, imageLoader: @escaping ImageLoader = { _ in nil })
+                            spoken: Bool = false, imageLoader: @escaping ImageLoader = { _ in nil },
+                            toolHandler: ToolHandler? = nil)
         -> AsyncThrowingStream<StreamEvent, Error>
     {
         AsyncThrowingStream { continuation in
@@ -106,8 +133,10 @@ public struct ClaudeClient: Sendable {
                 do {
                     guard !apiKey.isEmpty else { throw ClaudeError.missingAPIKey }
                     var messages = Self.apiMessages(from: history, imageLoader: imageLoader)
-                    for _ in 0...Self.maxResumes {
-                        let turn = try await runTurn(apiKey: apiKey, model: model, master: masterPrompt, spoken: spoken, messages: messages) {
+                    let usesTools = toolHandler != nil
+                    for _ in 0..<(Self.maxResumes + Self.maxToolSteps) {
+                        let turn = try await runTurn(apiKey: apiKey, model: model, master: masterPrompt, spoken: spoken,
+                                                     usesTools: usesTools, messages: messages) {
                             continuation.yield($0)
                         }
                         switch turn.stopReason {
@@ -115,7 +144,21 @@ public struct ClaudeClient: Sendable {
                             // No "continue" message: the API sees the trailing
                             // server_tool_use block and resumes on its own.
                             messages.append(["role": "assistant", "content": turn.contentBlocks])
-                            continue
+                        case "tool_use":
+                            guard let toolHandler else { throw ClaudeError.stream(message: "unexpected tool call") }
+                            messages.append(["role": "assistant", "content": turn.contentBlocks])
+                            var results: [[String: Any]] = []
+                            for block in turn.contentBlocks where block["type"] as? String == "tool_use" {
+                                let name = block["name"] as? String ?? ""
+                                continuation.yield(.toolUse(name: name))
+                                let input = (try? JSONSerialization.data(withJSONObject: block["input"] ?? [:])) ?? Data("{}".utf8)
+                                let outcome = await toolHandler(name, input)
+                                results.append(["type": "tool_result", "tool_use_id": block["id"] ?? "",
+                                                "content": outcome.content, "is_error": outcome.isError])
+                            }
+                            // Every result of one assistant turn goes back in a single user message.
+                            messages.append(["role": "user", "content": results])
+                            if !turn.text.isEmpty { continuation.yield(.textDelta("\n\n")) }
                         case "refusal":
                             throw ClaudeError.refusal
                         case "max_tokens":
@@ -134,11 +177,12 @@ public struct ClaudeClient: Sendable {
         }
     }
 
-    private func runTurn(apiKey: String, model: ModelOption, master: String, spoken: Bool,
+    private func runTurn(apiKey: String, model: ModelOption, master: String, spoken: Bool, usesTools: Bool,
                          messages: [[String: Any]],
                          emit: (StreamEvent) -> Void) async throws -> TurnAccumulator
     {
-        let body = Self.requestBody(model: model, master: master, spoken: spoken, messages: messages)
+        let body = Self.requestBody(model: model, master: master, spoken: spoken,
+                                    clientTools: usesTools ? ReminderToolSchema.definitions : [], messages: messages)
         let betas = model.usesDefaultFallback ? ["server-side-fallback-2026-07-01"] : []
         let request = try Self.urlRequest(apiKey: apiKey, body: body, betas: betas)
 

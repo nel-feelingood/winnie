@@ -61,6 +61,7 @@ struct SettingsView: View {
             }
             Section("Голос") {
                 Toggle("Отвечать вслух на голосовые вопросы", isOn: $settings.speaksReplies)
+                Toggle("Проговаривать напоминания вслух", isOn: $settings.speaksReminders)
                 ShortcutRecorder(title: "Спросить голосом", shortcut: $settings.voiceShortcut)
             }
             Section("Шорткат") {
@@ -68,7 +69,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 740)
+        .frame(width: 520, height: 770)
         .onChange(of: settings.shortcut) { _, shortcut in onShortcutChange(shortcut) }
         .onChange(of: settings.voiceShortcut) { _, shortcut in onVoiceShortcutChange(shortcut) }
         .onChange(of: settings.petScale) { _, scale in onScaleChange(scale) }
@@ -137,7 +138,7 @@ final class SettingsWindowController {
             window.title = "Настройки Винни"
             window.contentView = NSHostingView(rootView: view)
             window.isReleasedWhenClosed = false
-            window.setContentSize(NSSize(width: 520, height: 740))
+            window.setContentSize(NSSize(width: 520, height: 770))
             window.center()
             self.window = window
         }

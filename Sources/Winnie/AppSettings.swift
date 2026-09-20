@@ -52,7 +52,13 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(speaksReplies, forKey: "speaksReplies") }
     }
 
+    /// Say a due reminder out loud. Off by default: a voice out of nowhere is a bad surprise on a call.
+    @Published var speaksReminders: Bool {
+        didSet { defaults.set(speaksReminders, forKey: "speaksReminders") }
+    }
+
     init() {
+        speaksReminders = defaults.bool(forKey: "speaksReminders")
         voiceShortcut = defaults.data(forKey: "voiceShortcut")
             .flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .defaultVoice
         speaksReplies = defaults.object(forKey: "speaksReplies") as? Bool ?? true

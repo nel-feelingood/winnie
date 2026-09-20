@@ -13,9 +13,14 @@ struct ChatView: View {
         VStack(spacing: 0) {
             header
             Divider()
-            messages
-            Divider()
-            input
+            switch controller.tab {
+            case .chat:
+                messages
+                Divider()
+                input
+            case .events:
+                EventsView(store: controller.reminders)
+            }
         }
         .overlay(alignment: .top) { toast }
         .onChange(of: controller.focusToken, initial: true) { inputFocused = true }
@@ -24,7 +29,22 @@ struct ChatView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
+            Picker("", selection: $controller.tab) {
+                Text("Chat").tag(ChatTab.chat)
+                Text("Events").tag(ChatTab.events)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+
+            if controller.tab == .chat { chatHeaderControls } else { Spacer() }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 40)
+    }
+
+    @ViewBuilder private var chatHeaderControls: some View {
             Menu {
                 ForEach(store.sortedSessions) { session in
                     Button {
@@ -47,7 +67,7 @@ struct ChatView: View {
             }
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
-            .fixedSize()
+            .frame(maxWidth: 130, alignment: .leading)
 
             Spacer()
 
@@ -55,9 +75,6 @@ struct ChatView: View {
                 controller.requestCapture()
             }
             HeaderButton(symbol: "plus", help: "Новый чат (⌘N)") { controller.newChat() }
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 40)
     }
 
     // MARK: - Messages

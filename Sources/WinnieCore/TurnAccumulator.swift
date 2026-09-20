@@ -5,6 +5,8 @@ public enum StreamEvent: Equatable, Sendable {
     /// The model started a web search; the query is known once the block closes.
     case searching(query: String?)
     case sources([Source])
+    /// The model is calling one of the app's own tools (reminders).
+    case toolUse(name: String)
 }
 
 public enum ClaudeError: Error, Equatable, LocalizedError {

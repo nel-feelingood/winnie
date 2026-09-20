@@ -7,7 +7,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = AppSettings()
     private let sprites = SpriteProvider()
     private lazy var store = ChatStore(directory: AppSettings.supportDirectory)
-    private lazy var controller = ChatController(store: store, settings: settings)
+    private lazy var reminders = ReminderStore(directory: AppSettings.supportDirectory)
+    private lazy var controller = ChatController(store: store, reminders: reminders, settings: settings)
+    private var scheduler: ReminderScheduler!
 
     private var petWindow: PetWindow!
     private var petView: PetView!
@@ -64,6 +66,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             isPetVisible: { [unowned self] in petWindow.isVisible }
         ))
 
+        scheduler = ReminderScheduler(store: reminders)
+        scheduler.onFire = { [unowned self] reminder in
+            controller.present(reminder)
+            showChatWithoutStealingFocus()
+        }
+        scheduler.onNotificationClicked = { [unowned self] in openChat(new: false) }
+        scheduler.onPermissionDenied = { [unowned self] in
+            controller.notify("Разреши Winnie уведомления в Системных настройках, иначе напоминания не всплывут")
+        }
+
         hotKey = HotKey(id: 1) { [unowned self] in toggleFromShortcut() }
         hotKey.register(settings.shortcut)
         voiceHotKey = HotKey(id: 2) { [unowned self] in
@@ -118,6 +130,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             petView.refresh()
         }
+    }
+
+    /// A reminder may arrive mid-sentence in another app: show the chat, but leave the
+    /// keyboard where it is.
+    private func showChatWithoutStealingFocus() {
+        showPet()
+        chatPanel.position(relativeTo: petWindow.frame)
+        chatPanel.orderFrontRegardless()
+        petView.refresh()
     }
 
     private func closeChat() {

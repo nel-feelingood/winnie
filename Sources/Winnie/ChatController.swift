@@ -3,8 +3,11 @@ import WinnieCore
 
 /// Drives one chat turn: sends the history, streams the reply into the store,
 /// and reports what the pet should be doing meanwhile.
+enum ChatTab: Hashable { case chat, events }
+
 @MainActor
 final class ChatController: ObservableObject {
+    @Published var tab = ChatTab.chat
     @Published var draft = ""
     @Published private(set) var isStreaming = false
     @Published private(set) var searchStatus: String?
@@ -16,6 +19,7 @@ final class ChatController: ObservableObject {
     @Published private(set) var isListening = false
 
     let store: ChatStore
+    let reminders: ReminderStore
     let settings: AppSettings
     var onActivity: (ChatActivity) -> Void = { _ in }
     /// The window layer owns hiding the chat during a capture and bringing it back.
@@ -30,8 +34,9 @@ final class ChatController: ObservableObject {
     /// flushed to the UI at most this often instead of per token.
     private static let flushInterval: Duration = .milliseconds(60)
 
-    init(store: ChatStore, settings: AppSettings) {
+    init(store: ChatStore, reminders: ReminderStore, settings: AppSettings) {
         self.store = store
+        self.reminders = reminders
         self.settings = settings
 
         listener.onTranscript = { [weak self] in self?.draft = $0 }
@@ -47,12 +52,32 @@ final class ChatController: ObservableObject {
         }
     }
 
+    // MARK: - Reminders
+
+    /// A due reminder, said by Winnie in a chat of its own. Written locally rather than by
+    /// the model: it must work offline and cost nothing. Being an ordinary assistant
+    /// message, it is context for a follow-up like «отложи на час».
+    func present(_ reminder: Reminder) {
+        discardPendingImages()
+        let session = store.startNew()
+        store.setTitle("Напоминание", for: session.id)
+        store.append(ChatMessage(role: .assistant, text: "Напоминаю: **\(reminder.title)**"), to: session.id)
+        tab = .chat
+        onActivity(.talking)
+        if settings.speaksReminders { speaker.speak("Напоминаю: \(reminder.title)") }
+        Task {
+            try? await Task.sleep(for: .seconds(5))
+            if !isStreaming, !speaker.isSpeaking { onActivity(.none) }
+        }
+    }
+
     // MARK: - Voice
 
     /// Mic button and voice shortcut: start listening, or finish early and send.
     func toggleListening() {
         if isListening { return listener.finish() }
         guard !isStreaming else { return }
+        tab = .chat
         speaker.stop()
         draft = ""
         isListening = true
@@ -103,6 +128,7 @@ final class ChatController: ObservableObject {
     // MARK: - Sessions
 
     func newChat() {
+        tab = .chat
         stop()
         discardPendingImages()
         store.startNew()
@@ -183,7 +209,12 @@ final class ChatController: ObservableObject {
             for try await event in client.streamReply(apiKey: apiKey, model: settings.model,
                                                              masterPrompt: settings.masterPrompt, history: history,
                                                              spoken: speaks,
-                                                             imageLoader: { ImageStore.data(for: $0) }) {
+                                                             imageLoader: { ImageStore.data(for: $0) },
+                                                             toolHandler: { [reminders] name, input in
+                                                                 await MainActor.run {
+                                                                     ReminderTools(store: reminders).execute(name: name, input: input)
+                                                                 }
+                                                             }) {
                 switch event {
                 case .textDelta(let piece):
                     if searchStatus != nil { searchStatus = nil }
@@ -197,6 +228,9 @@ final class ChatController: ObservableObject {
                     if ContinuousClock.now - lastFlush >= Self.flushInterval { flush() }
                 case .searching(let query):
                     searchStatus = query.map { "Ищу: \($0)" } ?? "Ищу в интернете…"
+                    onActivity(.thinking)
+                case .toolUse(let name):
+                    searchStatus = name == "list_reminders" ? "Смотрю напоминания…" : "Записываю напоминание…"
                     onActivity(.thinking)
                 case .sources(let sources):
                     store.update(replyID, in: sessionID) { $0.sources = sources }
