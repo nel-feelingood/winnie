@@ -486,7 +486,7 @@ private struct TelegramSection: View {
             case .waitingForCode:
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Отправь этот код своему боту в Telegram")
+                        Text(telegram.botName.isEmpty ? "Отправь этот код своему боту в Telegram" : "Отправь этот код боту @\(telegram.botName)")
                         Text("Кто первым пришлёт код, тому бот и будет отвечать.").font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -495,7 +495,8 @@ private struct TelegramSection: View {
                 Button("Отключить") { telegram.disconnect() }
             case .connected(let name):
                 HStack {
-                    Label(name.isEmpty ? "Бот привязан" : "Бот отвечает: \(name)", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                    Label((telegram.botName.isEmpty ? "Бот" : "@\(telegram.botName)") + (name.isEmpty ? " привязан" : " отвечает: \(name)"),
+                          systemImage: "checkmark.circle.fill").foregroundStyle(.green)
                     Spacer()
                     Button("Отвязать") { telegram.unpair() }
                     Button("Отключить") { telegram.disconnect() }

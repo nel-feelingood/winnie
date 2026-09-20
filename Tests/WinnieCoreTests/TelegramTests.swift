@@ -20,6 +20,11 @@ import Testing
         #expect(TelegramAPI.errorDescription(Data(#"{"ok":false,"description":"Unauthorized"}"#.utf8)) == "Unauthorized")
     }
 
+    @Test func tokenCheckReadsTheBotName() {
+        #expect(TelegramAPI.botUsername(Data(#"{"ok":true,"result":{"id":1,"is_bot":true,"username":"winnie_pooh_bot"}}"#.utf8)) == "winnie_pooh_bot")
+        #expect(TelegramAPI.botUsername(Data(#"{"ok":false,"error_code":401,"description":"Unauthorized"}"#.utf8)) == nil)
+    }
+
     @Test func largeChatIdentifiersSurvive() throws {
         let data = Data(#"{"ok":true,"result":[{"update_id":1,"message":{"chat":{"id":5123456789,"type":"private"},"text":"hi"}}]}"#.utf8)
         #expect(try #require(TelegramAPI.parseUpdates(data)).messages.first?.chatID == 5_123_456_789)

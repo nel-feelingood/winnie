@@ -14,6 +14,8 @@ final class TelegramBridge: ObservableObject {
 
     @Published private(set) var status = Status.off
     @Published private(set) var pairingCode = ""
+    /// The bot's @username, so the owner knows whom to write to.
+    @Published private(set) var botName = ""
 
     /// Produces Winnie's answer to a message from the owner.
     var answer: (String) async -> String = { _ in "" }
@@ -88,6 +90,11 @@ final class TelegramBridge: ObservableObject {
     private func poll() async {
         let token = Keychain.load(.telegramBotToken)
         guard !token.isEmpty else { return status = .off }
+        // A quick call first. The long poll below only returns when a message arrives, so waiting
+        // on it to learn that the token works would leave the owner with no code to send.
+        guard await verify(token) else { return }
+        status = ownerChatID == nil ? .waitingForCode : .connected(ownerName)
+
         var offset = defaults.integer(forKey: "telegramOffset")
         var backoff: UInt64 = 2
 
@@ -108,8 +115,7 @@ final class TelegramBridge: ObservableObject {
                     continue
                 }
                 backoff = 2
-                if case .failed = status { status = .connecting }
-                if status == .connecting { status = ownerChatID == nil ? .waitingForCode : .connected(ownerName) }
+                if case .failed = status { status = ownerChatID == nil ? .waitingForCode : .connected(ownerName) }
                 if let last = parsed.lastUpdateID {
                     offset = last + 1
                     defaults.set(offset, forKey: "telegramOffset")
@@ -124,6 +130,31 @@ final class TelegramBridge: ObservableObject {
                 backoff = min(backoff * 2, 60)
             }
         }
+    }
+
+    /// Confirms the token with `getMe`, retrying while offline. False means the token was rejected.
+    private func verify(_ token: String) async -> Bool {
+        guard let url = TelegramAPI.url(token: token, method: "getMe") else {
+            status = .failed("Неверный токен.")
+            return false
+        }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 15
+        var backoff: UInt64 = 2
+        while !Task.isCancelled {
+            if let (data, _) = try? await session.data(for: request) {
+                if let name = TelegramAPI.botUsername(data) {
+                    botName = name
+                    return true
+                }
+                status = .failed("Telegram не принял токен: \(TelegramAPI.errorDescription(data) ?? "неизвестная ошибка"). Проверь, что он скопирован целиком.")
+                return false
+            }
+            // No network yet (just woke up, no Wi-Fi): keep trying, up to once a minute.
+            try? await Task.sleep(nanoseconds: backoff * 1_000_000_000)
+            backoff = min(backoff * 2, 60)
+        }
+        return false
     }
 
     private func handle(_ message: TelegramMessage) async {

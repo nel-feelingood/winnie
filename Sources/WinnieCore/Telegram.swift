@@ -39,6 +39,13 @@ public enum TelegramAPI {
         return (messages, last)
     }
 
+    /// The bot's @username from a `getMe` response; nil when the token was rejected.
+    public static func botUsername(_ data: Data) -> String? {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any], object["ok"] as? Bool == true,
+              let bot = object["result"] as? [String: Any] else { return nil }
+        return bot["username"] as? String ?? ""
+    }
+
     public static func errorDescription(_ data: Data) -> String? {
         guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any], object["ok"] as? Bool == false else { return nil }
         return object["description"] as? String
