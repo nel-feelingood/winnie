@@ -36,6 +36,10 @@ let mailDigest = """
 MainActor.assumeIsolated {
     let app = NSApplication.shared
     app.setActivationPolicy(.accessory)
+    // WINNIE_APPEARANCE=light|dark renders in that theme whatever the system uses; the site needs both.
+    if let theme = ProcessInfo.processInfo.environment["WINNIE_APPEARANCE"] {
+        app.appearance = NSAppearance(named: theme == "light" ? .aqua : .darkAqua)
+    }
 
     // `editor-test`: drives the real note editor the way the keyboard does, and prints what happened.
     if mode == "editor-test" {

@@ -1,234 +1,184 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Winnie — Винни-Пух на рабочем столе Mac</title>
-<meta name="description" content="Winnie — десктоп-питомец и ИИ-помощник для macOS: Винни-Пух поверх всех окон с чатом Claude. Веб-поиск, напоминания, заметки, голос, Gmail, Telegram. Открытый код, MIT.">
-<meta property="og:title" content="Winnie — Винни-Пух на рабочем столе Mac">
-<meta property="og:description" content="Winnie — десктоп-питомец и ИИ-помощник для macOS: Винни-Пух поверх всех окон с чатом Claude. Веб-поиск, напоминания, заметки, голос, Gmail, Telegram. Открытый код, MIT.">
+<title>Winnie – Винни-Пух на рабочем столе Mac</title>
+<meta name="description" content="Приложение для macOS: Винни-Пух на рабочем столе, по клику открывается чат с Claude. Диктовка по шорткату, напоминания, быстрые команды, заметки. Открытый код, MIT.">
+<meta property="og:title" content="Winnie – Винни-Пух на рабочем столе Mac">
+<meta property="og:description" content="По клику открывается чат с Claude. Диктовка по шорткату, напоминания, быстрые команды, заметки.">
 <meta property="og:image" content="https://nel-feelingood.github.io/winnie/images/sprites/hover.png">
 <meta property="og:url" content="https://nel-feelingood.github.io/winnie/">
 <link rel="icon" href="images/favicon.png">
+<script>/* Theme before first paint: saved choice, otherwise the system's. */
+(function(){var t=null;try{t=localStorage.getItem('theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div class="wrap">
-  <nav>
+<div class="w">
+  <header class="top">
     <a class="brand" href="index.html"><img src="images/favicon.png" alt="">Winnie</a>
-    <div class="nav-links">
-      <a href="features.html">Возможности</a>
-      <a href="usecases.html">Сценарии</a>
-      <a href="settings.html">Настройки</a>
-      <a href="install.html">Установка</a>
-      <a href="about.html">Автор</a>
-      <a href="https://github.com/nel-feelingood/winnie">GitHub</a>
-    </div>
-  </nav>
-</div>
+    <nav class="seg" aria-label="Вкладки приложения"><a href="chat.html">Chat</a><a href="events.html">Events</a><a href="notes.html">Notes</a></nav>
+    <nav class="top-links"><a href="features.html">Возможности</a><a href="install.html">Установка</a><a href="about.html">Автор</a></nav>
+    <button class="pill" id="theme" type="button" aria-label="Тема оформления">Авто</button>
+    <a class="pill" href="https://github.com/nel-feelingood/winnie"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+  </header>
 
-<div class="wrap">
-  <header class="hero" id="top">
-    <div class="hero-text">
-      <span class="eyebrow">Приложение для macOS · открытый код</span>
-      <h1>Винни-Пух на рабочем столе <em>с чатом Claude внутри</em></h1>
-      <p class="lead">Winnie — десктоп-питомец и ИИ-помощник в одном. Медведь из советского мультфильма живёт в углу экрана
-        поверх всех окон, а по клику или шорткату открывает компактный чат: перевести, найти, напомнить, записать.
-        Спросил, получил ответ, закрыл — без браузера и вкладок.</p>
-      <ul class="reqs">
-        <li>macOS 14+</li><li>Command Line Tools, Xcode не нужен</li><li>свой ключ Anthropic API</li><li>бесплатно · MIT</li>
-      </ul>
-      <p class="prompt-intro"><b>Установка — одним промптом.</b> Скопируй и вставь в Claude Code или другого ИИ-агента с терминалом: он сам скачает, соберёт и запустит Winnie, а потом по шагам поможет подключить Claude, Gmail и Telegram — на каждом шаге можно ответить «позже».</p>
-      <div class="prompt prompt-compact">
-      <div class="prompt-head"><span>Промпт для установки</span><button type="button" class="copy" data-copy="install-prompt">Скопировать</button></div>
-      <pre id="install-prompt" tabindex="0">Установи и настрой на этом Mac приложение Winnie — десктоп-питомца с чатом Claude (открытый код, MIT).
+  <h1><span class="l"><i>Винни-Пух</i></span><span class="l"><i>на рабочем столе Mac.</i></span><span class="l"><i>По клику открывается</i></span><span class="l"><i>чат с <em>Claude</em>.</i></span></h1>
+
+  <div class="hero">
+    <div>
+      <p class="sub">Слушает по шорткату, ставит напоминания, выполняет быстрые команды, ведёт заметки. Окно чата закрывается, медведь остаётся в углу экрана.</p>
+      <div class="prompt">
+        <div class="prompt-head"><span>Промпт для установки</span><button type="button" class="btn small" data-copy="install-prompt"><span class="roll"><span>Скопировать</span><span>Скопировано</span></span></button></div>
+        <pre id="install-prompt" tabindex="0">Установи и настрой на этом Mac приложение Winnie – десктоп-питомца с чатом Claude (открытый код, MIT).
 Репозиторий: https://github.com/nel-feelingood/winnie
 
 ЧАСТЬ 1. УСТАНОВКА
 
 1. Проверь, что это macOS 14 или новее и что стоят Command Line Tools (xcode-select -p). Если их нет, запусти xcode-select --install и попроси меня дождаться конца установки.
-2. Клонируй репозиторий в ~/Developer/winnie. Если папка уже есть — сделай в ней git pull.
+2. Клонируй репозиторий в ~/Developer/winnie. Если папка уже есть – сделай в ней git pull.
 3. Запусти ./scripts/install.sh. Скрипт соберёт приложение, положит его в /Applications и запустит. Первая сборка идёт пару минут.
-4. Убедись, что /Applications/Winnie.app существует и процесс Winnie запущен. Если сборка упала — покажи ошибку и предложи, как её исправить.
+4. Убедись, что /Applications/Winnie.app существует и процесс Winnie запущен. Если сборка упала – покажи ошибку и предложи, как её исправить.
 
 ЧАСТЬ 2. НАСТРОЙКА
 
-Иди по шагам по порядку. Перед каждым шагом коротко объясни, что он даёт, и спроси меня: «Подключим сейчас или позже?» Если я отвечаю «позже» — переходи к следующему шагу и запомни, что отложено.
+Иди по шагам по порядку. Перед каждым шагом коротко объясни, что он даёт, и спроси меня: «Подключим сейчас или позже?» Если я отвечаю «позже» – переходи к следующему шагу и запомни, что отложено.
 
 Правила для всей настройки:
-- Никогда не проси меня присылать ключи, токены и секреты в чат и не вводи их сам. Я вставляю их только в окно настроек Winnie — оттуда они попадают в Связку ключей macOS.
-- Твоя роль — вести меня: называй одно действие за раз («открой…», «нажми…») и жди, пока я отвечу «готово» или опишу, что вижу.
-- Названия пунктов на сторонних сайтах могут немного отличаться — ориентируйся по смыслу.
+- Никогда не проси меня присылать ключи, токены и секреты в чат и не вводи их сам. Я вставляю их только в окно настроек Winnie – оттуда они попадают в Связку ключей macOS.
+- Твоя роль – вести меня: называй одно действие за раз («открой…», «нажми…») и жди, пока я отвечу «готово» или опишу, что вижу.
+- Названия пунктов на сторонних сайтах могут немного отличаться – ориентируйся по смыслу.
 - Системные настройки безопасности сам не меняй, только объясняй, что нажать.
 
-5. Claude API — нужен, чтобы чат вообще работал.
+5. Claude API – нужен, чтобы чат вообще работал.
    - На console.anthropic.com: пополнить баланс (Billing), затем API Keys → Create Key → скопировать ключ.
-   - В Winnie: настройки (открываются сами при первом запуске, иначе — шестерёнка в окне чата) → раздел «API» → поле Claude → вставить ключ → «Сохранить». Если macOS спросит про доступ к Связке ключей — «Разрешать всегда».
-   - Проверка: кликнуть по Винни и написать «привет» — он должен ответить.
+   - В Winnie: настройки (открываются сами при первом запуске, иначе – шестерёнка в окне чата) → раздел «API» → поле Claude → вставить ключ → «Сохранить». Если macOS спросит про доступ к Связке ключей – «Разрешать всегда».
+   - Проверка: кликнуть по Винни и написать «привет» – он должен ответить.
 
-6. Gmail — по желанию; Винни сможет читать почту и делать сводки. Доступ только на чтение, сервис Google бесплатный.
+6. Gmail – по желанию; Винни сможет читать почту и делать сводки. Доступ только на чтение, сервис Google бесплатный.
    - На console.cloud.google.com: создать проект → APIs & Services → Library → включить Gmail API.
    - OAuth consent screen: тип External, заполнить название и почту, в Test users добавить свой адрес.
    - Credentials → Create credentials → OAuth client ID → тип Desktop app → появятся Client ID и Client Secret.
-   - В Winnie: «API» → «Почта · Gmail» → вставить Client ID и Client Secret → «Войти» → разрешить доступ в браузере. Предупреждение Google о непроверенном приложении — это нормально, приложение моё собственное.
+   - В Winnie: «API» → «Почта · Gmail» → вставить Client ID и Client Secret → «Войти» → разрешить доступ в браузере. Предупреждение Google о непроверенном приложении – это нормально, приложение моё собственное.
    - Предупреди меня: пока проект в статусе Testing, входить придётся заново раз в 7 дней; кнопка Publish app на экране согласия это убирает.
    - Проверка: спросить Винни «что важного в почте?».
 
-7. Telegram-бот — по желанию; тот же Винни в телефоне и напоминания в Telegram.
+7. Telegram-бот – по желанию; тот же Винни в телефоне и напоминания в Telegram.
    - В Telegram написать @BotFather → /newbot → придумать имя и username → получить токен.
    - В Winnie: «API» → «Telegram» → вставить токен → «Подключить бота» → появится шестизначный код.
-   - Отправить этот код своему боту в личном чате — бот привяжется ко мне и больше никому отвечать не будет.
+   - Отправить этот код своему боту в личном чате – бот привяжется ко мне и больше никому отвечать не будет.
    - Проверка: написать боту «привет». Напомни: бот работает, пока Winnie запущен на Mac.
 
-8. Разрешения macOS. Объясни, что система спросит сама: уведомления — при запуске (нужны для напоминаний); микрофон и распознавание речи — при первом нажатии на микрофон; запись экрана — при первом скриншоте, после выдачи Winnie нужно перезапустить.
+8. Разрешения macOS. Объясни, что система спросит сама: уведомления – при запуске (нужны для напоминаний); микрофон и распознавание речи – при первом нажатии на микрофон; запись экрана – при первом скриншоте, после выдачи Winnie нужно перезапустить.
 
 9. Итог. Коротко напиши: что установлено, что подключено, что отложено и как к этому вернуться (настройки Winnie → «API»; подробная инструкция: https://nel-feelingood.github.io/winnie/install.html). Упомяни, что MCP-серверы, свои API и сертификат «Winnie Dev» для пересборок описаны там же.</pre>
+      </div>
+      <p class="prompt-note">Вставляется в Claude Code или другого агента с терминалом. Агент собирает приложение и помогает с настройкой. <a href="install.html">Установка вручную</a></p>
+      <p class="reqs">macOS 14+ · ключ Anthropic API · открытый код, MIT</p>
     </div>
-      <p class="cta-hint"><a href="install.html">Установить руками и настроить</a> · <a href="https://github.com/nel-feelingood/winnie">исходники на GitHub</a></p>
+    <div class="scene" role="img" aria-label="Рабочий стол Mac: медведь в правом нижнем углу, над ним окно чата">
+      <div class="bar"><span>Finder Файл Правка Вид</span><span><img src="images/favicon.png" alt=""> Вс 14:00</span></div>
+      <div class="win"><u style="width:62%"></u><u style="width:88%"></u><u style="width:74%"></u><u style="width:40%"></u><u style="width:81%"></u><u style="width:57%"></u><u style="width:70%"></u></div>
+      <img class="only-light panel" src="images/app/empty-light.png" alt="" loading="lazy"><img class="only-dark panel" src="images/app/empty-dark.png" alt="" loading="lazy">
+      <img class="pet" id="pet" src="images/sprites/idle.png" alt="">
     </div>
+  </div>
 
-    <div class="scene" role="img" aria-label="Winnie на рабочем столе Mac: медведь в углу экрана, над ним окно чата">
-      <div class="menubar"><span><b>Finder</b> Файл Правка Вид</span><span><img src="images/favicon.png" alt=""> Вс 16:20</span></div>
-      <div class="win"><div class="win-bar"><i></i><i></i><i></i></div><div class="win-body"><u style="width:62%"></u><u style="width:88%"></u><u style="width:74%"></u><u style="width:40%"></u><u style="width:81%"></u><u style="width:57%"></u></div></div>
-      <img class="panel" src="images/chat.png" alt="">
-      <div class="scene-bubble" id="bubble">Привет!</div>
-      <img class="scene-pet" id="pet" src="images/sprites/idle.png" alt="">
-      <div class="dock"><i></i><i></i><i></i><i></i><i></i></div>
+  <section>
+    <div class="head"><span class="n">01</span><h2>Что он делает</h2></div>
+    <div class="frame cases"><div class="list" id="list" role="tablist" aria-label="Сценарии"></div>
+      <div class="stage" id="stage"><div class="hint" id="hint"></div><div class="say" id="say"></div><div class="out" id="out"></div><img class="stage-pet" id="stage-pet" src="images/sprites/idle.png" alt=""></div></div>
+  </section>
+
+  <section>
+    <div class="head"><span class="n">02</span><h2>Три вкладки</h2></div>
+    <div class="frame tabs-demo">
+      <div class="tabs-text">
+        <div class="seg" role="tablist" id="tabs"><button role="tab" aria-selected="true" data-tab="chat">Chat</button><button role="tab" aria-selected="false" data-tab="events">Events</button><button role="tab" aria-selected="false" data-tab="notes">Notes</button></div>
+        <div class="tab-body" data-body="chat"><h3>Одноразовые диалоги</h3><ul>
+          <li><b>Быстрые команды.</b> Кнопки в пустом чате. У каждой подпись и своя инструкция.</li>
+          <li><b>Голос.</b> Диктовка по шорткату из любого приложения, ответ вслух.</li>
+          <li><b>Скриншот.</b> Область экрана прикладывается к вопросу.</li></ul><a class="btn ghost small" href="chat.html">Подробнее о Chat</a></div>
+        <div class="tab-body" data-body="events" hidden><h3>Напоминания</h3><ul>
+          <li><b>Одной фразой.</b> «Через 40 минут», «в пятницу в 10», «каждый будний день».</li>
+          <li><b>Уведомление приходит всегда.</b> Даже когда медведь спрятан.</li>
+          <li><b>Правка словами.</b> «Отложи на час», «удали».</li></ul><a class="btn ghost small" href="events.html">Подробнее об Events</a></div>
+        <div class="tab-body" data-body="notes" hidden><h3>Заметки</h3><ul>
+          <li><b>Markdown-файлы.</b> Лежат на диске, открываются чем угодно.</li>
+          <li><b>Редактор без разметки.</b> Меню по /, чекбоксы, картинки.</li>
+          <li><b>Медведь пишет сам.</b> «Запиши в Идеи», «что у меня в заметке про отпуск».</li></ul><a class="btn ghost small" href="notes.html">Подробнее о Notes</a></div>
+      </div>
+      <div class="tabs-shot"><div data-shot="chat"><img class="only-light" src="images/app/chat-light.png" alt="" loading="lazy"><img class="only-dark" src="images/app/chat-dark.png" alt="" loading="lazy"></div><div data-shot="events" hidden><img class="only-light" src="images/app/events-light.png" alt="" loading="lazy"><img class="only-dark" src="images/app/events-dark.png" alt="" loading="lazy"></div><div data-shot="notes" hidden><img class="only-light" src="images/app/note-light.png" alt="" loading="lazy"><img class="only-dark" src="images/app/note-dark.png" alt="" loading="lazy"></div></div>
     </div>
-  </header>
+  </section>
+
+  <section>
+    <div class="head"><span class="n">03</span><h2>Как его вызвать</h2></div>
+    <div class="frame call">
+      <div>
+        <div class="combo"><kbd class="key">⇧</kbd><kbd class="key">⌘</kbd><kbd class="key">E</kbd><p><b>Слушать</b>Из любого приложения. Первое нажатие включает микрофон, второе выключает.</p></div>
+        <div class="combo"><kbd class="key">⌃</kbd><kbd class="key">⌥</kbd><kbd class="key">Space</kbd><p><b>Показать или спрятать</b>Открывает последний чат с курсором в поле ввода.</p></div>
+        <div class="combo"><kbd class="key">Клик</kbd><p><b>По медведю</b>Открывает и закрывает чат. При наведении появляется кнопка нового диалога.</p></div>
+        <p class="reqs">Оба шортката настраиваются.</p>
+      </div>
+      <div class="resize">
+        <h3>Размер окна</h3>
+        <p>Окно чата тянется за край и запоминает размер. Здесь тоже: правый нижний угол.</p>
+        <div class="resize-box" id="resize"><img class="only-light" src="images/app/chat-light.png" alt="" loading="lazy"><img class="only-dark" src="images/app/chat-dark.png" alt="" loading="lazy"></div>
+        <p class="resize-size" id="resize-size">380 × 520</p>
+        <p class="reqs">от 320 × 360 до 760 × 1000</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><span class="n">04</span><h2>Кадры</h2></div>
+    <div class="frame"><div class="screen"><div class="pic"><img id="frame" src="images/sprites/idle.png" alt=""></div>
+      <div class="info"><span class="k" id="frame-n">01 / 09</span><h3 id="frame-t"></h3><p id="frame-d"></p><button class="pill" id="frame-play" type="button">Пауза</button></div></div>
+      <div class="strip" id="strip" role="tablist" aria-label="Кадры"></div></div>
+  </section>
+
+  <section>
+    <div class="head"><span class="n">05</span><h2>Где хранятся данные</h2></div>
+    <ol class="rules">
+      <li><span>Чаты, заметки и память – файлы на Mac<small>Папка ~/Library/Application Support/Winnie.</small></span></li>
+      <li><span>Ключи и токены – в Связке ключей macOS<small>В файлы настроек и в репозиторий они не попадают.</small></span></li>
+      <li><span>Запросы идут напрямую в Anthropic API<small>Промежуточных серверов и аналитики нет.</small></span></li>
+      <li><span>Код открыт<small>Лицензия MIT. <a href="https://github.com/nel-feelingood/winnie">Репозиторий на GitHub</a></small></span></li>
+    </ol>
+  </section>
+
+  <section class="faq">
+    <div class="head"><span class="n">06</span><h2>Вопросы</h2></div>
+    <details><summary>Сколько стоит</summary><p>Приложение бесплатное. Запросы к Claude оплачиваются по тарифам Anthropic, расходы видны в настройках.</p></details>
+    <details><summary>Почему нет готовой сборки</summary><p>У проекта нет подписи Apple. Сборка из исходников занимает несколько минут, Xcode не нужен.</p></details>
+    <details><summary>Можно ли заменить персонажа</summary><p>Да. Кадры – 13 PNG-файлов в папке приложения.</p></details>
+    <details><summary>Работает ли без интернета</summary><p>Нет, отвечает Claude. Заметки и напоминания остаются доступны.</p></details>
+  </section>
+
+  <section>
+    <div class="head"><span class="n">07</span><h2>Написать автору</h2></div>
+    <div class="contact">
+      <div><p>Кнопка открывает почтовую программу с готовым письмом. Сайт ничего не отправляет сам.</p>
+        <p><a href="mailto:nelfeelingood@gmail.com?subject=Winnie">nelfeelingood@gmail.com</a><br><a href="https://t.me/otetslsd" rel="me">Telegram</a> · <a href="https://www.instagram.com/interrobong/" rel="me">Instagram</a> · <a href="about.html">Об авторе</a></p></div>
+      <form class="form" id="contact-form" data-mail="nelfeelingood@gmail.com">
+        <label>Имя<input name="name" type="text" autocomplete="name"></label>
+        <label>Тема<select name="topic"><option>Идея</option><option>Ошибка</option><option>Вопрос</option></select></label>
+        <label>Сообщение<textarea name="message" rows="3" required></textarea></label>
+        <button class="btn" type="submit">Написать письмо</button>
+      </form>
+    </div>
+  </section>
 </div>
 
-<section class="band" id="features">
-  <div class="wrap">
-    <h2>Фичи</h2>
-    <p class="sub">Полноценный помощник, до которого один клик или один шорткат.</p>
-    <div class="grid">
-      <div class="card"><div class="ico">💬</div><h3>Карманный чат</h3>
-        <p>Claude Opus, Sonnet или Haiku. Ответы печатаются на лету, с Markdown и веб-поиском. Чаты называются сами.</p></div>
-      <div class="card"><div class="ico">⏰</div><h3>Напоминания</h3>
-        <p>«Напомни завтра в десять позвонить». Разовые и повторяющиеся, с системным уведомлением.</p></div>
-      <div class="card"><div class="ico">📝</div><h3>Заметки</h3>
-        <p>Markdown-файлы с чистым редактором: меню по <code>/</code>, чекбоксы, картинки. Медведь ведёт их сам.</p></div>
-      <div class="card"><div class="ico">🎙️</div><h3>Голос</h3>
-        <p>Диктовка по шорткату и озвучка ответов средствами macOS. Бесплатно, распознавание на устройстве.</p></div>
-      <div class="card"><div class="ico">📸</div><h3>Скриншоты</h3>
-        <p>Выдели область экрана или вставь картинку из буфера — и спроси, что на ней.</p></div>
-      <div class="card"><div class="ico">⚡</div><h3>Быстрые действия</h3>
-        <p>Свои кнопки с готовыми инструкциями: перевод, сводка почты, таймер.</p></div>
-      <div class="card"><div class="ico">🧠</div><h3>Память и характер</h3>
-        <p>«Запомни, что…» — и он помнит между чатами. Характер задаётся редактируемым промптом.</p></div>
-      <div class="card"><div class="ico">🎛️</div><h3>Управляет собой</h3>
-        <p>«Стань побольше», «выключи сны», «добавь кнопку» — настройки меняются просьбой в чате.</p></div>
-      <div class="card"><div class="ico">💸</div><h3>Расходы на виду</h3>
-        <p>Учёт токенов и стоимости по моделям, экономный промпт с кэшированием.</p></div>
-    </div>
-    <p class="more"><a href="features.html">Все возможности подробно →</a> · <a href="usecases.html">Сценарии использования →</a></p>
-  </div>
-</section>
-
-<section id="integrations">
-  <div class="wrap">
-    <h2>Интеграции</h2>
-    <p class="sub">Подключается к тому, чем ты уже пользуешься. Всё необязательно и настраивается в приложении.</p>
-    <div class="grid">
-      <div class="card"><div class="ico">🤖</div><h3>Claude API</h3>
-        <p>Прямое подключение к Anthropic со своим ключом: без посредников и подписок, платишь только за запросы.</p></div>
-      <div class="card"><div class="ico">📬</div><h3>Gmail</h3>
-        <p>Сводка почты и поиск писем. Доступ только на чтение — отправить или удалить письмо нельзя.</p></div>
-      <div class="card"><div class="ico">✈️</div><h3>Telegram-бот</h3>
-        <p>Тот же Винни в телефоне: та же память, события и напоминания, пока приложение запущено на Mac.</p></div>
-      <div class="card"><div class="ico">🔌</div><h3>MCP-серверы</h3>
-        <p>Подключай рабочие инструменты по Model Context Protocol, в том числе со входом через OAuth.</p></div>
-      <div class="card"><div class="ico">🌐</div><h3>Свои HTTP-API</h3>
-        <p>Адрес, описание и токен — и медведь ходит в твой сервис. Запросы привязаны к хосту, запись включается отдельно.</p></div>
-      <div class="card"><div class="ico">🍎</div><h3>macOS</h3>
-        <p>Системные уведомления, Связка ключей, распознавание и синтез речи, глобальные шорткаты, строка меню.</p></div>
-    </div>
-    <p class="more"><a href="install.html#gmail">Как подключить →</a></p>
-  </div>
-</section>
-
-<section class="band" id="privacy">
-  <div class="wrap">
-    <h2>Приватность данных</h2>
-    <p class="sub">Приложение говорит с Claude API напрямую. Наружу уходит только то, что ты сам отправил в чат.</p>
-    <div class="grid">
-      <div class="card"><div class="ico">🏠</div><h3>Всё хранится локально</h3>
-        <p>Чаты, события, заметки и память лежат в <code>~/Library/Application Support/Winnie</code> — обычными файлами.</p></div>
-      <div class="card"><div class="ico">🔑</div><h3>Секреты — в Связке ключей</h3>
-        <p>Ключ API и токены никогда не попадают в файлы настроек и тем более в репозиторий.</p></div>
-      <div class="card"><div class="ico">🛡️</div><h3>Защита от инъекций</h3>
-        <p>Прочитав письмо, веб-страницу или данные MCP, медведь в этом ответе не может менять память, настройки и заметки.</p></div>
-      <div class="card"><div class="ico">👀</div><h3>Почта только на чтение</h3>
-        <p>Gmail подключается с правом <code>gmail.readonly</code>.</p></div>
-      <div class="card"><div class="ico">🔒</div><h3>Telegram под замком</h3>
-        <p>Бот отвечает только в привязанном личном чате; после пяти неверных кодов код меняется.</p></div>
-      <div class="card"><div class="ico">📖</div><h3>Открытый код</h3>
-        <p>Никаких серверов посередине и никакой аналитики. Всё, что делает приложение, можно прочитать.</p></div>
-    </div>
-  </div>
-</section>
-
-<section id="character">
-  <div class="wrap">
-    <h2>Живой характер</h2>
-    <p class="sub">Спрайты в духе мультфильма Фёдора Хитрука. Постоянной анимации нет — медведь не ест батарею.</p>
-    <div class="dreamer">
-      <div class="dreamer-pet"><img src="images/sprites/sleep.png" alt="Винни спит" loading="lazy"><div class="dreams" id="dreams" aria-hidden="true"></div></div>
-      <div>
-        <h3>Спит и видит сны</h3>
-        <p>Минута без дела — и Винни засыпает. Над спящим медведем всплывают эмодзи: то, что ему снится.
-          Чаще всего это мёд, женщины, трава, тачки и, увы, работа. Иногда — что угодно.</p>
-        <p class="dream-row" aria-hidden="true">🍯 🐝 💃 💋 🌿 🍀 🏎️ 🚙 💻 📈 ☕️</p>
-        <p class="fine">Сны отключаются в настройках, в разделе «Поведение».</p>
-      </div>
-      <div class="dreamer-pet"><img src="images/sprites/smoke-2.png" alt="Винни на перекуре" loading="lazy"></div>
-      <div>
-        <h3>Перекур в 16:20</h3>
-        <p>Каждый день ровно в 16:20 медведь устраивает перекур — даже если был спрятан. Можно попросить в чате: «перекур».</p>
-        <p class="fine">Тоже отключается.</p>
-      </div>
-    </div>
-    <div class="states states-6">
-      <div class="state"><img src="images/sprites/hover.png" alt="" loading="lazy"><b>Заметил тебя</b><span>при наведении курсора</span></div>
-      <div class="state"><img src="images/sprites/thinking.png" alt="" loading="lazy"><b>Думает</b><span>пока ждёт ответ модели</span></div>
-      <div class="state"><img src="images/sprites/talking.png" alt="" loading="lazy"><b>Рассказывает</b><span>когда приходит ответ</span></div>
-      <div class="state"><img src="images/sprites/listening.png" alt="" loading="lazy"><b>Слушает</b><span>во время диктовки</span></div>
-      <div class="state"><img src="images/sprites/drag.png" alt="" loading="lazy"><b>Висит</b><span>когда тащишь по экрану</span></div>
-      <div class="state"><img src="images/sprites/error.png" alt="" loading="lazy"><b>Разводит лапами</b><span>если что-то пошло не так</span></div>
-    </div>
-  </div>
-</section>
-
-<section class="band" id="contact">
-  <div class="wrap contact">
-    <div>
-      <h2>Написать автору</h2>
-      <p class="sub">Идеи, вопросы, найденные ошибки или просто спасибо — всё читаю.</p>
-      <p class="fine">Форма ничего никуда не отправляет сама: по кнопке откроется твоя почтовая программа с готовым письмом.
-        Можно и напрямую — <a href="mailto:nelfeelingood@gmail.com?subject=Winnie">nelfeelingood@gmail.com</a>. <a href="about.html">Об авторе →</a></p>
-      <p class="fine">Ещё я есть в <a href="https://t.me/otetslsd" rel="me">Telegram</a> и <a href="https://www.instagram.com/interrobong/" rel="me">Instagram</a>.</p>
-    </div>
-    <form id="contact-form" class="form" data-mail="nelfeelingood@gmail.com">
-      <label>Как тебя зовут<input name="name" type="text" autocomplete="name" placeholder="Имя"></label>
-      <label>О чём письмо<select name="topic"><option>Идея</option><option>Ошибка</option><option>Вопрос</option><option>Спасибо</option></select></label>
-      <label>Сообщение<textarea name="message" rows="5" required placeholder="Расскажи, что думаешь"></textarea></label>
-      <button class="btn btn-primary" type="submit">Написать письмо</button>
-    </form>
-  </div>
-</section>
-
-<footer>
-  <div class="wrap">
-    <div class="row">
-      <span>© 2026 Sergey Donskov · исходный код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
-      <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="about.html">Об авторе</a> · <a href="mailto:nelfeelingood@gmail.com?subject=Winnie">nelfeelingood@gmail.com</a></span>
-    </div>
-    <p>Лицензия MIT распространяется только на код. Винни-Пух — персонаж фильмов Фёдора Хитрука («Союзмультфильм»);
-      изображения нарисованы для личного использования и лицензией не покрываются. Проект не связан с Anthropic, Google и Telegram.</p>
-  </div>
-</footer>
+<footer><div class="w">
+  <span>© 2026 Sergey Donskov · код под лицензией <a href="https://github.com/nel-feelingood/winnie/blob/main/LICENSE">MIT</a></span>
+  <span><a href="https://github.com/nel-feelingood/winnie">GitHub</a> · <a href="about.html">Автор</a></span>
+  <p>Лицензия MIT распространяется только на код. Винни-Пух – персонаж фильмов Фёдора Хитрука («Союзмультфильм»), изображения сделаны для личного использования. Проект не связан с Anthropic, Google и Telegram.</p>
+</div></footer>
 <script src="site.js"></script>
 </body>
 </html>
