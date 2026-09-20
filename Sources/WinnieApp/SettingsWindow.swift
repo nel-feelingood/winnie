@@ -182,6 +182,15 @@ struct SettingsView: View {
                             .toggleStyle(.switch)
                             .controlSize(.mini)
                             .help("Включено — нажатие сразу отправляет инструкцию. Выключено — она подставляется в поле, и её можно дописать.")
+                        // Arrows rather than drag and drop: reordering by drag is unreliable inside a macOS Form.
+                        Button { moveQuickAction(action, by: -1) } label: { Image(systemName: "chevron.up") }
+                            .buttonStyle(.borderless)
+                            .disabled(settings.quickActions.first?.id == action.id)
+                            .help("Выше")
+                        Button { moveQuickAction(action, by: 1) } label: { Image(systemName: "chevron.down") }
+                            .buttonStyle(.borderless)
+                            .disabled(settings.quickActions.last?.id == action.id)
+                            .help("Ниже")
                         Button { settings.quickActions.removeAll { $0.id == action.id } } label: { Image(systemName: "trash") }
                             .buttonStyle(.borderless)
                             .help("Удалить")
@@ -206,6 +215,13 @@ struct SettingsView: View {
         } footer: {
             Footnote("Показываются над полем ввода, пока в чате нет сообщений. У кнопки короткая подпись и полная инструкция: на кнопке видна подпись, Винни получает инструкцию. Пиши её так, чтобы она была понятна без контекста. Тумблер «сразу»: включён — нажатие отправляет; выключен — текст подставляется в поле, чтобы его дописать.")
         }
+    }
+
+    private func moveQuickAction(_ action: QuickAction, by offset: Int) {
+        guard let index = settings.quickActions.firstIndex(where: { $0.id == action.id }) else { return }
+        let target = index + offset
+        guard settings.quickActions.indices.contains(target) else { return }
+        withAnimation(.easeInOut(duration: 0.15)) { settings.quickActions.swapAt(index, target) }
     }
 
     // MARK: - API
