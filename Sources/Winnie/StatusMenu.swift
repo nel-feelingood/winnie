@@ -13,18 +13,34 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         var isPetVisible: () -> Bool
     }
 
-    private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+    private let item: NSStatusItem
     private let settings: AppSettings
     private let actions: Actions
 
     init(settings: AppSettings, actions: Actions) {
         self.settings = settings
         self.actions = actions
+        item = Self.makeStatusItem()
         super.init()
         item.button?.image = Self.menuBarIcon()
         let menu = NSMenu()
         menu.delegate = self
         item.menu = menu
+    }
+
+    /// New status items are added at the far left, and on a notched MacBook with a full
+    /// menu bar that spot is behind the notch, where macOS silently hides the item.
+    /// Seeding the position macOS itself persists (points from the right edge) starts
+    /// Winnie among the visible items; after that the user's own ⌘-drag wins.
+    private static func makeStatusItem() -> NSStatusItem {
+        let name = "WinnieStatusItem"
+        let positionKey = "NSStatusItem Preferred Position \(name)"
+        if UserDefaults.standard.object(forKey: positionKey) == nil {
+            UserDefaults.standard.set(330.0, forKey: positionKey)
+        }
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        item.autosaveName = name
+        return item
     }
 
     /// Winnie's vector silhouette. As a template image only its shape matters: macOS
