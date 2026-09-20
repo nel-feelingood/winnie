@@ -294,13 +294,13 @@ struct SettingsView: View {
             ShortcutRecorder(title: "Показать / спрятать Винни", shortcut: $settings.shortcut) {
                 settings.isFree($0, for: \.shortcut)
             }
-            ShortcutRecorder(title: "Голосовой режим", shortcut: $settings.newVoiceShortcut) {
+            ShortcutRecorder(title: "Диктовка: включить / выключить", shortcut: $settings.newVoiceShortcut) {
                 settings.isFree($0, for: \.newVoiceShortcut)
             }
         } header: {
             Text("Глобальные")
         } footer: {
-            Footnote("Работают из любого приложения. «Голосовой режим»: если чат закрыт — открывает новый диалог с включённым микрофоном; если чат открыт — включает или выключает микрофон в текущем. Нажми на сочетание, затем набери новое — с ⌘, ⌥ или ⌃.")
+            Footnote("Работают из любого приложения. «Диктовка» включает и выключает микрофон в текущем чате; закрытый чат сначала открывается. Новый диалог шорткат не создаёт. Нажми на сочетание, затем набери новое — с ⌘, ⌥ или ⌃.")
         }
         Section("В окне чата") {
             LabeledContent("Новый диалог", value: "⌘N")
