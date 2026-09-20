@@ -53,7 +53,7 @@
     </div>
     <div class="pet">
       <img id="pet" src="images/sprites/idle.png" alt="Винни-Пух" width="360" height="360">
-      <div class="bubble" id="bubble">Наведи на меня</div>
+      <div class="bubble" id="bubble">Привет!</div>
     </div>
   </header>
 </div>
@@ -239,19 +239,33 @@ cd winnie
     target.textContent = 'Скопировано ✓';
     setTimeout(() => target.textContent = label, 1800);
   }));
-  // The hero bear reacts the way the real one does: notices the pointer, talks when clicked.
+  // The hero bear tells what he can do, one line at a time, wearing the sprite that goes with it.
   const pet = document.getElementById('pet'), bubble = document.getElementById('bubble');
-  const lines = ['Чем могу помочь?', 'Напомнить? Перевести? Найти?', 'Мёд сам себя не съест.', 'Сижу тут в опилках, урчу.'];
-  let line = 0, timer;
-  ['hover', 'talking'].forEach(s => { new Image().src = `images/sprites/${s}.png`; });
-  const show = (state, text) => { pet.src = `images/sprites/${state}.png`; bubble.textContent = text; };
-  pet.addEventListener('mouseenter', () => { clearTimeout(timer); show('hover', 'Привет! Нажми на меня'); });
-  pet.addEventListener('mouseleave', () => { clearTimeout(timer); show('idle', 'Наведи на меня'); });
-  pet.addEventListener('click', () => {
-    clearTimeout(timer);
-    show('talking', lines[line++ % lines.length]);
-    timer = setTimeout(() => show('idle', 'Наведи на меня'), 2600);
-  });
+  const story = [
+    ['talking',   'Привет! Я Винни. Живу поверх всех окон.'],
+    ['thinking',  'Спроси что угодно — поищу в интернете.'],
+    ['talking',   'Напомню о важном. Скажи: «через час позвонить».'],
+    ['talking',   'Веду заметки. Могу дописывать их сам.'],
+    ['thinking',  'Пришли скриншот — объясню, что на нём.'],
+    ['talking',   'Расскажу, что важного в почте.'],
+    ['listening', 'Понимаю голос и отвечаю вслух.'],
+    ['talking',   'В Telegram я тоже есть.'],
+    ['smoke-2',   'В 16:20 у меня перекур.'],
+    ['sleep',     'А если минуту не трогать — сплю и вижу сны.'],
+  ];
+  ['hover', ...story.map(([state]) => state)].forEach(state => { new Image().src = `images/sprites/${state}.png`; });
+  let step = -1, timer;
+  const say = (state, text) => {
+    pet.src = `images/sprites/${state}.png`;
+    bubble.classList.remove('pop'); void bubble.offsetWidth; bubble.classList.add('pop');
+    bubble.textContent = text;
+  };
+  const next = () => { step = (step + 1) % story.length; say(...story[step]); };
+  const play = () => { clearInterval(timer); timer = setInterval(next, 3600); };
+  pet.addEventListener('mouseenter', () => { clearInterval(timer); say('hover', 'Нажми — расскажу, что ещё умею'); });
+  pet.addEventListener('mouseleave', () => { next(); play(); });
+  pet.addEventListener('click', () => { next(); if (!pet.matches(':hover')) play(); });
+  setTimeout(() => { next(); play(); }, 1200);
 </script>
 </body>
 </html>
