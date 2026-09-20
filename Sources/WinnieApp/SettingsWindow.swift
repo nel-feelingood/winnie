@@ -67,7 +67,17 @@ struct SettingsView: View {
     var body: some View {
         HStack(spacing: 0) {
             List(SettingsPane.allCases, selection: Binding(get: { navigation.pane }, set: { navigation.pane = $0 ?? navigation.pane })) { item in
-                Label(item.title, systemImage: item.symbol).tag(item)
+                Label {
+                    Text(item.title)
+                } icon: {
+                    // Winnie's own pane wears his face, the same silhouette as in the menu bar.
+                    if item == .winnie, let face = WinnieIcon.template(side: 16) {
+                        Image(nsImage: face).renderingMode(.template)
+                    } else {
+                        Image(systemName: item.symbol)
+                    }
+                }
+                .tag(item)
             }
             .listStyle(.sidebar)
             .frame(width: 190)

@@ -2,6 +2,24 @@ import AppKit
 import ServiceManagement
 import WinnieCore
 
+/// Winnie's vector silhouette, shared by the menu bar and the settings sidebar.
+@MainActor
+enum WinnieIcon {
+    /// A template image: only its shape matters, macOS tints it for light and dark
+    /// surroundings, so the white fill of the source SVG is irrelevant.
+    static func template(side: CGFloat) -> NSImage? {
+        guard let url = Bundle.main.url(forResource: "menubar", withExtension: "svg"),
+              let icon = NSImage(contentsOf: url)?.copy() as? NSImage else {
+            // Running outside the .app bundle (swift run): keep a recognisable stand-in.
+            return NSImage(systemSymbolName: "pawprint.fill", accessibilityDescription: "Winnie")
+        }
+        icon.size = NSSize(width: side, height: side)
+        icon.isTemplate = true
+        icon.accessibilityDescription = "Winnie"
+        return icon
+    }
+}
+
 /// Winnie's menu in the menu bar, next to the clock.
 @MainActor
 final class StatusMenu: NSObject, NSMenuDelegate {
@@ -22,7 +40,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         self.actions = actions
         item = Self.makeStatusItem()
         super.init()
-        item.button?.image = Self.menuBarIcon()
+        item.button?.image = WinnieIcon.template(side: 18)
         let menu = NSMenu()
         menu.delegate = self
         item.menu = menu
@@ -41,20 +59,6 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.autosaveName = name
         return item
-    }
-
-    /// Winnie's vector silhouette. As a template image only its shape matters: macOS
-    /// tints it for light and dark menu bars, so the white fill of the source is irrelevant.
-    private static func menuBarIcon() -> NSImage? {
-        guard let url = Bundle.main.url(forResource: "menubar", withExtension: "svg"),
-              let icon = NSImage(contentsOf: url) else {
-            // Running outside the .app bundle (swift run): keep a recognisable stand-in.
-            return NSImage(systemSymbolName: "pawprint.fill", accessibilityDescription: "Winnie")
-        }
-        icon.size = NSSize(width: 18, height: 18)
-        icon.isTemplate = true
-        icon.accessibilityDescription = "Winnie"
-        return icon
     }
 
     /// Rebuilt on every open so titles and checkmarks always reflect current state.
