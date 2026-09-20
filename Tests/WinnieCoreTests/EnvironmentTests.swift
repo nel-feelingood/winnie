@@ -20,11 +20,18 @@ import Testing
         #expect(parse("update_settings") == .problem("Nothing to change: pass at least one setting."))
     }
 
-    @Test func quickActionsDefaultToSendingAndNeedText() {
-        #expect(parse("add_quick_action", ["text": "  Что в календаре  "]) == .command(.addQuickAction(text: "Что в календаре", sendsImmediately: true)))
-        #expect(parse("add_quick_action", ["text": "Переведи", "send_immediately": false]) == .command(.addQuickAction(text: "Переведи", sendsImmediately: false)))
-        #expect(parse("add_quick_action", ["text": " "]) == .problem("text is required."))
-        #expect(parse("add_quick_action", ["text": String(repeating: "я", count: 80)]) == .problem("Keep the button text under 60 characters."))
+    @Test func quickActionsCarryALabelAndAFullInstruction() {
+        let full = "Запусти рабочий блок на 2 часа: сессии по 20 минут и перерывы по 10 минут."
+        #expect(parse("add_quick_action", ["label": " Помодоро 2 ч ", "instruction": full])
+            == .command(.addQuickAction(label: "Помодоро 2 ч", instruction: full, sendsImmediately: true)))
+        #expect(parse("add_quick_action", ["label": "Переведи", "instruction": "Переведи", "send_immediately": false])
+            == .command(.addQuickAction(label: "Переведи", instruction: "Переведи", sendsImmediately: false)))
+        // A label alone is what went wrong before: «02:00 (20/10)» meant nothing when it came back.
+        #expect(parse("add_quick_action", ["label": "02:00 (20/10)"])
+            == .problem("instruction is required: the full request that will be sent when the button is tapped."))
+        #expect(parse("add_quick_action", ["instruction": full]) == .problem("label is required."))
+        #expect(parse("add_quick_action", ["label": String(repeating: "я", count: 40), "instruction": full])
+            == .problem("Keep the label under 30 characters; the details belong in instruction."))
         #expect(parse("remove_quick_action", ["text": "Переведи"]) == .command(.removeQuickAction(text: "Переведи")))
     }
 

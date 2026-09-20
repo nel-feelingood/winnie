@@ -18,7 +18,7 @@ public enum EnvironmentCommand: Equatable, Sendable {
 
     case readSettings
     case update(SettingsPatch)
-    case addQuickAction(text: String, sendsImmediately: Bool)
+    case addQuickAction(label: String, instruction: String, sendsImmediately: Bool)
     case removeQuickAction(text: String)
     case deleteAllReminders
 
@@ -39,10 +39,14 @@ public enum EnvironmentCommand: Equatable, Sendable {
         case "delete_all_reminders":
             return .command(.deleteAllReminders)
         case "add_quick_action":
-            guard let text = (arguments["text"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty
-            else { return .problem("text is required.") }
-            guard text.count <= 60 else { return .problem("Keep the button text under 60 characters.") }
-            return .command(.addQuickAction(text: text, sendsImmediately: arguments["send_immediately"] as? Bool ?? true))
+            func field(_ key: String) -> String { (arguments[key] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "" }
+            let label = field("label"), instruction = field("instruction")
+            guard !label.isEmpty else { return .problem("label is required.") }
+            guard label.count <= 30 else { return .problem("Keep the label under 30 characters; the details belong in instruction.") }
+            guard !instruction.isEmpty else { return .problem("instruction is required: the full request that will be sent when the button is tapped.") }
+            guard instruction.count <= 600 else { return .problem("Keep the instruction under 600 characters.") }
+            return .command(.addQuickAction(label: label, instruction: instruction,
+                                            sendsImmediately: arguments["send_immediately"] as? Bool ?? true))
         case "remove_quick_action":
             guard let text = (arguments["text"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty
             else { return .problem("text is required.") }
@@ -109,20 +113,21 @@ public enum EnvironmentToolSchema {
         ],
         [
             "name": "add_quick_action",
-            "description": "Add a quick action button shown in an empty chat. Use it when the user asks for a quick command or button, e.g. «добавь быструю команду „Что в календаре“».",
+            "description": "Add a quick action button shown in an empty chat. A button has two parts: a short label, and the full instruction that is sent to you when it is tapped. Later you will receive that instruction with no memory of this conversation, so it must carry everything.",
             "input_schema": [
                 "type": "object",
                 "properties": [
-                    "text": ["type": "string", "description": "The button's text, short, in the user's language; it is also what gets sent."],
-                    "send_immediately": ["type": "boolean", "description": "true (default): a tap sends the text. false: the text goes into the input field to be finished, right for prompts like «Переведи»."],
+                    "label": ["type": "string", "description": "One to three words for the button, in the user's language, e.g. «Помодоро 2 ч»."],
+                    "instruction": ["type": "string", "description": "The complete request in the user's language, keeping every detail and number the user gave, phrased so it makes sense on its own, e.g. «Запусти рабочий блок на 2 часа: сессии по 20 минут и перерывы по 10 минут. Поставь напоминание на начало каждого перерыва и каждой следующей сессии»."],
+                    "send_immediately": ["type": "boolean", "description": "true (default): a tap sends the instruction. false: it goes into the input field to be finished, right for prompts like «Переведи»."],
                 ],
-                "required": ["text"],
+                "required": ["label", "instruction"],
             ],
         ],
         [
             "name": "remove_quick_action",
-            "description": "Remove a quick action button by its text (case-insensitive). Get the exact texts from get_settings if unsure.",
-            "input_schema": ["type": "object", "properties": ["text": ["type": "string"]], "required": ["text"]],
+            "description": "Remove a quick action button by its label (case-insensitive). Get the exact labels from get_settings if unsure. To change a button, remove it and add it again.",
+            "input_schema": ["type": "object", "properties": ["text": ["type": "string", "description": "The button's label."]], "required": ["text"]],
         ],
         [
             "name": "delete_all_reminders",

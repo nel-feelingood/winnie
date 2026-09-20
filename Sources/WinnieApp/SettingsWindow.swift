@@ -155,21 +155,30 @@ struct SettingsView: View {
     @ViewBuilder private var quickPane: some View {
         Section {
             ForEach($settings.quickActions) { $action in
-                HStack {
-                    TextField("", text: $action.text, prompt: Text("Например: Переведи"))
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        TextField("", text: $action.text, prompt: Text("Подпись на кнопке"))
+                            .labelsHidden()
+                            .frame(maxWidth: .infinity)
+                        // The caption is a separate Text: a labelled Toggle in a Form claims the whole row.
+                        Text("сразу").font(.caption).foregroundStyle(.secondary)
+                        Toggle("", isOn: $action.sendsImmediately)
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                            .controlSize(.mini)
+                            .help("Включено — нажатие сразу отправляет инструкцию. Выключено — она подставляется в поле, и её можно дописать.")
+                        Button { settings.quickActions.removeAll { $0.id == action.id } } label: { Image(systemName: "trash") }
+                            .buttonStyle(.borderless)
+                            .help("Удалить")
+                    }
+                    TextField("", text: Binding(get: { action.instruction ?? "" }, set: { action.instruction = $0 }),
+                              prompt: Text("Инструкция для Винни. Пусто — отправляется сама подпись"), axis: .vertical)
                         .labelsHidden()
-                        .frame(maxWidth: .infinity)
-                    // The caption is a separate Text: a labelled Toggle in a Form claims the whole row.
-                    Text("сразу").font(.caption).foregroundStyle(.secondary)
-                    Toggle("", isOn: $action.sendsImmediately)
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                        .controlSize(.mini)
-                        .help("Включено — нажатие сразу отправляет текст. Выключено — текст подставляется в поле, и его можно дописать.")
-                    Button { settings.quickActions.removeAll { $0.id == action.id } } label: { Image(systemName: "trash") }
-                        .buttonStyle(.borderless)
-                        .help("Удалить")
+                        .lineLimit(1...5)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                 }
+                .padding(.vertical, 2)
             }
             HStack {
                 Button("Добавить") { settings.quickActions.append(QuickAction(text: "")) }
@@ -180,7 +189,7 @@ struct SettingsView: View {
         } header: {
             Text("Кнопки в пустом чате")
         } footer: {
-            Footnote("Показываются над полем ввода, пока в чате нет сообщений. Тумблер «сразу»: включён — нажатие отправляет текст Винни; выключен — текст подставляется в поле, чтобы его дописать (удобно для «Переведи»). Короткие подписи помещаются лучше.")
+            Footnote("Показываются над полем ввода, пока в чате нет сообщений. У кнопки короткая подпись и полная инструкция: на кнопке видна подпись, Винни получает инструкцию. Пиши её так, чтобы она была понятна без контекста. Тумблер «сразу»: включён — нажатие отправляет; выключен — текст подставляется в поле, чтобы его дописать.")
         }
     }
 

@@ -32,12 +32,12 @@ struct EnvironmentTools {
             if let rate = patch.voiceRate { settings.voiceRate = rate }
             return ToolOutcome("Changed. Now:\n\(summary)")
 
-        case .addQuickAction(let text, let sendsImmediately):
-            guard !settings.quickActions.contains(where: { Self.same($0.text, text) })
-            else { return ToolOutcome("A button «\(text)» already exists.", isError: true) }
+        case .addQuickAction(let label, let instruction, let sendsImmediately):
+            guard !settings.quickActions.contains(where: { Self.same($0.text, label) })
+            else { return ToolOutcome("A button «\(label)» already exists. Remove it first to replace it.", isError: true) }
             guard settings.quickActions.count < 12 else { return ToolOutcome("There are already 12 buttons; remove one first.", isError: true) }
-            settings.quickActions.append(QuickAction(text: text, sendsImmediately: sendsImmediately))
-            return ToolOutcome("Added the button «\(text)» (\(sendsImmediately ? "sends at once" : "fills the input field")).")
+            settings.quickActions.append(QuickAction(text: label, instruction: instruction, sendsImmediately: sendsImmediately))
+            return ToolOutcome("Added the button «\(label)» (\(sendsImmediately ? "sends at once" : "fills the input field")). It will send: \(instruction)")
 
         case .removeQuickAction(let text):
             guard settings.quickActions.contains(where: { Self.same($0.text, text) }) else {
@@ -55,7 +55,9 @@ struct EnvironmentTools {
     }
 
     private var summary: String {
-        let buttons = settings.quickActions.map { "«\($0.text)»\($0.sendsImmediately ? "" : " (fills the field)")" }.joined(separator: ", ")
+        let buttons = settings.quickActions.map { action in
+            "\n  - «\(action.text)»\(action.sendsImmediately ? "" : " (fills the field)") → sends: \(action.message)"
+        }.joined()
         return """
         pet_size_percent: \(Int((settings.petScale * 100).rounded()))
         model: \(settings.model.displayName)

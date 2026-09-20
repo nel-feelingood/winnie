@@ -25,9 +25,18 @@ struct Shortcut: Codable, Equatable {
 /// A one-tap prompt offered in an empty chat.
 struct QuickAction: Codable, Identifiable, Equatable {
     var id = UUID()
+    /// The short label on the button. (Named `text` in storage since before instructions existed.)
     var text: String
+    /// What is actually sent: the full instruction, written to make sense on its own.
+    /// Optional so buttons saved earlier still decode; empty means "send the label".
+    var instruction: String?
     /// Off for prompts that need finishing, like «Переведи»: the text lands in the field instead.
     var sendsImmediately = true
+
+    var message: String {
+        let full = instruction?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return full.isEmpty ? text.trimmingCharacters(in: .whitespacesAndNewlines) : full
+    }
 }
 
 @MainActor

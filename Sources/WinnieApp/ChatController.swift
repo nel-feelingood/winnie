@@ -203,7 +203,7 @@ final class ChatController: ObservableObject {
     /// Either sends the text as a message, or puts it in the field for the user to finish.
     func run(_ action: QuickAction) {
         guard !isStreaming, !isListening else { return }
-        let text = action.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = action.message
         if action.sendsImmediately {
             draft = text
             send()
