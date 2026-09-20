@@ -2,9 +2,10 @@ import AppKit
 
 /// Screenshots attached to chats, stored as JPEG files next to `chats.json`.
 enum ImageStore {
-    /// Longest edge sent to the API. Larger images are downscaled by the API anyway,
-    /// so sending more only costs upload time.
-    private static let maxEdge: CGFloat = 1568
+    /// Longest edge sent to the API. Image cost grows with pixel count, and a selected
+    /// region rarely needs more; raise it (the API uses up to 1568) if small text in
+    /// wide captures stops being legible to the model.
+    private static let maxEdge: CGFloat = 1000
 
     static var directory: URL { AppSettings.supportDirectory.appendingPathComponent("Images") }
 
