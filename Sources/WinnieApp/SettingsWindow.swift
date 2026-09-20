@@ -155,12 +155,13 @@ struct SettingsView: View {
 
     // MARK: - Поведение
 
+    /// One row per behaviour, each with its own explanation. New behaviours are added here.
     @ViewBuilder private var behaviourPane: some View {
         Section {
-            Toggle("16:20", isOn: $settings.smokeBreakEnabled)
-            Toggle("Сны", isOn: $settings.dreamsEnabled)
-        } footer: {
-            Footnote("16:20 — каждый день в это время Винни устраивает перекур; по просьбе в чате («16:20», «перекур») анимация играет в любое время, даже если тумблер выключен. Сны — пока Винни спит, над ним раз в 10 секунд всплывает эмодзи: чаще то, что ему снится (мёд, женщины, трава, тачки, работа), иногда любой случайный.")
+            BehaviourToggle(title: "16:20", isOn: $settings.smokeBreakEnabled,
+                            description: "Каждый день в 16:20 Винни устраивает перекур. По просьбе в чате («16:20», «перекур») анимация играет в любое время, даже если тумблер выключен.")
+            BehaviourToggle(title: "Сны", isOn: $settings.dreamsEnabled,
+                            description: "Пока Винни спит, над ним раз в 10 секунд всплывает эмодзи: чаще то, что ему снится (мёд, женщины, трава, тачки, работа), иногда любой случайный.")
         }
     }
 
@@ -506,6 +507,28 @@ private struct NewConnectorForm: View {
             .disabled(!isValid)
             if !url.isEmpty, !isValid { Text("нужен адрес, начинающийся с https://").font(.caption).foregroundStyle(.secondary) }
         }
+    }
+}
+
+/// A behaviour switch with its explanation right under its name.
+private struct BehaviourToggle: View {
+    let title: String
+    @Binding var isOn: Bool
+    let description: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                Text(description)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Toggle("", isOn: $isOn).labelsHidden().toggleStyle(.switch)
+        }
+        .padding(.vertical, 4)
     }
 }
 
