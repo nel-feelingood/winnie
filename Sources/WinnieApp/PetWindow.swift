@@ -56,6 +56,19 @@ final class PetView: NSView {
 
     private static let dreamInterval: TimeInterval = 10
     private static let dreamDuration: CFTimeInterval = 3
+    /// What this particular bear dreams about: honey, women, weed, cars and, alas, work.
+    private static let favouriteDreams = ["🍯", "🐝", "🥄", "🫖", "🍰", "🎈", "💤",
+                                          "💃", "👩", "👩‍🦰", "👱‍♀️", "💋", "👠", "👄", "💅", "👙",
+                                          "🌿", "🍃", "🍀", "🌱", "🪴", "💨",
+                                          "🚗", "🏎️", "🚙", "🛻", "🚕", "🏁", "🛞",
+                                          "💼", "💻", "📈", "📊", "⌨️", "☎️", "📅", "🗂️", "☕️"]
+    /// How often a dream comes from the favourites rather than from the whole emoji set.
+    private static let favouriteShare = 0.65
+
+    private static func randomDream() -> String? {
+        Double.random(in: 0..<1) < favouriteShare ? favouriteDreams.randomElement() : dreams.randomElement()
+    }
+
     /// Every single-character emoji this Mac can draw: taken from the Unicode tables rather than a
     /// hand-picked list, and checked against the emoji font so that none comes out as an empty box.
     /// Flags, skin-tone modifiers and multi-person sequences are several characters each and are left out.
@@ -162,7 +175,7 @@ final class PetView: NSView {
     }
 
     private func showDream() {
-        guard dreamsEnabled(), mood.state == .sleep, let emoji = Self.dreams.randomElement() else { return }
+        guard dreamsEnabled(), mood.state == .sleep, let emoji = Self.randomDream() else { return }
         let spriteSide = bounds.height - PetWindow.buttonStrip
         let size = max(22, spriteSide * 0.2)
         // Just above the sleeping head (he sits lower than he stands), a little off-centre each time.
