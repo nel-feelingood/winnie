@@ -19,7 +19,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 img { max-width: 100%; }
 .w { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
 .mono { font-family: var(--mono); }
-[data-theme="dark"] .only-light, [data-theme="light"] .only-dark { display: none; }
+[data-theme="dark"] .only-light, [data-theme="light"] .only-dark { display: none !important; }
 :focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
 
 /* ---------- Header ---------- */
@@ -75,17 +75,16 @@ h1 em { font-style: normal; color: var(--acc); }
 .prompt.tall pre { max-height: 420px; }
 .prompt-note { margin: 12px 0 0; font-size: 15px; color: var(--soft); }
 
-/* The desktop: flat, outlined, the chat window is a real screenshot. */
-.scene { position: relative; aspect-ratio: 4 / 3.1; border: 1px solid var(--line); border-radius: 22px; overflow: hidden; background: var(--scene); container-type: inline-size; }
-.scene .bar { position: absolute; inset: 0 0 auto 0; height: 5.4cqw; display: flex; justify-content: space-between; align-items: center; padding: 0 2.6cqw;
-              border-bottom: 1px solid var(--line); background: var(--bg); font: 2.1cqw var(--mono); color: var(--soft); }
-.scene .bar span { display: flex; align-items: center; gap: 1.8cqw; }
-.scene .bar img { width: 3.4cqw; }
-.scene .win { position: absolute; left: 5%; top: 15%; width: 54%; height: 60%; border: 1px solid var(--line); border-radius: 2cqw; background: var(--bg); padding: 6cqw 4cqw 0; display: grid; gap: 2.4cqw; align-content: start; }
-.scene .win::before { content: "● ● ●"; position: absolute; left: 2cqw; top: 1.2cqw; font-size: 1.8cqw; letter-spacing: .3cqw; color: var(--line); }
-.scene .win u { display: block; height: 1px; background: var(--line); }
-.scene .panel { position: absolute; right: 3.5%; bottom: 25%; height: 67%; width: auto; border-radius: 2.4cqw; border: 1px solid var(--line); }
-.scene .pet { position: absolute; right: 1.5%; bottom: 1.5%; width: 19%; cursor: pointer; animation: breathe 3.6s ease-in-out infinite; transform-origin: 50% 100%; }
+/* The bear and the chat above him, on a still gradient. The chat turns its own tabs. */
+.scene { position: relative; aspect-ratio: 1 / 1.04; border-radius: 28px; overflow: hidden; container-type: inline-size;
+         background: linear-gradient(160deg, #ffd3b8 0%, #f4d3ff 52%, #c9dcff 100%); }
+[data-theme="dark"] .scene { background: linear-gradient(160deg, #4a1f08 0%, #2c1246 52%, #0b2050 100%); }
+.scene .panel { position: absolute; right: 9%; top: 5%; height: 71%; aspect-ratio: 760 / 1040; border-radius: 3.4cqw; overflow: hidden; box-shadow: 0 5cqw 9cqw -4cqw rgba(0, 0, 0, .45); }
+.scene .slot { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; }
+.scene .slot.on { opacity: 1; }
+.scene .slot img { width: 100%; height: 100%; display: block; }
+.scene .pet { position: absolute; right: 7%; bottom: 2.5%; width: 23%; cursor: pointer; animation: breathe 3.6s ease-in-out infinite; transform-origin: 50% 100%;
+              filter: drop-shadow(0 2cqw 2cqw rgba(0, 0, 0, .3)); }
 @keyframes breathe { 50% { transform: scale(1.018, .985); } }
 
 /* ---------- Sections ---------- */
@@ -101,16 +100,14 @@ h2 span { color: var(--soft); }
 /* 01 — what he does: the list on the left, the chat plays on the right */
 .cases { display: grid; grid-template-columns: minmax(270px, .8fr) 1.2fr; }
 .list { display: flex; flex-direction: column; border-right: 1px solid var(--line); }
-.list button { flex: 1; display: grid; grid-template-columns: 26px 1fr; gap: 2px 12px; align-items: baseline; padding: 17px 22px; text-align: left;
+.list button { flex: 1; display: grid; grid-template-columns: 40px 1fr; gap: 1px 14px; align-items: center; padding: 17px 22px; text-align: left;
                background: none; border: 0; border-bottom: 1px solid var(--line); }
 .list button:last-child { border-bottom: 0; }
-.list .ico { font-size: 19px; line-height: 1; filter: grayscale(1); opacity: .55; transition: filter .2s, opacity .2s; }
-.list [aria-selected="true"] .ico, .list button:hover .ico { filter: none; opacity: 1; }
+.list .ico { grid-row: 1 / span 2; font-size: 30px; line-height: 1; }
 .list button:focus-visible { outline-offset: -3px; }
-.list b { font-size: 21px; font-weight: 600; letter-spacing: -.02em; color: var(--soft); transition: color .2s; }
+.list b { align-self: end; font-size: 21px; font-weight: 600; letter-spacing: -.02em; color: var(--soft); transition: color .2s; }
 .list [aria-selected="true"] b, .list button:hover b { color: var(--ink); }
-.list small { grid-column: 2; font-size: 14.5px; line-height: 1.4; color: var(--soft); display: none; }
-.list [aria-selected="true"] small { display: block; }
+.list small { grid-column: 2; font-size: 14.5px; line-height: 1.35; color: var(--soft); }
 .stage { position: relative; min-height: 430px; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
 .hint { align-self: flex-end; display: flex; gap: 6px; align-items: center; font: 12px var(--mono); color: var(--soft); min-height: 26px; }
 .hint kbd { font: 12px var(--mono); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
