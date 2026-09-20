@@ -263,12 +263,15 @@ final class ChatController: ObservableObject {
 
         // Resolved per answer: an expired OAuth token is refreshed here, before the request needs it.
         let apps = await mcp.servers(for: settings.connectors)
+        let apis = settings.resolvedAPIs
         do {
             for try await event in client.streamReply(apiKey: apiKey, model: settings.model,
                                                              masterPrompt: settings.masterPrompt, history: history,
                                                              spoken: speaks,
                                                              imageLoader: { ImageStore.data(for: $0) },
-                                                             toolHandler: { [reminders, memory, mail = MailTools(client: gmail.client)] name, input in
+                                                             toolHandler: { [reminders, memory, mail = MailTools(client: gmail.client),
+                                                                             custom = CustomAPITools(apis: apis)] name, input in
+                                                                 if name == CustomAPIToolSchema.name { return await custom.execute(input: input) }
                                                                  if MailToolSchema.names.contains(name) {
                                                                      return await mail.execute(name: name, input: input)
                                                                  }
@@ -283,7 +286,8 @@ final class ChatController: ObservableObject {
                                                              },
                                                              offersMail: gmail.isConnected,
                                                              memory: memory.notes,
-                                                             apps: apps) {
+                                                             apps: apps,
+                                                             apis: apis.map(\.api)) {
                 switch event {
                 case .textDelta(let piece):
                     if searchStatus != nil { searchStatus = nil }
@@ -339,6 +343,7 @@ final class ChatController: ObservableObject {
     private static func status(forTool name: String) -> String {
         if name.hasPrefix("app:") { return "Спрашиваю \(name.dropFirst(4))…" }
         switch name {
+        case "call_api": return "Обращаюсь к API…"
         case "list_emails": return "Смотрю почту…"
         case "read_email": return "Читаю письмо…"
         case "list_reminders": return "Смотрю напоминания…"

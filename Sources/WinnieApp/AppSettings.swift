@@ -77,6 +77,21 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(try? JSONEncoder().encode(connectors), forKey: "connectors") }
     }
 
+    /// Plain HTTP APIs of other applications. Keys are in the Keychain.
+    @Published var customAPIs: [CustomAPI] {
+        didSet { defaults.set(try? JSONEncoder().encode(customAPIs), forKey: "customAPIs") }
+    }
+
+    /// Enabled APIs with their keys, ready for one answer.
+    var resolvedAPIs: [ResolvedAPI] {
+        customAPIs.filter(\.isUsable).map { ResolvedAPI(api: $0, key: Keychain.load(named: $0.secretName)) }
+    }
+
+    func removeAPI(_ api: CustomAPI) {
+        Keychain.save("", named: api.secretName)
+        customAPIs.removeAll { $0.id == api.id }
+    }
+
     func removeConnector(_ connector: AppConnector) {
         Keychain.save("", named: connector.secretName)
         connectors.removeAll { $0.id == connector.id }
@@ -101,6 +116,8 @@ final class AppSettings: ObservableObject {
 
     init() {
         speaksReminders = defaults.bool(forKey: "speaksReminders")
+        customAPIs = defaults.data(forKey: "customAPIs")
+            .flatMap { try? JSONDecoder().decode([CustomAPI].self, from: $0) } ?? []
         connectors = defaults.data(forKey: "connectors")
             .flatMap { try? JSONDecoder().decode([AppConnector].self, from: $0) } ?? []
         quickActions = defaults.stringArray(forKey: "quickActions") ?? Self.defaultQuickActions

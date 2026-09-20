@@ -11,7 +11,7 @@ struct SettingsActions {
 }
 
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case winnie, quick, api, usage, voice, shortcuts
+    case winnie, quick, api, mcp, usage, voice, shortcuts
 
     var id: String { rawValue }
 
@@ -20,6 +20,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .winnie: "Винни"
         case .quick: "Быстрые действия"
         case .api: "API"
+        case .mcp: "MCP"
         case .usage: "Модель и расходы"
         case .voice: "Голос"
         case .shortcuts: "Шорткаты"
@@ -31,6 +32,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .winnie: "pawprint"
         case .quick: "bolt"
         case .api: "link"
+        case .mcp: "point.3.connected.trianglepath.dotted"
         case .usage: "chart.bar"
         case .voice: "waveform"
         case .shortcuts: "keyboard"
@@ -89,6 +91,7 @@ struct SettingsView: View {
                 case .winnie: winniePane
                 case .quick: quickPane
                 case .api: apiPane
+                case .mcp: appsSection
                 case .usage: usagePane
                 case .voice: voicePane
                 case .shortcuts: shortcutsPane
@@ -182,7 +185,7 @@ struct SettingsView: View {
     @ViewBuilder private var apiPane: some View {
         claudeSection
         mailSection
-        appsSection
+        customAPISection
     }
 
     @ViewBuilder private var claudeSection: some View {
@@ -355,7 +358,7 @@ extension SettingsView {
                 }
             }
         } header: {
-            Text("MCP · приложения")
+            Text("Приложения по MCP")
         } footer: {
             Footnote("Любое приложение с удалённым MCP-сервером (https://…). Если сервер входит через OAuth, как Bridge, оставь токен пустым — откроется вход в браузере, токены обновляются сами. Claude получает список инструментов приложения сам; перед действием, которое что-то меняет, Винни спросит подтверждение. Токены хранятся в Связке ключей и уходят только в Anthropic API вместе с запросом.")
         }
@@ -376,6 +379,78 @@ extension SettingsView {
             case .open:
                 Button("Войти") { mcp.signIn(connector) }.controlSize(.small)
             }
+        }
+    }
+}
+
+extension SettingsView {
+    @ViewBuilder var customAPISection: some View {
+        Section {
+            ForEach($settings.customAPIs) { $api in
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(api.name)
+                            Text(api.baseURL).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                        }
+                        Spacer()
+                        Toggle("", isOn: $api.isEnabled).labelsHidden()
+                        Button { settings.removeAPI(api) } label: { Image(systemName: "trash") }
+                            .buttonStyle(.borderless)
+                            .help("Удалить API и его ключ")
+                    }
+                    TextField("Заметки для Винни", text: $api.notes, prompt: Text("GET /tasks — мои задачи; GET /tasks/{id} — одна задача"), axis: .vertical)
+                        .lineLimit(1...4)
+                        .font(.callout)
+                        .labelsHidden()
+                    Toggle("Разрешить запросы, которые что-то меняют (POST, PUT, PATCH, DELETE)", isOn: $api.allowsWrites)
+                        .font(.callout)
+                }
+                .padding(.vertical, 2)
+            }
+            NewAPIForm { api, key in
+                Keychain.save(key, named: api.secretName)
+                settings.customAPIs.append(api)
+            }
+        } header: {
+            Text("Свои API")
+        } footer: {
+            Footnote("Обычный HTTP-API другого приложения. Винни ходит только на указанный адрес и по умолчанию только читает (GET). В заметках опиши, какие эндпоинты есть: он пользуется ими, а не угадывает. Ключ хранится в Связке ключей и добавляется к запросам самим приложением — модель его не видит.")
+        }
+    }
+}
+
+private struct NewAPIForm: View {
+    let onAdd: (CustomAPI, _ key: String) -> Void
+
+    @State private var name = ""
+    @State private var baseURL = ""
+    @State private var key = ""
+    @State private var header = "Authorization"
+    @State private var scheme = "Bearer"
+
+    private var isValid: Bool {
+        let url = URL(string: baseURL.trimmingCharacters(in: .whitespaces))
+        return !name.trimmingCharacters(in: .whitespaces).isEmpty && url?.scheme == "https" && url?.host != nil
+    }
+
+    var body: some View {
+        TextField("Название", text: $name, prompt: Text("Bridge API"))
+        TextField("Базовый адрес", text: $baseURL, prompt: Text("https://api.example.com/v1"))
+        SecureField("Ключ", text: $key, prompt: Text("если API его требует"))
+        HStack {
+            TextField("Заголовок", text: $header, prompt: Text("Authorization"))
+            TextField("Схема", text: $scheme, prompt: Text("Bearer или пусто"))
+        }
+        HStack {
+            Button("Добавить API") {
+                onAdd(CustomAPI(name: name.trimmingCharacters(in: .whitespaces), baseURL: baseURL.trimmingCharacters(in: .whitespaces),
+                                authHeader: header.trimmingCharacters(in: .whitespaces), authScheme: scheme.trimmingCharacters(in: .whitespaces)),
+                      key.trimmingCharacters(in: .whitespacesAndNewlines))
+                name = ""; baseURL = ""; key = ""; header = "Authorization"; scheme = "Bearer"
+            }
+            .disabled(!isValid)
+            if !baseURL.isEmpty, !isValid { Text("нужен адрес, начинающийся с https://").font(.caption).foregroundStyle(.secondary) }
         }
     }
 }
