@@ -4,6 +4,7 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
     var onShortcutChange: (Shortcut) -> Void
+    var onScaleChange: (Double) -> Void
 
     @State private var apiKey = Keychain.loadAPIKey()
     @State private var saved = false
@@ -24,6 +25,17 @@ struct SettingsView: View {
                     Link("Получить ключ", destination: URL(string: "https://console.anthropic.com/settings/keys")!)
                 }
             }
+            Section("Винни") {
+                HStack {
+                    Text("Размер")
+                    Slider(value: $settings.petScale, in: AppSettings.petScaleRange, step: 0.05)
+                    Text("\(Int((settings.petScale * 100).rounded()))%")
+                        .monospacedDigit()
+                        .frame(width: 44, alignment: .trailing)
+                    Button("Сброс") { settings.petScale = 1 }
+                        .disabled(settings.petScale == 1)
+                }
+            }
             Section("Шорткат") {
                 HStack {
                     Text("Показать / спрятать Винни")
@@ -35,7 +47,8 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 440, height: 250)
+        .frame(width: 440, height: 330)
+        .onChange(of: settings.petScale) { _, scale in onScaleChange(scale) }
         .onDisappear { stopRecording() }
     }
 
@@ -63,21 +76,25 @@ final class SettingsWindowController {
     private var window: NSWindow?
     private let settings: AppSettings
     private let onShortcutChange: (Shortcut) -> Void
+    private let onScaleChange: (Double) -> Void
 
-    init(settings: AppSettings, onShortcutChange: @escaping (Shortcut) -> Void) {
+    init(settings: AppSettings, onShortcutChange: @escaping (Shortcut) -> Void,
+         onScaleChange: @escaping (Double) -> Void) {
         self.settings = settings
         self.onShortcutChange = onShortcutChange
+        self.onScaleChange = onScaleChange
     }
 
     func show() {
         if window == nil {
-            let view = SettingsView(settings: settings, onShortcutChange: onShortcutChange)
+            let view = SettingsView(settings: settings, onShortcutChange: onShortcutChange,
+                                    onScaleChange: onScaleChange)
             let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable],
                                   backing: .buffered, defer: false)
             window.title = "Настройки Винни"
             window.contentView = NSHostingView(rootView: view)
             window.isReleasedWhenClosed = false
-            window.setContentSize(NSSize(width: 440, height: 250))
+            window.setContentSize(NSSize(width: 440, height: 330))
             window.center()
             self.window = window
         }

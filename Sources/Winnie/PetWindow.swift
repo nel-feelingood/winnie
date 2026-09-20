@@ -4,10 +4,20 @@ import WinnieCore
 /// The always-on-top pet. A non-activating panel so clicking Winnie never
 /// steals focus from the app the user is working in.
 final class PetWindow: NSPanel {
-    static let petSize = NSSize(width: 150, height: 190)
+    /// Sprite edge at 100% scale, in points.
+    static let baseSpriteSide: CGFloat = 150
+    /// Strip above the sprite where the "New dialog" button appears.
+    static let buttonStrip: CGFloat = 40
+    /// The button keeps its size at any scale, so the window never gets narrower than it.
+    static let minimumWidth: CGFloat = 110
 
-    init() {
-        super.init(contentRect: NSRect(origin: .zero, size: Self.petSize),
+    static func size(forScale scale: Double) -> NSSize {
+        let side = (baseSpriteSide * scale).rounded()
+        return NSSize(width: max(side, minimumWidth), height: side + buttonStrip)
+    }
+
+    init(scale: Double) {
+        super.init(contentRect: NSRect(origin: .zero, size: Self.size(forScale: scale)),
                    styleMask: [.borderless, .nonactivatingPanel],
                    backing: .buffered, defer: false)
         isOpaque = false
@@ -42,14 +52,14 @@ final class PetView: NSView {
     private static let dragThreshold: CGFloat = 4
     private static let sleepDelay: TimeInterval = 60
 
-    init(sprites: SpriteProvider) {
+    init(sprites: SpriteProvider, scale: Double) {
         self.sprites = sprites
-        super.init(frame: NSRect(origin: .zero, size: PetWindow.petSize))
+        super.init(frame: NSRect(origin: .zero, size: PetWindow.size(forScale: scale)))
         wantsLayer = true
+        autoresizingMask = [.width, .height]
 
         // Anchored at the feet so the breathing scale grows upward.
         spriteLayer.anchorPoint = CGPoint(x: 0.5, y: 0)
-        spriteLayer.frame = NSRect(x: 0, y: 0, width: 150, height: 150)
         spriteLayer.contentsGravity = .resizeAspect
         layer?.addSublayer(spriteLayer)
 
@@ -60,10 +70,9 @@ final class PetView: NSView {
         newDialogButton.target = self
         newDialogButton.action = #selector(newDialogPressed)
         newDialogButton.sizeToFit()
-        newDialogButton.frame.origin = NSPoint(x: (bounds.width - newDialogButton.frame.width) / 2,
-                                               y: bounds.height - newDialogButton.frame.height - 6)
         newDialogButton.isHidden = true
         addSubview(newDialogButton)
+        layoutContents()
 
         addTrackingArea(NSTrackingArea(rect: .zero,
                                        options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
@@ -74,6 +83,29 @@ final class PetView: NSView {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
+
+    // MARK: - Layout
+
+    /// Resizes the pet around its feet, so scaling never makes Winnie slide sideways or sink.
+    func apply(scale: Double) {
+        guard let window else { return }
+        let size = PetWindow.size(forScale: scale)
+        let old = window.frame
+        let origin = NSPoint(x: old.midX - size.width / 2, y: old.minY)
+        window.setFrame(NSRect(origin: origin, size: size), display: true)
+        layoutContents()
+    }
+
+    private func layoutContents() {
+        let side = bounds.height - PetWindow.buttonStrip
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        spriteLayer.bounds = CGRect(x: 0, y: 0, width: side, height: side)
+        spriteLayer.position = CGPoint(x: bounds.midX, y: 0)
+        CATransaction.commit()
+        newDialogButton.frame.origin = NSPoint(x: (bounds.width - newDialogButton.frame.width) / 2,
+                                               y: bounds.height - newDialogButton.frame.height - 6)
+    }
 
     // MARK: - State
 

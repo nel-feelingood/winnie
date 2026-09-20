@@ -17,9 +17,9 @@ public enum ClaudeError: Error, Equatable, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .missingAPIKey:
-            "Не задан API-ключ. Добавь его в меню Винни → «API-ключ…»."
+            "Не задан API-ключ. Добавь его в меню Винни → «Настройки…»."
         case .http(401, _):
-            "API-ключ не подошёл. Проверь его в меню Винни → «API-ключ…»."
+            "API-ключ не подошёл. Проверь его в меню Винни → «Настройки…»."
         case .http(429, _):
             "Слишком много запросов. Подожди немного и повтори."
         case .http(529, _), .http(503, _):

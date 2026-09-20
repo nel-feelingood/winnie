@@ -44,7 +44,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
             models.submenu?.addItem(entry)
         }
         menu.addItem(models)
-        menu.addItem(make("API-ключ и шорткат…", #selector(openSettings)))
+        menu.addItem(make("Настройки…", #selector(openSettings)))
         menu.addItem(.separator())
         menu.addItem(make("Открыть папку спрайтов", #selector(openSprites)))
         menu.addItem(make("Перезагрузить спрайты", #selector(reloadSprites)))

@@ -25,7 +25,15 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(try? JSONEncoder().encode(shortcut), forKey: "shortcut") }
     }
 
+    /// Pet size multiplier, applied live while the slider moves.
+    @Published var petScale: Double {
+        didSet { defaults.set(petScale, forKey: "petScale") }
+    }
+    static let petScaleRange = 0.5...2.5
+
     init() {
+        let storedScale = defaults.double(forKey: "petScale")
+        petScale = Self.petScaleRange.contains(storedScale) ? storedScale : 1
         model = defaults.string(forKey: "model").flatMap(ModelOption.init) ?? .opus
         shortcut = defaults.data(forKey: "shortcut")
             .flatMap { try? JSONDecoder().decode(Shortcut.self, from: $0) } ?? .default

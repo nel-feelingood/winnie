@@ -21,7 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         try? FileManager.default.createDirectory(at: AppSettings.spritesDirectory,
                                                  withIntermediateDirectories: true)
 
-        petView = PetView(sprites: sprites)
+        petView = PetView(sprites: sprites, scale: settings.petScale)
         petView.onClick = { [unowned self] in chatPanel.isVisible ? closeChat() : openChat(new: false) }
         petView.onNewDialog = { [unowned self] in openChat(new: true) }
         petView.onMoved = { [unowned self] in
@@ -30,7 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         petView.onDragEnded = { [unowned self] in settings.petOrigin = petWindow.frame.origin }
         petView.isChatOpen = { [unowned self] in chatPanel.isVisible }
 
-        petWindow = PetWindow()
+        petWindow = PetWindow(scale: settings.petScale)
         petWindow.contentView = petView
         petWindow.setFrameOrigin(initialPetOrigin())
         petWindow.orderFrontRegardless()
@@ -40,9 +40,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         controller.onActivity = { [unowned self] in petView.setActivity($0) }
 
-        settingsWindow = SettingsWindowController(settings: settings) { [unowned self] in
-            hotKey.register($0)
-        }
+        settingsWindow = SettingsWindowController(
+            settings: settings,
+            onShortcutChange: { [unowned self] in hotKey.register($0) },
+            onScaleChange: { [unowned self] in
+                petView.apply(scale: $0)
+                settings.petOrigin = petWindow.frame.origin
+                if chatPanel.isVisible { chatPanel.position(relativeTo: petWindow.frame) }
+            }
+        )
         statusMenu = StatusMenu(settings: settings, actions: .init(
             togglePet: { [unowned self] in petWindow.isVisible ? hideEverything() : showPet() },
             newChat: { [unowned self] in openChat(new: true) },
@@ -94,10 +100,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func initialPetOrigin() -> NSPoint {
         let visible = NSScreen.main?.visibleFrame ?? .zero
-        let fallback = NSPoint(x: visible.maxX - PetWindow.petSize.width - 40, y: visible.minY + 20)
+        let size = PetWindow.size(forScale: settings.petScale)
+        let fallback = NSPoint(x: visible.maxX - size.width - 40, y: visible.minY + 20)
         guard let saved = settings.petOrigin else { return fallback }
         // A saved spot may belong to a display that is no longer connected.
-        let frame = NSRect(origin: saved, size: PetWindow.petSize)
+        let frame = NSRect(origin: saved, size: size)
         return NSScreen.screens.contains { $0.frame.intersects(frame) } ? saved : fallback
     }
 
