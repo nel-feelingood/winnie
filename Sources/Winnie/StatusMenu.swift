@@ -21,10 +21,24 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         self.settings = settings
         self.actions = actions
         super.init()
-        item.button?.image = NSImage(systemSymbolName: "pawprint.fill", accessibilityDescription: "Winnie")
+        item.button?.image = Self.menuBarIcon()
         let menu = NSMenu()
         menu.delegate = self
         item.menu = menu
+    }
+
+    /// Winnie's vector silhouette. As a template image only its shape matters: macOS
+    /// tints it for light and dark menu bars, so the white fill of the source is irrelevant.
+    private static func menuBarIcon() -> NSImage? {
+        guard let url = Bundle.main.url(forResource: "menubar", withExtension: "svg"),
+              let icon = NSImage(contentsOf: url) else {
+            // Running outside the .app bundle (swift run): keep a recognisable stand-in.
+            return NSImage(systemSymbolName: "pawprint.fill", accessibilityDescription: "Winnie")
+        }
+        icon.size = NSSize(width: 18, height: 18)
+        icon.isTemplate = true
+        icon.accessibilityDescription = "Winnie"
+        return icon
     }
 
     /// Rebuilt on every open so titles and checkmarks always reflect current state.

@@ -12,6 +12,8 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/Winnie" "$APP/Contents/MacOS/Winnie"
 # SwiftPM resource bundles (MarkdownUI's dependencies) are looked up next to the executable's bundle.
 find "$BIN" -maxdepth 1 -name "*.bundle" -exec cp -R {} "$APP/Contents/Resources/" \;
+cp Assets/icon/Winnie.icns "$APP/Contents/Resources/Winnie.icns"
+cp Assets/icon/menubar.svg "$APP/Contents/Resources/menubar.svg"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -22,6 +24,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>CFBundleDisplayName</key><string>Winnie</string>
     <key>CFBundleIdentifier</key><string>local.winnie.pet</string>
     <key>CFBundleExecutable</key><string>Winnie</string>
+    <key>CFBundleIconFile</key><string>Winnie</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>0.1.0</string>
     <key>CFBundleVersion</key><string>1</string>
